@@ -17,22 +17,18 @@ class InputText(Widget):
     """Text input widget"""
 
     def _pre_render_head(self) -> Result[None]:
-        if not self._data_bag._main_data_path:
-            return Result.error("InputText requires path (id)")
-
-        # Get value using field_values
-        value_res = self._data_bag.get("label")
-        if not value_res:
-            return Result.error(f"InputText: failed to get value", value_res)
-        value = value_res.unwrapped
+        res = self._data_bag.get("label")
+        if not res:
+            return Result.error("InputText: failed to get value", res)
+        value = res.unwrapped
 
         imgui_id = f"###{self.uid}"
 
         changed, new_val = imgui.input_text(imgui_id, str(value))
         if changed:
-            set_res = self._data_bag.set("label", new_val)
-            if not set_res:
-                return Result.error(f"InputText: failed to set value", set_res)
+            res = self._data_bag.set("label", new_val)
+            if not res:
+                return Result.error("InputText: failed to set value", res)
 
         return Ok(None)
 
@@ -42,29 +38,23 @@ class InputInt(Widget):
     """Integer input widget"""
 
     def _pre_render_head(self) -> Result[None]:
-        data_path = self._data_bag._main_data_path
-        if not data_path:
-            return Result.error("InputInt requires path (id)")
+        res = self._data_bag.get("label")
+        if not res:
+            return Result.error("InputInt: failed to get value", res)
+        value = res.unwrapped
 
-        # Get value using field_values
-        value_res = self._data_bag.get("label")
-        if not value_res:
-            return Result.error(f"InputInt: failed to get value", value_res)
-        value = value_res.unwrapped
-
-        # Validate integer value
         try:
             int_value = int(value)
-        except (ValueError, TypeError) as e:
-            return Result.error(f"InputInt: invalid integer value '{value}' at path '{data_path}'")
+        except (ValueError, TypeError):
+            return Result.error(f"InputInt: invalid integer value '{value}'")
 
         imgui_id = f"###{self.uid}"
 
         changed, new_val = imgui.input_int(imgui_id, int_value)
         if changed:
-            set_res = self._data_bag.set("label", new_val)
-            if not set_res:
-                return Result.error(f"InputInt: failed to set value", set_res)
+            res = self._data_bag.set("label", new_val)
+            if not res:
+                return Result.error("InputInt: failed to set value", res)
 
         return Ok(None)
 
@@ -74,29 +64,23 @@ class InputFloat(Widget):
     """Float input widget"""
 
     def _pre_render_head(self) -> Result[None]:
-        data_path = self._data_bag._main_data_path
-        if not data_path:
-            return Result.error("InputFloat requires path (id)")
+        res = self._data_bag.get("label")
+        if not res:
+            return Result.error("InputFloat: failed to get value", res)
+        value = res.unwrapped
 
-        # Get value using field_values
-        value_res = self._data_bag.get("label")
-        if not value_res:
-            return Result.error(f"InputFloat: failed to get value", value_res)
-        value = value_res.unwrapped
-
-        # Validate float value
         try:
             float_value = float(value)
-        except (ValueError, TypeError) as e:
-            return Result.error(f"InputFloat: invalid float value '{value}' at path '{data_path}'")
+        except (ValueError, TypeError):
+            return Result.error(f"InputFloat: invalid float value '{value}'")
 
         imgui_id = f"###{self.uid}"
 
         changed, new_val = imgui.input_float(imgui_id, float_value)
         if changed:
-            set_res = self._data_bag.set("label", new_val)
-            if not set_res:
-                return Result.error(f"InputFloat: failed to set value", set_res)
+            res = self._data_bag.set("label", new_val)
+            if not res:
+                return Result.error("InputFloat: failed to set value", res)
 
         return Ok(None)
 
@@ -106,14 +90,10 @@ class SliderInt(Widget):
     """Integer slider widget"""
 
     def _pre_render_head(self) -> Result[None]:
-        if not self._data_bag._main_data_path:
-            return Result.error("SliderInt requires path (id)")
-
-        # Get value using field_values
-        value_res = self._data_bag.get("label")
-        if not value_res:
-            return Result.error(f"SliderInt: failed to get value", value_res)
-        current_value = value_res.unwrapped
+        res = self._data_bag.get("label")
+        if not res:
+            return Result.error("SliderInt: failed to get value", res)
+        current_value = res.unwrapped
 
         minv = 0
         res = self._handle_error(self._data_bag.get("min", minv))
@@ -178,14 +158,10 @@ class SliderFloat(Widget):
     """Float slider widget"""
 
     def _pre_render_head(self) -> Result[None]:
-        if not self._data_bag._main_data_path:
-            return Result.error("SliderFloat requires path (id)")
-
-        # Get value using field_values
-        value_res = self._data_bag.get("label")
-        if not value_res:
-            return Result.error(f"SliderFloat: failed to get value", value_res)
-        current_value = float(value_res.unwrapped)
+        res = self._data_bag.get("label")
+        if not res:
+            return Result.error("SliderFloat: failed to get value", res)
+        current_value = float(res.unwrapped)
 
         minv = 0.0
         res = self._handle_error(self._data_bag.get("min", minv))

@@ -82,7 +82,7 @@ class Toggle(Widget):
         imgui.text(label)
 
         # Update value if changed
-        if changed and self._data_bag._main_data_path:
+        if changed:
             set_res = self._data_bag.set("value", new_value)
             if not set_res:
                 return Result.error(f"Toggle: failed to set value", set_res)

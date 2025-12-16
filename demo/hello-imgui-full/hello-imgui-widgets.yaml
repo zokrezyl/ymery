@@ -18,8 +18,7 @@ widgets:
       - text: "Selection: "
       - same-line
       - text:
-          data-map:
-            label: node-selection
+          label: "@node-selection"
           style:
             text: [0.2, 1.0, 0.2, 1.0]
       - separator

@@ -153,7 +153,7 @@ class Composite(Widget):
 
                         # Create widget at current path (not child path!)
                         tree_like = self._data_bag._main_data_tree
-                        res = self._factory.create_widget(full_widget_name, tree_like, data_path, widget_params)
+                        res = self._factory.create_widget(full_widget_name, tree_like, data_path, widget_params, self._data_bag._data_trees)
                         if not res:
                             return Result.error(f"Composite: foreach-key failed to create widget '{widget_name}'", res)
 
@@ -219,7 +219,7 @@ class Composite(Widget):
                             full_widget_name = widget_name
 
                         # Create widget at child_path
-                        res = self._factory.create_widget(full_widget_name, tree_like, child_path, widget_params)
+                        res = self._factory.create_widget(full_widget_name, tree_like, child_path, widget_params, self._data_bag._data_trees)
                         if not res:
                             return Result.error(f"Composite: foreach failed to create widget '{widget_name}' at '{child_path}'", res)
 
@@ -240,17 +240,25 @@ class Composite(Widget):
                 child_path = data_path
             # Handle dict format: {"text": "label"} or {"data-id": "foo", "text": "label"}
             elif isinstance(item, dict):
-                # Extract data-id if present
+                # Extract data-tree if present (switches which tree is used as main)
+                child_data_tree = item.get("data-tree")
+                if child_data_tree:
+                    tree_like = self._data_bag._data_trees.get(child_data_tree)
+                    if not tree_like:
+                        return Result.error(f"Composite: unknown data-tree '{child_data_tree}'")
+                    data_path = DataPath("/")  # Start at root of the new tree
+
+                # Extract data-id if present (navigates within the tree)
                 child_data_id = item.get("data-id")
                 if child_data_id is None:
                     child_path = data_path
                 else:
                     child_path = data_path / child_data_id
 
-                # Extract widget name and params (excluding data-id)
-                widget_keys = [k for k in item.keys() if k != "data-id"]
+                # Extract widget name and params (excluding data-id and data-tree)
+                widget_keys = [k for k in item.keys() if k not in ("data-id", "data-tree")]
                 if len(widget_keys) != 1:
-                    return Result.error(f"Composite template item must have one widget key (plus optional data-id), got {len(widget_keys)}: {widget_keys}")
+                    return Result.error(f"Composite template item must have one widget key (plus optional data-id/data-tree), got {len(widget_keys)}: {widget_keys}")
 
                 widget_name = widget_keys[0]
                 params = item[widget_name]
@@ -265,7 +273,7 @@ class Composite(Widget):
                 full_widget_name = widget_name
 
             # Create single child widget via factory
-            res = self._factory.create_widget(full_widget_name, tree_like, child_path, params)
+            res = self._factory.create_widget(full_widget_name, tree_like, child_path, params, self._data_bag._data_trees)
             if not res:
                 return Result.error(f"Composite: failed to create child widget '{widget_name}'", res)
 

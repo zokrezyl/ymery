@@ -14,9 +14,6 @@ class Imguizmo(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Render ImGuizmo"""
-        if not self._data_bag._main_data_path:
-            return Result.error("Imguizmo requires path (id)")
-
         # Get operation from params
         op_str = "translate"
         res = self._handle_error(self._data_bag.get("operation", op_str))

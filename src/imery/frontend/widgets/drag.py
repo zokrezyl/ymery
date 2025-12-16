@@ -13,11 +13,6 @@ class DragInt(Widget):
     """Drag integer widget"""
 
     def _pre_render_head(self) -> Result[None]:
-        data_path = self._data_bag._main_data_path
-        if not data_path:
-            return Result.error("DragInt requires path (id)")
-
-        # Get value using field_values
         value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"DragInt: failed to get value", value_res)
@@ -27,7 +22,7 @@ class DragInt(Widget):
         try:
             int_value = int(value)
         except (ValueError, TypeError) as e:
-            return Result.error(f"DragInt: invalid integer value '{value}' at path '{data_path}'")
+            return Result.error(f"DragInt: invalid integer value '{value}'")
 
         minv = 0
         res = self._handle_error(self._data_bag.get("min", minv))
@@ -60,11 +55,6 @@ class DragFloat(Widget):
     """Drag float widget"""
 
     def _pre_render_head(self) -> Result[None]:
-        data_path = self._data_bag._main_data_path
-        if not data_path:
-            return Result.error("DragFloat requires path (id)")
-
-        # Get value using field_values
         value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"DragFloat: failed to get value", value_res)
@@ -74,7 +64,7 @@ class DragFloat(Widget):
         try:
             float_value = float(value)
         except (ValueError, TypeError) as e:
-            return Result.error(f"DragFloat: invalid float value '{value}' at path '{data_path}'")
+            return Result.error(f"DragFloat: invalid float value '{value}'")
 
         minv = 0.0
         res = self._handle_error(self._data_bag.get("min", minv))

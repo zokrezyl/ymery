@@ -103,8 +103,9 @@ def main(layouts_path, layouts_url, providers_path, widgets_path, main):
         return 1
     kernel = kernel_res.unwrapped
 
-    # Create WidgetFactory
-    res = WidgetFactory.create(dispatcher, widget_definitions=lang.widget_definitions, widgets_path=widgets_path)
+    # Create WidgetFactory with kernel as a named tree
+    data_trees = {"kernel": kernel}
+    res = WidgetFactory.create(dispatcher, widget_definitions=lang.widget_definitions, data_trees=data_trees, widgets_path=widgets_path)
     if not res:
         handle_error(res)
         click.echo(f"Error creating WidgetFactory: {factory_res}", err=True)

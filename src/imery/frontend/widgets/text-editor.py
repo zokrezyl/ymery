@@ -26,10 +26,6 @@ class TextEditor(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Render text editor"""
-        if not self._data_bag._main_data_path:
-            return Result.error("TextEditor requires path (id)")
-
-        # Get text from data
         text_res = self._data_bag.get("label")
         if not text_res:
             return Result.error(f"TextEditor: failed to get text", text_res)

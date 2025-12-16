@@ -474,8 +474,15 @@ class Kernel(DeviceManager, ActionHandler):
         return Result.error(f"Kernel: metadata is not a dict at {node_path}")
 
     def set(self, path: DataPath, value) -> Result[None]:
-        """Set not implemented"""
-        return Result.error("Kernel: set: not implemented")
+        """Set metadata value at path - supports root level metadata like /selection"""
+        # For root-level metadata (e.g., /selection)
+        if len(path) == 1:
+            key = path.filename()
+            self._tree["metadata"][key] = value
+            return Ok(None)
+
+        # For now, only root-level metadata is supported
+        return Result.error(f"Kernel: set: only root-level metadata supported, got path '{path}'")
 
     def add_child(self, path: DataPath, value) -> Result[None]:
         """Set not implemented"""

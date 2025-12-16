@@ -114,7 +114,7 @@ class WidgetFactory(Object):
 
         return Ok(None)
 
-    def create_widget(self, widget_name: str, tree_like: TreeLike, data_path: DataPath, params=None) -> Result["Widget"]:
+    def create_widget(self, widget_name: str, tree_like: TreeLike, data_path: DataPath, params=None, parent_data_trees=None) -> Result["Widget"]:
         """
         Create widget from widget_name
 
@@ -123,6 +123,7 @@ class WidgetFactory(Object):
             tree_like: TreeLike instance (can be None) - used as main data tree
             data_path: DataPath to data
             params: Parameters for the widget (can be None) - used as static
+            parent_data_trees: Optional data_trees from parent widget (for inheriting local, etc.)
 
         Returns:
             Result[Widget]: Created widget instance
@@ -152,6 +153,11 @@ class WidgetFactory(Object):
         # Create data_trees dict with tree_like as main entry
         # Use "main" as default key if tree_like is provided
         data_trees = dict(self._data_trees)  # Copy factory's data_trees
+        # Inherit from parent's data_trees (for local, etc.)
+        if parent_data_trees:
+            for key, value in parent_data_trees.items():
+                if key not in data_trees:
+                    data_trees[key] = value
         if tree_like:
             data_trees["main"] = tree_like
         main_data_key = "main" if tree_like else None

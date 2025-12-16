@@ -13,10 +13,6 @@ class Listbox(Widget):
     """Listbox widget"""
 
     def _pre_render_head(self) -> Result[None]:
-        if not self._data_bag._main_data_path:
-            return Result.error("Listbox requires path (id)")
-
-        # Get value using field_values
         value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"Listbox: failed to get value", value_res)

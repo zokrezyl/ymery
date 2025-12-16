@@ -229,16 +229,64 @@ Links a widget to a data path:
   text:                           # Reads label from current-path/user-name/label
 ```
 
-### data-map
+### Data References with `@`
 
-Maps widget fields to custom data paths:
+Reference values from data trees using `@` syntax:
 
 ```yaml
-text:
-  data-map:
-    label: /absolute/path/to/value    # Absolute path
-    label: relative/path              # Relative to current data path
+# Relative path (from current data context)
+label: "@selection"
+label: "@child/label"
+
+# Absolute path (from tree root)
+label: "@/root/selection"
+
+# Parent-relative path
+label: "@../sibling/label"
+
+# Named tree reference with $tree@path
+label: "$kernel@/audio/sample-rate"
+selection: "$local@current-selection"
 ```
+
+**Reference Syntax:**
+
+| Pattern | Meaning |
+|---------|---------|
+| `"@path"` | Relative path in main data tree |
+| `"@/abs/path"` | Absolute path in main tree |
+| `"@../path"` | Parent-relative path |
+| `"$tree@path"` | Path in named tree (e.g., `$kernel`, `$local`) |
+
+**Note:** Values containing `@` must be quoted in YAML.
+
+### Local Data Tree
+
+Define widget-local data using `local`. This creates a DataTree scoped to the widget:
+
+```yaml
+my-popup:
+  type: popup
+  local:
+    metadata:
+      label: "New Item"
+      count: 0
+    children:
+      options:
+        metadata:
+          selected: false
+  body:
+    - input-text:
+        label: "$local@label"
+    - text: "$local@count"
+```
+
+**Local tree features:**
+- Follows standard DataTree structure (`metadata`/`children`)
+- Accessed via `$local@path`
+- Inherited by child widgets
+- Read-write (widgets can modify local state)
+- Context is root, so `$local@label` equals `$local@/label`
 
 ## Iteration
 
@@ -471,7 +519,8 @@ child:
 ## Tips
 
 1. **Use namespaces** - Organize widgets into modules for maintainability
-2. **Prefer data binding** - Use `data-id` and `data-map` over hardcoded values
-3. **Leverage foreach** - Use `foreach-child` for dynamic lists
-4. **Style sparingly** - Apply styles at the container level when possible
-5. **Test incrementally** - Build UI piece by piece, testing each addition
+2. **Prefer data binding** - Use `data-id` and `@` references over hardcoded values
+3. **Use local state** - Use `local` for popup/form temporary state
+4. **Leverage foreach** - Use `foreach-child` for dynamic lists
+5. **Style sparingly** - Apply styles at the container level when possible
+6. **Test incrementally** - Build UI piece by piece, testing each addition

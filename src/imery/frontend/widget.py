@@ -16,7 +16,7 @@ from typing import Optional, Dict, Any, Union
 
 
 
-EVENT_COMMAND_NAMES = {"show", "add-data-child", "dispatch-event", "default"}
+EVENT_COMMAND_NAMES = {"show", "add-data-child", "add-child", "dispatch-event", "default", "close-popup", "set-value"}
 
 def _render_error_simple(error) -> Result[None]:
     """Display errors using bullet points recursively - fallback method"""
@@ -344,12 +344,164 @@ widgets:
         return Ok(None)
 
     def _execute_event_command_default(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
+        """Default action: for click events, set selection to current data path"""
+        if event_name == "on-click":
+            # Set selection to current data path
+            # If static has "selection" reference, it writes there
+            res = self._data_bag.get_data_path_str()
+            if not res:
+                return Result.error("default action: failed to get data path", res)
+            res = self._data_bag.set("selection", res.unwrapped)
+            if not res:
+                return Result.error("default action: failed to set selection", res)
         return Ok(None)
 
 
     def _execute_event_command_dispatch_event(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
         print("Widget: _execute_event_command_dispatch_event")
         return Result.error("Widget: _execute_event_command_dispatch_event: not implemented")
+
+    def _resolve_action_references(self, value: Any) -> Result[Any]:
+        """
+        Recursively resolve @ references in action parameters.
+        Handles strings, dicts, and lists.
+        """
+        if isinstance(value, str):
+            if '@' in value:
+                return self._data_bag._resolve_reference(value)
+            return Ok(value)
+        elif isinstance(value, dict):
+            resolved = {}
+            for k, v in value.items():
+                res = self._resolve_action_references(v)
+                if not res:
+                    return Result.error(f"Failed to resolve reference in '{k}'", res)
+                resolved[k] = res.unwrapped
+            return Ok(resolved)
+        elif isinstance(value, list):
+            resolved = []
+            for item in value:
+                res = self._resolve_action_references(item)
+                if not res:
+                    return Result.error("Failed to resolve reference in list item", res)
+                resolved.append(res.unwrapped)
+            return Ok(resolved)
+        else:
+            return Ok(value)
+
+    def _execute_event_command_add_child(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
+        """
+        Handle add-child action - adds a new child node to the data tree.
+        Resolves @ references in name and metadata.
+        """
+        print("Widget: _execute_event_command_add_child")
+        if not isinstance(data, dict):
+            return Result.error(f"Widget: _execute_event_command_add_child: expected dict, got '{type(data)}'")
+
+        # Resolve references in action parameters
+        res = self._resolve_action_references(data)
+        if not res:
+            return Result.error("Widget: _execute_event_command_add_child: failed to resolve references", res)
+        resolved_data = res.unwrapped
+
+        # Get child name
+        child_name = resolved_data.get("name")
+        if not child_name:
+            return Result.error("Widget: _execute_event_command_add_child: missing 'name' parameter")
+
+        # Get metadata
+        child_metadata = resolved_data.get("metadata")
+        if child_metadata is None:
+            return Result.error("Widget: _execute_event_command_add_child: missing 'metadata' parameter")
+
+        # Target path is current data path
+        target_path = self._data_bag._main_data_path
+
+        # Call add_child
+        res = self._data_bag.add_child(target_path, child_name, {"metadata": child_metadata})
+        if not res:
+            return Result.error(f"Widget: _execute_event_command_add_child: failed to add child '{child_name}' at '{target_path}'", res)
+
+        # Close popup after successful add
+        imgui.close_current_popup()
+        return Ok(None)
+
+    def _execute_event_command_close_popup(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
+        """Close the current popup"""
+        print("Widget: _execute_event_command_close_popup")
+        imgui.close_current_popup()
+        return Ok(None)
+
+    def _execute_event_command_set_value(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
+        """
+        Set a value in the data tree.
+        data should have 'target' (path reference) and 'value' (value or reference).
+        """
+        print("Widget: _execute_event_command_set_value")
+        if not isinstance(data, dict):
+            return Result.error(f"Widget: _execute_event_command_set_value: expected dict, got '{type(data)}'")
+
+        target = data.get("target")
+        value = data.get("value")
+
+        if target is None:
+            return Result.error("Widget: _execute_event_command_set_value: missing 'target' parameter")
+
+        # Resolve the value reference if it's a reference
+        if isinstance(value, str) and '@' in value:
+            res = self._data_bag._resolve_reference(value)
+            if not res:
+                return Result.error(f"Widget: _execute_event_command_set_value: failed to resolve value reference '{value}'", res)
+            resolved_value = res.unwrapped
+        else:
+            resolved_value = value
+
+        # Target should be a reference like $local@channel
+        # Parse the target to find the tree and path
+        if isinstance(target, str) and '@' in target:
+            from imery.data_bag import REF_PATTERN
+            match = REF_PATTERN.match(target)
+            if match:
+                tree_name = match.group(1)  # $tree or None
+                path_str = match.group(2)   # path after @
+
+                # Determine tree
+                if tree_name:
+                    tree_key = tree_name[1:]  # Remove $ prefix
+                    tree = self._data_bag._data_trees.get(tree_key) if self._data_bag._data_trees else None
+                    if not tree:
+                        return Result.error(f"Widget: _execute_event_command_set_value: unknown tree '{tree_key}'")
+                    # Named trees (like $local) always use root-relative paths
+                    if not path_str.startswith('/'):
+                        path_str = '/' + path_str
+                else:
+                    tree = self._data_bag._main_data_tree
+
+                # Resolve path
+                if path_str.startswith('/'):
+                    full_path = DataPath(path_str)
+                elif path_str.startswith('..'):
+                    parts = path_str.split('/')
+                    current = self._data_bag._main_data_path
+                    for part in parts:
+                        if part == '..':
+                            current = current.parent
+                        elif part:
+                            current = current / part
+                    full_path = current
+                else:
+                    full_path = self._data_bag._main_data_path / path_str
+
+                # Set the value
+                res = tree.set(full_path, resolved_value)
+                if not res:
+                    return Result.error(f"Widget: _execute_event_command_set_value: failed to set value at '{full_path}'", res)
+
+                # Close popup after successful set
+                imgui.close_current_popup()
+                return Ok(None)
+
+        return Result.error(f"Widget: _execute_event_command_set_value: target '{target}' is not a valid reference")
 
 
     def _execute_event_commands(self, event_name: str) -> Result[None]:
@@ -488,6 +640,7 @@ widgets:
         """
         tree_like = self._data_bag._main_data_tree
         data_path = self._data_bag._main_data_path
+        parent_data_trees = self._data_bag._data_trees
 
         # String → widget reference
         if isinstance(widget_spec, str):
@@ -496,14 +649,14 @@ widgets:
                 full_widget_name = f"{self._namespace}.{widget_name}"
             else:
                 full_widget_name = widget_spec
-            return self._factory.create_widget(full_widget_name, tree_like, data_path)
+            return self._factory.create_widget(full_widget_name, tree_like, data_path, None, parent_data_trees)
 
         # Dict or list → composite - use factory to avoid circular import
         if isinstance(widget_spec, (dict, list)):
             params = {"type": "composite", "body": [widget_spec] if isinstance(widget_spec, dict) else widget_spec}
             # Use full widget name with namespace to preserve context
             full_widget_name = f"{self._namespace}.composite" if self._namespace else "composite"
-            res = self._factory.create_widget(full_widget_name, tree_like, data_path, params)
+            res = self._factory.create_widget(full_widget_name, tree_like, data_path, params, parent_data_trees)
             if not res:
                 return Result.error("Widget: _create_widget_from_spec: could not create widget", res)
             return Ok(res.unwrapped)

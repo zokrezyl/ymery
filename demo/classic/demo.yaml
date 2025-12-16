@@ -436,8 +436,7 @@ widgets:
               on-click: default
               on-hover:
                 show: metadata-tooltip
-              data-map:
-                selection: "/selection"
+              selection: "@/selection"
               style-mapping:
                 openable:
                   text: [0.2, 0.8, 0.2, 1.0]
@@ -452,8 +451,7 @@ widgets:
       - text: "Selection: "
       - same-line
       - text:
-          data-map:
-            label: selection
+          label: "@selection"
           style:
             text: [0.2, 1.0, 0.2, 1.0]
       - separator

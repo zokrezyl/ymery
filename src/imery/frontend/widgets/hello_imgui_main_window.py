@@ -113,7 +113,7 @@ class HelloImguiMainWindow(Composite):
 
     def _read_runner_params_metadata(self) -> dict:
         """Read runner-params metadata and convert to Python dict"""
-        res = self._field_values.get("runner-params", {})
+        res = self._data_bag.get("runner-params", {})
         if not res:
             return {}
 
@@ -182,7 +182,7 @@ class HelloImguiMainWindow(Composite):
                 setattr(runner_params.imgui_window_params, key, val)
 
         # Fallback to old fields if not in runner-params
-        res = self._field_values.get("label", self.uid)
+        res = self._data_bag.get("label", self.uid)
         if not res:
             self._handle_error(Result.error("HelloImguiMainWindow: failed to get label", res))
             label = "error: LABEL NOT AVAILABLE"
@@ -191,7 +191,7 @@ class HelloImguiMainWindow(Composite):
         if 'app_window_params' not in params_dict:
             runner_params.app_window_params.window_title = label
 
-        res = self._field_values.get("window-size", [1200, 800])
+        res = self._data_bag.get("window-size", [1200, 800])
         if not res:
             self._handle_error(Result.error("HelloImguiMainWindow: failed to get window-size", res))
             size_list = [1200, 800]
@@ -241,7 +241,7 @@ class HelloImguiMainWindow(Composite):
         if app_menu_items_widget:
             runner_params.callbacks.show_app_menu_items = lambda: app_menu_items_widget.render()
 
-        res = self._field_values.get("fps-idle", 0)
+        res = self._data_bag.get("fps-idle", 0)
         if not res:
             self._handle_error(Result.error("HelloImguiMainWindow: failed to get 'fps-idle'"))
             idle = 0

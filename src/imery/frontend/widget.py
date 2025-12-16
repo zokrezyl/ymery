@@ -1,196 +1,19 @@
 """
 Widget - Base class and primitive widgets for imgui
-Each widget gets TreeLike and path for data access
+Each widget gets DataBag for data access
 """
 
 from imgui_bundle import imgui
 from imery.frontend.types import Visual
 from imery.backend.types import TreeLike
 from imery.types import DataPath, Object, EventHandler
+from imery.data_bag import DataBag
 from imery.dispatcher import Dispatcher
 from imery.result import Result, Ok
 
 from typing import Optional, Dict, Any, Union
 
 
-class FieldValues(Object):
-    """
-    Helper class that implements the logic of handling (read/write) of field values of a widget
-    The value can be static in the definition of the widget or obtained from the tree like data
-    """
-    def __init__(self, tree_like: TreeLike, data_path: DataPath, params: Optional[Dict]):
-        self._tree_like = tree_like
-        self._data_path = data_path
-        self._params = params
-        self._data_map = None
-
-    def as_tree(self, data_path: DataPath, depth: int = 0):
-        return {
-            "data-path": str(self._data_path),
-            "params": self._params,
-            "tree-like": self._tree_like.as_tree,
-            "data-map": self._data_map
-        }
-
-
-    def init(self) -> Result[None]:
-        if not isinstance(self._params, dict):
-            self._data_map = {}
-            return Ok(None)
-        self._data_map = self._params.get("data-map")
-        if self._data_map:
-            if not isinstance(self._data_map, dict):
-                return Result.error("FieldValues.init: data-map should be dictionary")
-        else:
-            self._data_map = {}
-        return Ok(None)
-
-    def dispose(self) -> Result[None]:
-        return Ok(None)
-
-    def _resolve_metadata_path(self, key: str) -> Result[DataPath]:
-        """
-        Resolve metadata path for a field key using data-map if present.
-
-        Args:
-            key: Field name (e.g., "label")
-
-        Returns:
-            Result[DataPath]: Resolved path for metadata access
-        """
-        # Check if data-map exists and has mapping for this key
-        if key in self._data_map:
-            mapping = self._data_map[key]
-            if not isinstance(mapping, str):
-                return Result.error(f"FieldValues: _resolve_metadata_path: mapping value should be string, got {type(mapping)}")
-
-            if mapping.startswith("/"):
-                return Ok(DataPath(mapping))
-            else: 
-                return Ok(self._data_path / mapping)
-        # No mapping - use key as metadata key at current data_path
-        return Ok(self._data_path / key)
-
-    def get(self, key: str, default_value: Any = None) -> Result[Any]:
-        """
-        Get field value - checks static params first, then dynamic from tree_like metadata.
-
-        Args:
-            key: Field name (e.g., "label")
-
-        Returns:
-            Result with field value, or Error if not found
-        """
-        # Handle string params: treat as "label" value
-        if self._params and isinstance(self._params, str):
-            if key == "label":
-                return Ok(self._params)
-            # For other keys, fall through to tree_like lookup
-
-        # Check if key exists directly in params dict (static value)
-        if self._params and isinstance(self._params, dict) and key in self._params:
-            return Ok(self._params[key])
-
-        # No static value - try to get from tree_like metadata
-        if not self._tree_like:
-            if default_value is None:
-                return Result.error(f"FieldValues.get: no tree_like available and key '{key}' not in params")
-            else:
-                return Ok(default_value)
-
-        res = self._resolve_metadata_path(key)
-        if not res:
-            return Result.error(f"FieldValues: get: Could not resolve metadata path for '{key}'", res)
-        full_path = res.unwrapped
-
-        # Get metadata value (path includes key as last component)
-        res = self._tree_like.get(full_path)
-        if not res:
-            if default_value is None:
-                return Result.error(f"FieldValues.get: failed to get '{key}' from tree_like at path '{full_path}'", res)
-            else:
-                return Ok(default_value)
-
-        return Ok(res.unwrapped)
-
-    def get_metadata(self) -> Result[Any]:
-        """
-        return the metadata view at current path
-        """
-        if self._tree_like is None:
-            return self._params.copy() if not self._params is None else Ok(None)
-
-        res = self._tree_like.get_metadata(self._data_path)
-        if not res:
-            return Result.error(f"FieldValues: get_metadata: no data found at {self._data_path}", res)
-        metadata = res.unwrapped.copy()
-        metadata.update(self._params)
-        return Ok(metadata)
-
-
-
-    def set(self, key: str, value: Any) -> Result[None]:
-        """
-        Set field value - writes to tree_like metadata.
-
-        Args:
-            key: Field name (e.g., "label")
-            value: Value to set
-
-        Returns:
-            Result[None]
-        """
-        if not self._tree_like:
-            return Result.error(f"FieldValues.set: no tree_like available")
-
-        # Check if there's a data-map for this key
-        if self._data_map and isinstance(self._data_map, dict) and key in self._data_map:
-            # Use mapped value
-            mapped = self._data_map[key]
-
-            # Check if mapped value is an absolute path
-            if isinstance(mapped, str) and mapped.startswith("/"):
-                # Absolute path - use it directly
-                full_path = DataPath(mapped)
-            else:
-                # Relative path or metadata key - build path
-                node_path = self._data_path
-                full_path = node_path / mapped
-        else:
-            # No mapping - resolve path normally
-            path_res = self._resolve_metadata_path(key)
-            if not path_res:
-                return Result.error(f"FieldValues.set: failed to resolve path for key '{key}'", path_res)
-            full_path = path_res.unwrapped
-
-
-        # Set metadata value (path includes key as last component)
-        res = self._tree_like.set(full_path, value)
-        if not res:
-            return Result.error(f"FieldValues.set: failed to set '{key}' at path '{full_path}'", res)
-
-        return Ok(None)
-
-    def add_child(self, path: DataPath, name: str, data: Any) -> Result[None]:
-        """
-        Add a child to the tree at the given path.
-
-        Args:
-            path: DataPath to the parent node
-            name: Name of the new child
-            data: Data for the new child
-
-        Returns:
-            Result[None]
-        """
-        if not self._tree_like:
-            return Result.error(f"FieldValues.add_child: no tree_like available")
-
-        res = self._tree_like.add_child(path, name, data)
-        if not res:
-            return Result.error(f"FieldValues.add_child: failed to add child '{name}' at path '{path}'", res)
-
-        return Ok(None)
 
 
 EVENT_COMMAND_NAMES = {"show", "add-data-child", "dispatch-event", "default"}
@@ -230,52 +53,43 @@ def _render_error_simple(error) -> Result[None]:
 class Widget(Visual, EventHandler):
     """Base class for all widgets"""
 
-    def __init__(self, factory: "WidgetFactory", dispatcher: Dispatcher, namespace: str, tree_like: TreeLike, data_path: DataPath, params: Optional[Dict] = None):
+    def __init__(self, factory: "WidgetFactory", dispatcher: Dispatcher, namespace: str, data_bag: DataBag):
         """
         Args:
             factory: WidgetFactory for creating nested widgets
+            dispatcher: Event dispatcher
             namespace: Current namespace (e.g., "demo_widgets")
-            tree_like: TreeLike instance for data access (can be None)
-            path: DataPath to data in the tree
-            params: Widget parameters (dict or other type depending on widget)
+            data_bag: DataBag instance for data access
         """
         super().__init__()
         self._factory = factory
         self._dispatcher = dispatcher
         self._namespace = namespace
-        self._tree_like = tree_like
-        self._data_path = data_path
-        self._params = params
+        self._data_bag = data_bag
         self._style_color_count = 0
         self._style_var_count = 0
         self._metadata = None
         self._event_handlers = {}  # event_name -> list of command specs (lazy evaluated)
         self._body = None  # Body widget created from activated event
-        self._is_body_activated = False # 
+        self._is_body_activated = False
         self._should_create_body = False
         self._is_open = True
         self._last_error = None
-
-        self._data_path = data_path
-
-        self._field_values = None
         self._render_cycle = -1
         self._clicked = False
-
 
         # we collect errors from different step! there should be only one main error collected
         self._error_widget = None
         self._errors = []
-        
+
         self._styles_pushed = False
 
 
     def init(self) -> Result[None]:
         """Initialize widget - override in subclasses if needed"""
-        res = FieldValues.create(self._tree_like, self._data_path, self._params)
+        res = self._data_bag.init()
         if not res:
-            return Result.error("Widget: failed to create FieldValues", res)
-        self._field_values = res.unwrapped
+            return Result.error("Widget: failed to init DataBag", res)
         res = self._init_events()
         if not res:
             return Result.error("Widget: failed to initialize events", res)
@@ -299,12 +113,28 @@ class Widget(Visual, EventHandler):
                 Result.error("Widget: body: could not create body")
 
     @property
-    def field_values(self) -> FieldValues:
-        return self._field_values
+    def field_values(self) -> DataBag:
+        """Return data_bag for backward compatibility with code using field_values"""
+        return self._data_bag
+
+    @property
+    def _static(self):
+        """Return static values from data_bag"""
+        return self._data_bag._static if self._data_bag else None
+
+    @property
+    def _data_path(self):
+        """Return main data path from data_bag"""
+        return self._data_bag._main_data_path if self._data_bag else None
+
+    @property
+    def _tree_like(self):
+        """Return main data tree from data_bag for backward compatibility"""
+        return self._data_bag._main_data_tree if self._data_bag else None
 
     def _init_events(self) -> Result[None]:
-        """Parse and store event specifications from params"""
-        if not isinstance(self._params, dict):
+        """Parse and store event specifications from static"""
+        if not isinstance(self._static, dict):
             return Ok(None)
 
         # List of supported event names
@@ -312,7 +142,7 @@ class Widget(Visual, EventHandler):
 
         # Check each event in params
         for event_name in event_names:
-            event_spec = self._params.get(event_name)
+            event_spec = self._static.get(event_name)
             if event_spec is not None:
                 res = self._normalize_event_spec(event_name, event_spec)
                 if not res:
@@ -516,7 +346,7 @@ widgets:
             target_path = self._data_path
 
         # Call add_child through field_values
-        res = self._field_values.add_child(target_path, child_name, child_data)
+        res = self._data_bag.add_child(target_path, child_name, child_data)
         if not res:
             return Result.error(f"Widget: _execute_event_command_add_data_child: failed to add child '{child_name}' at '{target_path}'", res)
         return Ok(None)
@@ -608,7 +438,7 @@ widgets:
             if action == "default":
                 # Default action: for "click" events, set "selected" field
                 if event_name == "on-click":
-                    set_res = self._field_values.set("selection", str(self._data_path))
+                    set_res = self._data_bag.set("selection", str(self._data_path))
                     if not set_res:
                         return Result.error(f"default action failed to set selected", set_res)
                 # For other events, default does nothing
@@ -651,7 +481,7 @@ widgets:
                     target_path = self._data_path
 
                 # Call add_child through field_values
-                res = self._field_values.add_child(target_path, child_name, child_data)
+                res = self._data_bag.add_child(target_path, child_name, child_data)
                 if not res:
                     return Result.error(f"add-data-child: failed to add child '{child_name}' at '{target_path}'", res)
 
@@ -704,8 +534,8 @@ widgets:
         # Get metadata first if we have a data tree
         if self._tree_like:
             # Determine metadata path: path / data-id if data-id present, otherwise path
-            if isinstance(self._params, dict) and "data-id" in self._params:
-                metadata_path = self._data_path / self._params["data-id"]
+            if isinstance(self._static, dict) and "data-id" in self._static:
+                metadata_path = self._data_path / self._static["data-id"]
             else:
                 metadata_path = self._data_path
 
@@ -765,18 +595,18 @@ widgets:
 
     def _push_styles(self) -> Result[None]:
         """Push styles before rendering"""
-        if not isinstance(self._params, dict):
+        if not isinstance(self._static, dict):
             return Ok(None)
 
         # Apply default style first
-        style = self._params.get("style")
+        style = self._static.get("style")
         if style and isinstance(style, dict):
             res = self._apply_style_dict(style)
             if not res:
                 return Result.error("_push_styles: failed to apply default style", res)
 
         # Apply style-mapping based on metadata conditions
-        style_mapping = self._params.get("style-mapping")
+        style_mapping = self._static.get("style-mapping")
         if style_mapping and self._metadata:
             # style-mapping can be:
             # 1. Dict (old format): {field_name: style_dict, ...} - backward compatible
@@ -851,8 +681,8 @@ widgets:
 
     def _ensure_body(self) -> Result[None]:
         # print("Widget: _ensure_body")
-        if isinstance(self._params, dict) and "body" in self._params and self._body is None:
-            activated_spec = self._params["body"]
+        if isinstance(self._static, dict) and "body" in self._static and self._body is None:
+            activated_spec = self._static["body"]
             res = self._create_widget_from_spec(activated_spec)
             if not res:
                 return Result.error("_prepare_render: failed to create activated widget", res)

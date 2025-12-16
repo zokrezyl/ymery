@@ -13,7 +13,7 @@ class Text(Widget):
     """Text display widget"""
 
     def _pre_render_head(self) -> Result[None]:
-        res = self._field_values.get("label")
+        res = self._data_bag.get("label")
         if not res:
             return Result.error("Text: failed to get label", res)
         imgui.text(res.unwrapped)
@@ -25,7 +25,7 @@ class BulletText(Widget):
     """Bullet text widget - text with bullet point"""
 
     def _pre_render_head(self) -> Result[None]:
-        res = self._field_values.get("label")
+        res = self._data_bag.get("label")
         if not res:
             return Result.error("BulletText: failed to get label", res)
         imgui.bullet_text(res.unwrapped)
@@ -37,7 +37,7 @@ class SeparatorText(Widget):
     """Separator with text label"""
 
     def _pre_render_head(self) -> Result[None]:
-        res = self._field_values.get("label")
+        res = self._data_bag.get("label")
         if not res:
             return Result.error("SeparatorText: failed to get label", res)
         imgui.separator_text(res.unwrapped)
@@ -82,15 +82,15 @@ class Combo(Widget):
             return Result.error("Combo requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"Combo: failed to get value", value_res)
         current_value = value_res.unwrapped
 
-        if not isinstance(self._params, dict):
-            return Result.error(f"Combo params must be dict, got {type(self._params)}")
+        if not isinstance(self._static, dict):
+            return Result.error(f"Combo params must be dict, got {type(self._static)}")
 
-        items = self._params.get("items", [])
+        items = self._static.get("items", [])
 
         try:
             idx = items.index(str(current_value))
@@ -100,7 +100,7 @@ class Combo(Widget):
         imgui_id = f"###{self.uid}"
         changed, idx = imgui.combo(imgui_id, idx, items)
         if changed and 0 <= idx < len(items):
-            set_res = self._field_values.set("label", items[idx])
+            set_res = self._data_bag.set("label", items[idx])
             if not set_res:
                 return Result.error(f"Combo: failed to set value", set_res)
 
@@ -117,7 +117,7 @@ class Checkbox(Widget):
             return Result.error("Checkbox requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"Checkbox: failed to get value", value_res)
         current_value = str(value_res.unwrapped).lower() in ("true", "1", "yes")
@@ -126,7 +126,7 @@ class Checkbox(Widget):
 
         changed, new_val = imgui.checkbox(imgui_id, current_value)
         if changed:
-            set_res = self._field_values.set("label", str(new_val))
+            set_res = self._data_bag.set("label", str(new_val))
             if not set_res:
                 return Result.error(f"Checkbox: failed to set value", set_res)
 
@@ -142,14 +142,14 @@ class RadioButton(Widget):
             return Result.error("RadioButton requires path (id)")
 
         # Get current value from data
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"RadioButton: failed to get value", value_res)
         current_value = value_res.unwrapped
 
         # Get this radio button's value from params
-        label_res = self._field_values.get("label", "")
-        button_value = self._params.get("value")
+        label_res = self._data_bag.get("label", "")
+        button_value = self._static.get("value")
         if button_value is None:
             return Result.error("RadioButton requires 'value' parameter")
 
@@ -159,7 +159,7 @@ class RadioButton(Widget):
         imgui_id = f"###{self.uid}"
         if imgui.radio_button(imgui_id, active):
             # Set the value to this button's value
-            set_res = self._field_values.set("label", button_value)
+            set_res = self._data_bag.set("label", button_value)
             if not set_res:
                 return Result.error(f"RadioButton: failed to set value", set_res)
 

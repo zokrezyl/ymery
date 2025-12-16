@@ -21,7 +21,7 @@ class InputText(Widget):
             return Result.error("InputText requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"InputText: failed to get value", value_res)
         value = value_res.unwrapped
@@ -30,7 +30,7 @@ class InputText(Widget):
 
         changed, new_val = imgui.input_text(imgui_id, str(value))
         if changed:
-            set_res = self._field_values.set("label", new_val)
+            set_res = self._data_bag.set("label", new_val)
             if not set_res:
                 return Result.error(f"InputText: failed to set value", set_res)
 
@@ -46,7 +46,7 @@ class InputInt(Widget):
             return Result.error("InputInt requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"InputInt: failed to get value", value_res)
         value = value_res.unwrapped
@@ -61,7 +61,7 @@ class InputInt(Widget):
 
         changed, new_val = imgui.input_int(imgui_id, int_value)
         if changed:
-            set_res = self._field_values.set("label", new_val)
+            set_res = self._data_bag.set("label", new_val)
             if not set_res:
                 return Result.error(f"InputInt: failed to set value", set_res)
 
@@ -77,7 +77,7 @@ class InputFloat(Widget):
             return Result.error("InputFloat requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"InputFloat: failed to get value", value_res)
         value = value_res.unwrapped
@@ -92,7 +92,7 @@ class InputFloat(Widget):
 
         changed, new_val = imgui.input_float(imgui_id, float_value)
         if changed:
-            set_res = self._field_values.set("label", new_val)
+            set_res = self._data_bag.set("label", new_val)
             if not set_res:
                 return Result.error(f"InputFloat: failed to set value", set_res)
 
@@ -108,22 +108,22 @@ class SliderInt(Widget):
             return Result.error("SliderInt requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"SliderInt: failed to get value", value_res)
         current_value = value_res.unwrapped
 
-        if not isinstance(self._params, dict):
-            return Result.error(f"SliderInt params must be dict, got {type(self._params)}")
+        if not isinstance(self._static, dict):
+            return Result.error(f"SliderInt params must be dict, got {type(self._static)}")
 
-        minv = self._params.get("min", 0)
-        maxv = self._params.get("max", 100)
-        scale = self._params.get("scale", "linear")
-        display_format = self._params.get("display-format", None)
+        minv = self._static.get("min", 0)
+        maxv = self._static.get("max", 100)
+        scale = self._static.get("scale", "linear")
+        display_format = self._static.get("display-format", None)
 
         if current_value is None or current_value == "":
             current_value = minv
-            set_res = self._field_values.set("label", minv)
+            set_res = self._data_bag.set("label", minv)
             if not set_res:
                 return Result.error(f"SliderInt: failed to set default", set_res)
 
@@ -145,14 +145,14 @@ class SliderInt(Widget):
 
             if changed:
                 new_val = int(2 ** log_value)
-                set_res = self._field_values.set("label", new_val)
+                set_res = self._data_bag.set("label", new_val)
                 if not set_res:
                     return Result.error(f"SliderInt: failed to set value", set_res)
         else:
             # Linear scale
             changed, new_val = imgui.slider_int(imgui_id, int(current_value), int(minv), int(maxv))
             if changed:
-                set_res = self._field_values.set("label", new_val)
+                set_res = self._data_bag.set("label", new_val)
                 if not set_res:
                     return Result.error(f"SliderInt: failed to set value", set_res)
 
@@ -168,22 +168,22 @@ class SliderFloat(Widget):
             return Result.error("SliderFloat requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"SliderFloat: failed to get value", value_res)
         current_value = float(value_res.unwrapped)
 
-        if not isinstance(self._params, dict):
-            return Result.error(f"SliderFloat params must be dict, got {type(self._params)}")
+        if not isinstance(self._static, dict):
+            return Result.error(f"SliderFloat params must be dict, got {type(self._static)}")
 
-        minv = float(self._params.get("min", 0.0))
-        maxv = float(self._params.get("max", 1.0))
+        minv = float(self._static.get("min", 0.0))
+        maxv = float(self._static.get("max", 1.0))
 
         imgui_id = f"###{self.uid}"
 
         changed, new_val = imgui.slider_float(imgui_id, current_value, minv, maxv)
         if changed:
-            set_res = self._field_values.set("label", new_val)
+            set_res = self._data_bag.set("label", new_val)
             if not set_res:
                 return Result.error(f"SliderFloat: failed to set value", set_res)
 

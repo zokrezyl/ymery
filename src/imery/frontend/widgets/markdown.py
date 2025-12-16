@@ -15,7 +15,7 @@ class Markdown(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Render markdown"""
         # Get markdown text from label field
-        text_res = self._field_values.get("label", "")
+        text_res = self._data_bag.get("label", "")
         if isinstance(text_res, Result):
             text = text_res.unwrapped if text_res else ""
         else:
@@ -37,7 +37,7 @@ class MarkdownUnindented(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Render unindented markdown"""
         # Get markdown text from label field
-        text_res = self._field_values.get("label", "")
+        text_res = self._data_bag.get("label", "")
         if isinstance(text_res, Result):
             text = text_res.unwrapped if text_res else ""
         else:

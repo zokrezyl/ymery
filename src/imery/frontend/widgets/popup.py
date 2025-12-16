@@ -46,7 +46,7 @@ class PopupModal(Widget):
         res = super().init()
         if not res:
             return Result.error("PopupModal: init: could not init base class", res)
-        res = self._field_values.get("label")
+        res = self._data_bag.get("label")
         if not res:
             return Result.error("PopupModal: init: failed to get label", res)
 
@@ -57,7 +57,7 @@ class PopupModal(Widget):
         """Render popup modal - returns True if open, False if closed"""
         # print(f"PopupModal: _pre_render_head: {self._is_body_activated}")
 
-        res = self._field_values.get("label")
+        res = self._data_bag.get("label")
         if not res:
             return Result.error("PopupModal: _pre_render_head: failed to get label", res)
 

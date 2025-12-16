@@ -30,7 +30,7 @@ class TextEditor(Widget):
             return Result.error("TextEditor requires path (id)")
 
         # Get text from data
-        text_res = self._field_values.get("label")
+        text_res = self._data_bag.get("label")
         if not text_res:
             return Result.error(f"TextEditor: failed to get text", text_res)
 
@@ -44,8 +44,8 @@ class TextEditor(Widget):
 
         # Get language from params
         language = "python"
-        if isinstance(self._params, dict):
-            language = self._params.get("language", "python")
+        if isinstance(self._static, dict):
+            language = self._static.get("language", "python")
 
             # Set language definition
             if language == "python":
@@ -67,7 +67,7 @@ class TextEditor(Widget):
         # Update data if text changed
         new_text = self._editor.get_text()
         if new_text != text:
-            set_res = self._field_values.set("label", new_text)
+            set_res = self._data_bag.set("label", new_text)
             if not set_res:
                 return Result.error(f"TextEditor: failed to set text", set_res)
 

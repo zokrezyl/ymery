@@ -15,7 +15,7 @@ class CoolBar(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Render cool bar"""
         # Get label
-        label_res = self._field_values.get("label", "CoolBar")
+        label_res = self._data_bag.get("label", "CoolBar")
         if isinstance(label_res, Result):
             label = label_res.unwrapped if label_res else "CoolBar"
         else:
@@ -26,10 +26,10 @@ class CoolBar(Widget):
         anchor_y = 0.07
         horizontal = True
 
-        if isinstance(self._params, dict):
-            anchor_x = self._params.get("anchor_x", 0.5)
-            anchor_y = self._params.get("anchor_y", 0.07)
-            horizontal = self._params.get("horizontal", True)
+        if isinstance(self._static, dict):
+            anchor_x = self._static.get("anchor_x", 0.5)
+            anchor_y = self._static.get("anchor_y", 0.07)
+            horizontal = self._static.get("horizontal", True)
 
         # Create config
         cool_bar_config = im_cool_bar.ImCoolBarConfig()
@@ -62,7 +62,7 @@ class CoolBarItem(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Render cool bar item"""
         # Get label
-        label_res = self._field_values.get("label", "Item")
+        label_res = self._data_bag.get("label", "Item")
         if isinstance(label_res, Result):
             label = label_res.unwrapped if label_res else "Item"
         else:
@@ -71,8 +71,8 @@ class CoolBarItem(Widget):
         # Get image path from params
         # Use an image that exists in imgui_bundle assets by default
         image_path = "images/world.png"
-        if isinstance(self._params, dict):
-            image_path = self._params.get("image", image_path)
+        if isinstance(self._static, dict):
+            image_path = self._static.get("image", image_path)
 
         # Begin cool bar item
         if im_cool_bar.cool_bar_item():

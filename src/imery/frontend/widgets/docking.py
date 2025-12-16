@@ -37,30 +37,30 @@ class DockableWindow(Widget):
         self._dockable_window = hello_imgui.DockableWindow()
 
         # Get label
-        res = self._field_values.get("label")
+        res = self._data_bag.get("label")
         if not res:
             return Result.error("DockableWindow: failed to get label", res)
         self._dockable_window.label = res.unwrapped
 
         # Get dock_space_name (optional)
-        res = self._field_values.get("dock-space-name", "MainDockSpace")
+        res = self._data_bag.get("dock-space-name", "MainDockSpace")
         if res:
             self._dockable_window.dock_space_name = res.unwrapped
 
         # Get optional parameters
-        res = self._field_values.get("include-in-view-menu", True)
+        res = self._data_bag.get("include-in-view-menu", True)
         if res:
             self._dockable_window.include_in_view_menu = res.unwrapped
 
-        res = self._field_values.get("remember-is-visible", True)
+        res = self._data_bag.get("remember-is-visible", True)
         if res:
             self._dockable_window.remember_is_visible = res.unwrapped
 
-        res = self._field_values.get("is-visible", True)
+        res = self._data_bag.get("is-visible", True)
         if res:
             self._dockable_window.is_visible = res.unwrapped
 
-        res = self._field_values.get("can-be-closed", True)
+        res = self._data_bag.get("can-be-closed", True)
         if res:
             self._dockable_window.can_be_closed = res.unwrapped
 
@@ -122,19 +122,19 @@ class DockingSplit(Widget):
         self._docking_split = hello_imgui.DockingSplit()
 
         # Get initial-dock
-        res = self._field_values.get("initial-dock")
+        res = self._data_bag.get("initial-dock")
         if not res:
             return Result.error("DockingSplit: failed to get initial-dock", res)
         self._docking_split.initial_dock = res.unwrapped
 
         # Get new-dock
-        res = self._field_values.get("new-dock")
+        res = self._data_bag.get("new-dock")
         if not res:
             return Result.error("DockingSplit: failed to get new-dock", res)
         self._docking_split.new_dock = res.unwrapped
 
         # Get direction
-        res = self._field_values.get("direction", "down")
+        res = self._data_bag.get("direction", "down")
         if not res:
             return Result.error("DockingSplit: failed to get direction", res)
 
@@ -152,7 +152,7 @@ class DockingSplit(Widget):
         self._docking_split.direction = direction_map[direction_str]
 
         # Get ratio
-        res = self._field_values.get("ratio", 0.5)
+        res = self._data_bag.get("ratio", 0.5)
         if not res:
             return Result.error("DockingSplit: failed to get ratio", res)
         self._docking_split.ratio = float(res.unwrapped)

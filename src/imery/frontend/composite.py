@@ -73,13 +73,13 @@ class Composite(Widget):
         """Create all child widgets from body"""
         # Extract body from params
         self._children = []
-        if isinstance(self._params, dict) and "body" in self._params:
-            body = self._params["body"]
-        elif isinstance(self._params, list):
-            body = self._params
+        if isinstance(self._static, dict) and "body" in self._static:
+            body = self._static["body"]
+        elif isinstance(self._static, list):
+            body = self._static
         else:
-            pprint.pp(self._params)
-            return Result.error(f"Composite params must be dict with 'body' or list, got {type(self._params)}, {self._params}")
+            pprint.pp(self._static)
+            return Result.error(f"Composite params must be dict with 'body' or list, got {type(self._static)}, {self._static}")
 
         # Normalize body to always be a list (handle collapsed forms)
         if isinstance(body, str):

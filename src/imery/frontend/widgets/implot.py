@@ -15,8 +15,8 @@ import pprint
 class ImplotLayer(Widget):
     """ImPlot layer widget - renders a single plot layer (line plot)"""
 
-    def __init__(self, factory, dispatcher, namespace: str, tree_like, data_path, params):
-        super().__init__(factory, dispatcher, namespace, tree_like, data_path, params)
+    def __init__(self, factory, dispatcher, namespace: str, data_bag):
+        super().__init__(factory, dispatcher, namespace, data_bag)
         self._cached_buffer = None
 
     def _pre_render_head(self) -> Result[bool]:
@@ -29,16 +29,16 @@ class ImplotLayer(Widget):
         if self._cached_buffer is not None:
             buffer = self._cached_buffer
         else:
-            res = self._field_values.get("buffer")
+            res = self._data_bag.get("buffer")
             if not res:
                 # we try to get openable channel
                 # Check if this is an openable channel
-                res = self._field_values.get("category")
+                res = self._data_bag.get("category")
                 if not res:
                     return Result.error("ImplotLayer: _pre_render_head: 'category' field not available", res)
                 category = res.unwrapped
 
-                res = self._field_values.get("capabilities")
+                res = self._data_bag.get("capabilities")
                 if not res:
                     return Result.error("ImplotLayer: _pre_render_head: 'capabilities' metadata not available", res)
                 capabilities = res.unwrapped
@@ -79,7 +79,7 @@ class ImplotLayer(Widget):
             xstart = -float(len(buffer_data))
 
             # Get label from field values
-            label_res = self._field_values.get("label")
+            label_res = self._data_bag.get("label")
             if not label_res:
                 return Result.error("ImplotLayer: failed to get label", label_res)
             label = label_res.unwrapped
@@ -98,7 +98,7 @@ class Implot(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Begin plot - sets _is_body_activated to render activated children"""
-        res = self._field_values.get("label")
+        res = self._data_bag.get("label")
         if not res:
             return Result.error("Implot: failed to get label", res)
         label = res.unwrapped
@@ -118,17 +118,17 @@ class ImplotGroup(Widget):
     """ImPlot group widget - creates subplots context, renders plots from activated"""
 
 
-    def __init__(self, factory, dispatcher, namespace: str, tree_like, data_path, params):
-        super().__init__(factory, dispatcher, namespace, tree_like, data_path, params)
+    def __init__(self, factory, dispatcher, namespace: str, data_bag):
+        super().__init__(factory, dispatcher, namespace, data_bag)
         self._rows = 1
         self._cols = 1
         self._size = None
     def init(self) -> Result[None]:
         """Initialize subplot parameters"""
-        if isinstance(self._params, dict):
-            self._rows = self._params.get("rows", 1)
-            self._cols = self._params.get("cols", 1)
-            size = self._params.get("size")
+        if isinstance(self._static, dict):
+            self._rows = self._static.get("rows", 1)
+            self._cols = self._static.get("cols", 1)
+            size = self._static.get("size")
             if size:
                 self._size = (size[0], size[1])
 
@@ -137,22 +137,22 @@ class ImplotGroup(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Begin subplots - sets _is_body_activated to render activated children"""
-        res = self._field_values.get("label")
+        res = self._data_bag.get("label")
         if not res:
             return Result.error("ImplotGroup: failed to get label", res)
         label = res.unwrapped
 
-        res = self._field_values.get("rows", 1)
+        res = self._data_bag.get("rows", 1)
         if not res:
             return Result.error("ImplotGroup: failed to get rows", res)
         rows = res.unwrapped
 
-        res = self._field_values.get("cols", 1)
+        res = self._data_bag.get("cols", 1)
         if not res:
             return Result.error("ImplotGroup: failed to get cols", res)
         cols = res.unwrapped
 
-        res = self._field_values.get("size", [-1, -1])
+        res = self._data_bag.get("size", [-1, -1])
         if not res:
             return Result.error("ImplotGroup: failed to get size", res)
         size_list = res.unwrapped

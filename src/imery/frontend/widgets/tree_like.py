@@ -16,7 +16,7 @@ class Button(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Render button core - returns True if clicked"""
-        label_res = self._field_values.get("label")
+        label_res = self._data_bag.get("label")
         if not label_res:
             return Result.error("Button: failed to get label", label_res)
         label = label_res.unwrapped
@@ -35,7 +35,7 @@ class Child(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Begin child window"""
-        label_res = self._field_values.get("label", self.uid)
+        label_res = self._data_bag.get("label", self.uid)
         if isinstance(label_res, Result):
             if not label_res:
                 return Result.error("Child: failed to get label", label_res)
@@ -48,10 +48,10 @@ class Child(Widget):
         border = False
         flags = imgui.ChildFlags_.none
 
-        if isinstance(self._params, dict):
-            size = self._params.get("size", [0, 0])
-            border = self._params.get("border", False)
-            flags_list = self._params.get("flags", [])
+        if isinstance(self._static, dict):
+            size = self._static.get("size", [0, 0])
+            border = self._static.get("border", False)
+            flags_list = self._static.get("flags", [])
             for flag_name in flags_list:
                 flag_attr = flag_name.replace("-", "_")
                 if hasattr(imgui.ChildFlags_, flag_attr):
@@ -77,10 +77,10 @@ class Columns(Widget):
         label = self.uid
         border = True
 
-        if isinstance(self._params, dict):
-            count = self._params.get("count", 1)
-            label = self._params.get("id", self.uid)
-            border = self._params.get("border", True)
+        if isinstance(self._static, dict):
+            count = self._static.get("count", 1)
+            label = self._static.get("id", self.uid)
+            border = self._static.get("border", True)
 
         imgui.columns(count, label, border)
         self._is_body_activated = True
@@ -161,7 +161,7 @@ class TreeNode(Widget):
             self._should_create_body = True
             return Ok(None)
 
-        label_res = self._field_values.get("label")
+        label_res = self._data_bag.get("label")
         if not label_res:
             return Result.error("TreeNode: failed to get label", label_res)
         label = label_res.unwrapped
@@ -195,7 +195,7 @@ class CollapsingHeader(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Render collapsing header core"""
-        label_res = self._field_values.get("label")
+        label_res = self._data_bag.get("label")
         if not label_res:
             return Result.error("CollapsingHeader: failed to get label", label_res)
         label = label_res.unwrapped
@@ -213,7 +213,7 @@ class Indent(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Render indent - always opens to render body"""
 
-        res = self._field_values.get("width", 0.0)
+        res = self._data_bag.get("width", 0.0)
         if not res:
             return Result.error("Indent: failed to get 'width'", res)
         width = res.unwrapped
@@ -227,7 +227,7 @@ class Indent(Widget):
 
     def _post_render_head(self) -> Result[None]:
         """Unindent after rendering"""
-        res = self._field_values.get("width", 0.0)
+        res = self._data_bag.get("width", 0.0)
         if not res:
             return Result.error("Indent: failed to get 'width'", res)
         width = res.unwrapped
@@ -276,11 +276,11 @@ class Menu(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Render menu core"""
-        res = self._field_values.get("label", "NO-LABEL")
+        res = self._data_bag.get("label", "NO-LABEL")
         if not res:
             return Result.error("Menu: failed to get 'label'", res)
         label = res.unwrapped
-        res = self._field_values.get("enabled", True)
+        res = self._data_bag.get("enabled", True)
         if not res:
             return Result.error("Menu: failed to get 'enabled'", res)
         enabled = res.unwrapped
@@ -302,25 +302,25 @@ class MenuItem(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Render menu item - returns True if clicked"""
 
-        #pprint.pp(self._field_values.as_tree)
-        pprint.pp(self._field_values.get_metadata())
+        #pprint.pp(self._data_bag.as_tree)
+        pprint.pp(self._data_bag.get_metadata())
 
-        res = self._field_values.get("label")
+        res = self._data_bag.get("label")
         if not res:
             return Result.error("MenuItem: failed to get 'label'", res)
         label = res.unwrapped
 
-        res = self._field_values.get("shortcut", "")
+        res = self._data_bag.get("shortcut", "")
         if not res:
             return Result.error("MenuItem: could not get 'shortcut'", res)
         shortcut = res.unwrapped
 
-        res = self._field_values.get("selection", False)
+        res = self._data_bag.get("selection", False)
         if not res:
             return Result.error("MenuItem: could not get 'selection'", res)
         selection = res.unwrapped
 
-        res = self._field_values.get("enabled", True)
+        res = self._data_bag.get("enabled", True)
         if not res:
             return Result.error("MenuItem: could not get 'enabled'", res)
         enabled = res.unwrapped
@@ -339,7 +339,7 @@ class TabBar(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Render tab bar core"""
-        res = self._field_values.get("label", "TabBar")
+        res = self._data_bag.get("label", "TabBar")
         if not res:
             return Result.error("TabBar: failed to get 'label'", res)
         label = res.unwrapped
@@ -361,7 +361,7 @@ class TabItem(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Render tab item core"""
-        res = self._field_values.get("label")
+        res = self._data_bag.get("label")
         if not res:
             return Result.error("TabItem: failed to get 'label'", res)
         label = res.unwrapped
@@ -386,7 +386,7 @@ class ColorEdit(Widget):
             return Result.error("ColorEdit requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"ColorEdit: failed to get value", value_res)
         value = value_res.unwrapped
@@ -409,7 +409,7 @@ class ColorEdit(Widget):
         if changed:
             # Convert to list for storage
             color_list = [new_color[0], new_color[1], new_color[2], new_color[3]]
-            set_res = self._field_values.set("label", color_list)
+            set_res = self._data_bag.set("label", color_list)
             if not set_res:
                 return Result.error(f"ColorEdit: failed to set value", set_res)
 
@@ -425,7 +425,7 @@ class ColorButton(Widget):
             return Result.error("ColorButton requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"ColorButton: failed to get value", value_res)
         value = value_res.unwrapped
@@ -473,14 +473,14 @@ class Draggable(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Render draggable container with body widgets"""
         # Get size
-        res = self._field_values.get("size", [30, 30])
+        res = self._data_bag.get("size", [30, 30])
         if not res:
             return Result.error("Draggable: failed to get size", res)
         size_list = res.unwrapped
         size = imgui.ImVec2(float(size_list[0]), float(size_list[1]))
 
         # Get initial position offset
-        res = self._field_values.get("position", [5, -35])
+        res = self._data_bag.get("position", [5, -35])
         if not res:
             return Result.error("Draggable: failed to get position", res)
         initial_offset = res.unwrapped

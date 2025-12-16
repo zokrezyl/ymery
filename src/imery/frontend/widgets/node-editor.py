@@ -24,7 +24,7 @@ class NodeEditor(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Begin node editor"""
-        label_res = self._field_values.get("label", "Node Editor")
+        label_res = self._data_bag.get("label", "Node Editor")
         if isinstance(label_res, Result):
             label = label_res.unwrapped if label_res else "Node Editor"
         else:
@@ -32,8 +32,8 @@ class NodeEditor(Widget):
 
         # Get size from params
         size = ImVec2(800, 600)
-        if isinstance(self._params, dict):
-            size_list = self._params.get("size", [800, 600])
+        if isinstance(self._static, dict):
+            size_list = self._static.get("size", [800, 600])
             size = ImVec2(size_list[0], size_list[1])
 
         # Set context and begin editor
@@ -63,7 +63,7 @@ class Node(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Render node"""
-        label_res = self._field_values.get("label", "Node")
+        label_res = self._data_bag.get("label", "Node")
         if isinstance(label_res, Result):
             label = label_res.unwrapped if label_res else "Node"
         else:
@@ -94,7 +94,7 @@ class NodePin(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Render pin"""
-        label_res = self._field_values.get("label", "Pin")
+        label_res = self._data_bag.get("label", "Pin")
         if isinstance(label_res, Result):
             label = label_res.unwrapped if label_res else "Pin"
         else:
@@ -102,8 +102,8 @@ class NodePin(Widget):
 
         pin_type = "input"
         kind = ed.PinKind.input
-        if isinstance(self._params, dict):
-            pin_type = self._params.get("type", "input")
+        if isinstance(self._static, dict):
+            pin_type = self._static.get("type", "input")
             if pin_type == "output":
                 kind = ed.PinKind.output
 

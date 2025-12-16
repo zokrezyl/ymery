@@ -15,14 +15,14 @@ class Knob(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Render knob"""
         # Get label
-        label_res = self._field_values.get("label", "Knob")
+        label_res = self._data_bag.get("label", "Knob")
         if isinstance(label_res, Result):
             label = label_res.unwrapped if label_res else "Knob"
         else:
             label = str(label_res) if not isinstance(label_res, str) else label_res
 
         # Get current value
-        value_res = self._field_values.get("value", 0.0)
+        value_res = self._data_bag.get("value", 0.0)
         if isinstance(value_res, Result):
             value = value_res.unwrapped if value_res else 0.0
         else:
@@ -37,15 +37,15 @@ class Knob(Widget):
         speed = 0
         steps = 100
 
-        if isinstance(self._params, dict):
-            v_min = self._params.get("min", 0.0)
-            v_max = self._params.get("max", 1.0)
-            size = self._params.get("size", size)
-            format_str = self._params.get("format", "%.2f")
-            speed = self._params.get("speed", 0)
-            steps = self._params.get("steps", 100)
+        if isinstance(self._static, dict):
+            v_min = self._static.get("min", 0.0)
+            v_max = self._static.get("max", 1.0)
+            size = self._static.get("size", size)
+            format_str = self._static.get("format", "%.2f")
+            speed = self._static.get("speed", 0)
+            steps = self._static.get("steps", 100)
 
-            variant_name = self._params.get("variant", "tick")
+            variant_name = self._static.get("variant", "tick")
             variant_map = {
                 "tick": imgui_knobs.ImGuiKnobVariant_.tick,
                 "dot": imgui_knobs.ImGuiKnobVariant_.dot,
@@ -73,7 +73,7 @@ class Knob(Widget):
 
         # Update value if changed
         if changed and self._data_path:
-            set_res = self._field_values.set("value", new_value)
+            set_res = self._data_bag.set("value", new_value)
             if not set_res:
                 return Result.error(f"Knob: failed to set value", set_res)
 
@@ -87,14 +87,14 @@ class KnobInt(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Render int knob"""
         # Get label
-        label_res = self._field_values.get("label", "Knob")
+        label_res = self._data_bag.get("label", "Knob")
         if isinstance(label_res, Result):
             label = label_res.unwrapped if label_res else "Knob"
         else:
             label = str(label_res) if not isinstance(label_res, str) else label_res
 
         # Get current value
-        value_res = self._field_values.get("value", 0)
+        value_res = self._data_bag.get("value", 0)
         if isinstance(value_res, Result):
             value = value_res.unwrapped if value_res else 0
         else:
@@ -109,15 +109,15 @@ class KnobInt(Widget):
         speed = 0
         steps = 10
 
-        if isinstance(self._params, dict):
-            v_min = self._params.get("min", 0)
-            v_max = self._params.get("max", 15)
-            size = self._params.get("size", size)
-            format_str = self._params.get("format", "%02i")
-            speed = self._params.get("speed", 0)
-            steps = self._params.get("steps", 10)
+        if isinstance(self._static, dict):
+            v_min = self._static.get("min", 0)
+            v_max = self._static.get("max", 15)
+            size = self._static.get("size", size)
+            format_str = self._static.get("format", "%02i")
+            speed = self._static.get("speed", 0)
+            steps = self._static.get("steps", 10)
 
-            variant_name = self._params.get("variant", "tick")
+            variant_name = self._static.get("variant", "tick")
             variant_map = {
                 "tick": imgui_knobs.ImGuiKnobVariant_.tick,
                 "dot": imgui_knobs.ImGuiKnobVariant_.dot,
@@ -144,7 +144,7 @@ class KnobInt(Widget):
 
         # Update value if changed
         if changed and self._data_path:
-            set_res = self._field_values.set("value", new_value)
+            set_res = self._data_bag.set("value", new_value)
             if not set_res:
                 return Result.error(f"KnobInt: failed to set value", set_res)
 

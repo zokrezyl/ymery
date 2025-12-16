@@ -28,8 +28,8 @@ class NanovgCanvas(Widget):
 
         # Get size from params
         width, height = 800, 600
-        if isinstance(self._params, dict):
-            size = self._params.get("size", [800, 600])
+        if isinstance(self._static, dict):
+            size = self._static.get("size", [800, 600])
             width, height = size[0], size[1]
 
         # Create framebuffer
@@ -45,7 +45,7 @@ class NanovgCanvas(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Render NanoVG canvas"""
         # Get label
-        label_res = self._field_values.get("label", "NanoVG Canvas")
+        label_res = self._data_bag.get("label", "NanoVG Canvas")
         if isinstance(label_res, Result):
             label = label_res.unwrapped if label_res else "NanoVG Canvas"
         else:
@@ -53,8 +53,8 @@ class NanovgCanvas(Widget):
 
         # Get canvas type from params
         canvas_type = "demo"
-        if isinstance(self._params, dict):
-            canvas_type = self._params.get("type", "demo")
+        if isinstance(self._static, dict):
+            canvas_type = self._static.get("type", "demo")
 
         # Render to framebuffer based on type
         if canvas_type == "shapes":

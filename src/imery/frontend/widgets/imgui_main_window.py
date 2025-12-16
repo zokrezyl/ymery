@@ -58,28 +58,28 @@ class ImguiMainWindow(Widget):
     def run(self) -> int:
         """Run the application - this is called by app.py"""
         # Create body widget if we have body definition
-        if isinstance(self._params, dict) and "body" in self._params:
-            body_spec = self._params["body"]
+        if isinstance(self._static, dict) and "body" in self._static:
+            body_spec = self._static["body"]
             res = self._create_widget_from_spec(body_spec)
             if not res:
                 print(f"Error creating body widget: {res}")
                 return 1
             self._body = res.unwrapped
 
-        res = self._field_values.get("label", "Main Window")
+        res = self._data_bag.get("label", "Main Window")
         if not res:
             print(f"Error creating body widget: {res}")
             return 1
 
         window_title = res.unwrapped
-        res = self._field_values.get("window-size", [1200, 800])
+        res = self._data_bag.get("window-size", [1200, 800])
         if not res:
             print(f"Error creating body widget: {res}")
             return 2
         size_list = res.unwrapped
         window_size = (size_list[0], size_list[1])
 
-        res = self._field_values.get("fps-idle", 0)
+        res = self._data_bag.get("fps-idle", 0)
         if not res:
             print(f"Error creating body widget: {res}")
             return 3

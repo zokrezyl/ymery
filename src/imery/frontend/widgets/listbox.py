@@ -17,16 +17,16 @@ class Listbox(Widget):
             return Result.error("Listbox requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"Listbox: failed to get value", value_res)
         current_value = value_res.unwrapped
 
-        if not isinstance(self._params, dict):
-            return Result.error(f"Listbox params must be dict, got {type(self._params)}")
+        if not isinstance(self._static, dict):
+            return Result.error(f"Listbox params must be dict, got {type(self._static)}")
 
-        items = self._params.get("items", [])
-        height = self._params.get("height", 4)
+        items = self._static.get("items", [])
+        height = self._static.get("height", 4)
 
         try:
             idx = items.index(str(current_value))
@@ -36,7 +36,7 @@ class Listbox(Widget):
         imgui_id = f"###{self.uid}"
         changed, idx = imgui.list_box(imgui_id, idx, items, height)
         if changed and 0 <= idx < len(items):
-            set_res = self._field_values.set("label", items[idx])
+            set_res = self._data_bag.set("label", items[idx])
             if not set_res:
                 return Result.error(f"Listbox: failed to set value", set_res)
 

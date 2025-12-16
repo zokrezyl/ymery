@@ -14,7 +14,7 @@ class Implot3d(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Begin 3D plot"""
-        label_res = self._field_values.get("label", "3D Plot")
+        label_res = self._data_bag.get("label", "3D Plot")
         if isinstance(label_res, Result):
             label = label_res.unwrapped if label_res else "3D Plot"
         else:
@@ -22,8 +22,8 @@ class Implot3d(Widget):
 
         # Get size from params
         size = [-1, -1]
-        if isinstance(self._params, dict):
-            size = self._params.get("size", [-1, -1])
+        if isinstance(self._static, dict):
+            size = self._static.get("size", [-1, -1])
 
         plot_opened = implot3d.begin_plot(label, size)
         self._is_body_activated = plot_opened

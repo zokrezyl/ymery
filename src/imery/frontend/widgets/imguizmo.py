@@ -21,9 +21,9 @@ class Imguizmo(Widget):
         op_str = "translate"
         mode_str = "local"
 
-        if isinstance(self._params, dict):
-            op_str = self._params.get("operation", "translate")
-            mode_str = self._params.get("mode", "local")
+        if isinstance(self._static, dict):
+            op_str = self._static.get("operation", "translate")
+            mode_str = self._static.get("mode", "local")
 
         # Display gizmo info
         imgui.text(f"ImGuizmo: {op_str.upper()} ({mode_str} space)")

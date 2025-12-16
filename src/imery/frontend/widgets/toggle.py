@@ -15,14 +15,14 @@ class Toggle(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Render toggle switch"""
         # Get label
-        label_res = self._field_values.get("label", "Toggle")
+        label_res = self._data_bag.get("label", "Toggle")
         if isinstance(label_res, Result):
             label = label_res.unwrapped if label_res else "Toggle"
         else:
             label = str(label_res) if not isinstance(label_res, str) else label_res
 
         # Get current value
-        value_res = self._field_values.get("value", False)
+        value_res = self._data_bag.get("value", False)
         if isinstance(value_res, Result):
             value = value_res.unwrapped if value_res else False
         else:
@@ -37,20 +37,20 @@ class Toggle(Widget):
         # Get style from params
         flags = 0
         config = None
-        if isinstance(self._params, dict):
-            style = self._params.get("style", "default")
-            animated = self._params.get("animated", False)
+        if isinstance(self._static, dict):
+            style = self._static.get("style", "default")
+            animated = self._static.get("animated", False)
 
             if animated:
                 flags = imgui_toggle.ToggleFlags_.animated.value
 
             if style == "material":
                 config = imgui_toggle.material_style()
-                if "animation_duration" in self._params:
-                    config.animation_duration = self._params["animation_duration"]
+                if "animation_duration" in self._static:
+                    config.animation_duration = self._static["animation_duration"]
             elif style == "ios":
-                size_scale = self._params.get("size_scale", 0.2)
-                light_mode = self._params.get("light_mode", False)
+                size_scale = self._static.get("size_scale", 0.2)
+                light_mode = self._static.get("light_mode", False)
                 config = imgui_toggle.ios_style(size_scale=size_scale, light_mode=light_mode)
 
         # Render toggle
@@ -66,7 +66,7 @@ class Toggle(Widget):
 
         # Update value if changed
         if changed and self._data_path:
-            set_res = self._field_values.set("value", new_value)
+            set_res = self._data_bag.set("value", new_value)
             if not set_res:
                 return Result.error(f"Toggle: failed to set value", set_res)
 

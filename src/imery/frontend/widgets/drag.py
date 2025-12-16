@@ -17,7 +17,7 @@ class DragInt(Widget):
             return Result.error("DragInt requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"DragInt: failed to get value", value_res)
         value = value_res.unwrapped
@@ -28,18 +28,18 @@ class DragInt(Widget):
         except (ValueError, TypeError) as e:
             return Result.error(f"DragInt: invalid integer value '{value}' at path '{self._data_path}'")
 
-        if not isinstance(self._params, dict):
-            return Result.error(f"DragInt params must be dict, got {type(self._params)}")
+        if not isinstance(self._static, dict):
+            return Result.error(f"DragInt params must be dict, got {type(self._static)}")
 
-        minv = self._params.get("min", 0)
-        maxv = self._params.get("max", 100)
-        speed = self._params.get("speed", 1.0)
+        minv = self._static.get("min", 0)
+        maxv = self._static.get("max", 100)
+        speed = self._static.get("speed", 1.0)
 
         imgui_id = f"###{self.uid}"
 
         changed, new_val = imgui.drag_int(imgui_id, int_value, speed, minv, maxv)
         if changed:
-            set_res = self._field_values.set("label", new_val)
+            set_res = self._data_bag.set("label", new_val)
             if not set_res:
                 return Result.error(f"DragInt: failed to set value", set_res)
 
@@ -55,7 +55,7 @@ class DragFloat(Widget):
             return Result.error("DragFloat requires path (id)")
 
         # Get value using field_values
-        value_res = self._field_values.get("label")
+        value_res = self._data_bag.get("label")
         if not value_res:
             return Result.error(f"DragFloat: failed to get value", value_res)
         value = value_res.unwrapped
@@ -66,18 +66,18 @@ class DragFloat(Widget):
         except (ValueError, TypeError) as e:
             return Result.error(f"DragFloat: invalid float value '{value}' at path '{self._data_path}'")
 
-        if not isinstance(self._params, dict):
-            return Result.error(f"DragFloat params must be dict, got {type(self._params)}")
+        if not isinstance(self._static, dict):
+            return Result.error(f"DragFloat params must be dict, got {type(self._static)}")
 
-        minv = float(self._params.get("min", 0.0))
-        maxv = float(self._params.get("max", 1.0))
-        speed = float(self._params.get("speed", 0.01))
+        minv = float(self._static.get("min", 0.0))
+        maxv = float(self._static.get("max", 1.0))
+        speed = float(self._static.get("speed", 0.01))
 
         imgui_id = f"###{self.uid}"
 
         changed, new_val = imgui.drag_float(imgui_id, float_value, speed, minv, maxv)
         if changed:
-            set_res = self._field_values.set("label", new_val)
+            set_res = self._data_bag.set("label", new_val)
             if not set_res:
                 return Result.error(f"DragFloat: failed to set value", set_res)
 

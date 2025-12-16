@@ -15,20 +15,20 @@ class Table(Widget):
     def _pre_render_head(self) -> Result[None]:
         """Begin table - sets _is_body_activated to render activated children"""
         # Get label from field values
-        label_res = self._field_values.get("label")
+        label_res = self._data_bag.get("label")
         if not label_res:
             return Result.error("Table: failed to get label", label_res)
         label = label_res.unwrapped
 
         # Get number of columns from params
-        if not isinstance(self._params, dict):
-            return Result.error(f"Table params must be dict, got {type(self._params)}")
+        if not isinstance(self._static, dict):
+            return Result.error(f"Table params must be dict, got {type(self._static)}")
 
-        num_columns = self._params.get("columns", 1)
+        num_columns = self._static.get("columns", 1)
 
         # Get flags from params
         flags = imgui.TableFlags_.none
-        flags_list = self._params.get("flags", [])
+        flags_list = self._static.get("flags", [])
         for flag_name in flags_list:
             flag_attr = flag_name.replace("-", "_")
             if hasattr(imgui.TableFlags_, flag_attr):
@@ -53,13 +53,13 @@ class Row(Widget):
         """Advance to next row - sets _is_body_activated to render activated children"""
         # Get min height from params
         min_height = 0.0
-        if isinstance(self._params, dict):
-            min_height = self._params.get("min-height", 0.0)
+        if isinstance(self._static, dict):
+            min_height = self._static.get("min-height", 0.0)
 
         # Get flags from params
         flags = imgui.TableRowFlags_.none
-        if isinstance(self._params, dict):
-            flags_list = self._params.get("flags", [])
+        if isinstance(self._static, dict):
+            flags_list = self._static.get("flags", [])
             for flag_name in flags_list:
                 flag_attr = flag_name.replace("-", "_")
                 if hasattr(imgui.TableRowFlags_, flag_attr):

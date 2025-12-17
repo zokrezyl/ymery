@@ -36,6 +36,11 @@ class Popup(Widget):
             imgui.end_popup()
         return Ok(None)
 
+    def close(self) -> Result[None]:
+        """Close the popup."""
+        imgui.close_current_popup()
+        return Ok(None)
+
 
 @widget
 class PopupModal(Widget):
@@ -65,7 +70,8 @@ class PopupModal(Widget):
 
         return Ok(None)
 
-    def _close(self) -> Result[None]:
+    def close(self) -> Result[None]:
+        """Close the popup modal."""
         imgui.close_current_popup()
         return Ok(None)
 

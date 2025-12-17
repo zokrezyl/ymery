@@ -288,14 +288,12 @@ class DataBag(Object):
 
         return Ok(None)
 
-    def add_child(self, path: DataPath, name: str, data: Any) -> Result[None]:
+    def add_child(self, data: dict) -> Result[None]:
         """
-        Add a child to the tree at the given path.
+        Add a child to the tree. Handles path resolution and reference resolution.
 
         Args:
-            path: DataPath to the parent node
-            name: Name of the new child
-            data: Data for the new child
+            data: Dict with 'name', 'metadata', and optional 'path'
 
         Returns:
             Result[None]
@@ -303,8 +301,50 @@ class DataBag(Object):
         if not self._main_data_tree:
             return Result.error(f"DataBag.add_child: no main_data_tree available")
 
-        res = self._main_data_tree.add_child(path, name, data)
+        # Resolve references in data
+        resolved = {}
+        for key, value in data.items():
+            if isinstance(value, str) and self._is_reference(value):
+                res = self._resolve_reference(value)
+                if not res:
+                    return Result.error(f"DataBag.add_child: failed to resolve '{key}'", res)
+                resolved[key] = res.unwrapped
+            elif isinstance(value, dict):
+                resolved_dict = {}
+                for k, v in value.items():
+                    if isinstance(v, str) and self._is_reference(v):
+                        res = self._resolve_reference(v)
+                        if not res:
+                            return Result.error(f"DataBag.add_child: failed to resolve '{k}'", res)
+                        resolved_dict[k] = res.unwrapped
+                    else:
+                        resolved_dict[k] = v
+                resolved[key] = resolved_dict
+            else:
+                resolved[key] = value
+
+        # Get child name
+        child_name = resolved.get("name")
+        if not child_name:
+            return Result.error("DataBag.add_child: missing 'name'")
+
+        # Get metadata
+        child_metadata = resolved.get("metadata")
+        if child_metadata is None:
+            return Result.error("DataBag.add_child: missing 'metadata'")
+
+        # Resolve target path
+        path_spec = resolved.get("path")
+        if path_spec:
+            if path_spec.startswith("/"):
+                target_path = DataPath(path_spec)
+            else:
+                target_path = self._main_data_path / path_spec
+        else:
+            target_path = self._main_data_path
+
+        res = self._main_data_tree.add_child(target_path, child_name, {"metadata": child_metadata})
         if not res:
-            return Result.error(f"DataBag.add_child: failed to add child '{name}' at path '{path}'", res)
+            return Result.error(f"DataBag.add_child: failed at '{target_path}'", res)
 
         return Ok(None)

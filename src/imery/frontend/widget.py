@@ -16,7 +16,7 @@ from typing import Optional, Dict, Any, Union
 
 
 
-EVENT_COMMAND_NAMES = {"show", "add-data-child", "add-child", "dispatch-event", "default", "close-popup", "set-value"}
+EVENT_COMMAND_NAMES = {"show", "add-data-child", "dispatch-event", "default", "close", "set-data-value"}
 
 def _render_error_simple(error) -> Result[None]:
     """Display errors using bullet points recursively - fallback method"""
@@ -389,75 +389,50 @@ widgets:
         else:
             return Ok(value)
 
-    def _execute_event_command_add_child(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
-        """
-        Handle add-child action - adds a new child node to the data tree.
-        Resolves @ references in name and metadata.
-        """
-        print("Widget: _execute_event_command_add_child")
+    def _execute_event_command_add_data_child(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
+        """Handle add-data-child action - adds a new child node to the data tree."""
         if not isinstance(data, dict):
-            return Result.error(f"Widget: _execute_event_command_add_child: expected dict, got '{type(data)}'")
+            return Result.error(f"add-data-child: expected dict, got '{type(data)}'")
 
-        # Resolve references in action parameters
-        res = self._resolve_action_references(data)
+        res = self._data_bag.add_child(data)
         if not res:
-            return Result.error("Widget: _execute_event_command_add_child: failed to resolve references", res)
-        resolved_data = res.unwrapped
+            return Result.error("add-data-child: failed", res)
 
-        # Get child name
-        child_name = resolved_data.get("name")
-        if not child_name:
-            return Result.error("Widget: _execute_event_command_add_child: missing 'name' parameter")
-
-        # Get metadata
-        child_metadata = resolved_data.get("metadata")
-        if child_metadata is None:
-            return Result.error("Widget: _execute_event_command_add_child: missing 'metadata' parameter")
-
-        # Target path is current data path
-        target_path = self._data_bag._main_data_path
-
-        # Call add_child
-        res = self._data_bag.add_child(target_path, child_name, {"metadata": child_metadata})
-        if not res:
-            return Result.error(f"Widget: _execute_event_command_add_child: failed to add child '{child_name}' at '{target_path}'", res)
-
-        # Close popup after successful add
-        imgui.close_current_popup()
         return Ok(None)
 
-    def _execute_event_command_close_popup(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
-        """Close the current popup"""
-        print("Widget: _execute_event_command_close_popup")
-        imgui.close_current_popup()
+    def _execute_event_command_close(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
+        """Close action - closes the current popup context."""
+        print("closing widget")
+        return self.close()
+
+    def close(self) -> Result[None]:
+        """Close the widget. Override in subclasses (e.g., Popup)."""
         return Ok(None)
 
-    def _execute_event_command_set_value(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
+    def _execute_event_command_set_data_value(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
         """
         Set a value in the data tree.
         data should have 'target' (path reference) and 'value' (value or reference).
         """
-        print("Widget: _execute_event_command_set_value")
         if not isinstance(data, dict):
-            return Result.error(f"Widget: _execute_event_command_set_value: expected dict, got '{type(data)}'")
+            return Result.error(f"set-data-value: expected dict, got '{type(data)}'")
 
         target = data.get("target")
         value = data.get("value")
 
         if target is None:
-            return Result.error("Widget: _execute_event_command_set_value: missing 'target' parameter")
+            return Result.error("set-data-value: missing 'target'")
 
         # Resolve the value reference if it's a reference
         if isinstance(value, str) and '@' in value:
             res = self._data_bag._resolve_reference(value)
             if not res:
-                return Result.error(f"Widget: _execute_event_command_set_value: failed to resolve value reference '{value}'", res)
+                return Result.error(f"set-data-value: failed to resolve value '{value}'", res)
             resolved_value = res.unwrapped
         else:
             resolved_value = value
 
-        # Target should be a reference like $local@channel
-        # Parse the target to find the tree and path
+        # Target should be a reference like $local@channel or @path
         if isinstance(target, str) and '@' in target:
             from imery.data_bag import REF_PATTERN
             match = REF_PATTERN.match(target)
@@ -470,8 +445,7 @@ widgets:
                     tree_key = tree_name[1:]  # Remove $ prefix
                     tree = self._data_bag._data_trees.get(tree_key) if self._data_bag._data_trees else None
                     if not tree:
-                        return Result.error(f"Widget: _execute_event_command_set_value: unknown tree '{tree_key}'")
-                    # Named trees (like $local) always use root-relative paths
+                        return Result.error(f"set-data-value: unknown tree '{tree_key}'")
                     if not path_str.startswith('/'):
                         path_str = '/' + path_str
                 else:
@@ -492,42 +466,39 @@ widgets:
                 else:
                     full_path = self._data_bag._main_data_path / path_str
 
-                # Set the value
                 res = tree.set(full_path, resolved_value)
                 if not res:
-                    return Result.error(f"Widget: _execute_event_command_set_value: failed to set value at '{full_path}'", res)
+                    return Result.error(f"set-data-value: failed at '{full_path}'", res)
 
-                # Close popup after successful set
-                imgui.close_current_popup()
                 return Ok(None)
 
-        return Result.error(f"Widget: _execute_event_command_set_value: target '{target}' is not a valid reference")
+        return Result.error(f"set-data-value: target '{target}' is not a valid reference")
 
 
     def _execute_event_commands(self, event_name: str) -> Result[None]:
-        print("Widget: _execute_event_command_dispatch_event")
         if event_name not in self._event_handlers:
             return Ok(None)
         commands = self._event_handlers[event_name]
-        # print("_detect_and_execute_events", event_name, commands)
-        for i, cmd_spec in enumerate(commands):
+        for cmd_spec in commands:
             if not isinstance(cmd_spec, dict):
-                return Result.error(f"Widget: _execute_event_commands: expected dict, got '{type(cmd_spec)}'", cmd_spec)
+                return Result.error(f"_execute_event_commands: expected dict, got '{type(cmd_spec)}'")
             # Check condition if present
             if "when" in cmd_spec:
                 condition = cmd_spec["when"]
                 metadata_res = self._data_bag.get_metadata()
                 metadata = metadata_res.unwrapped if metadata_res else None
                 if metadata and not self._evaluate_condition(condition, metadata):
-                    continue  # Condition not met, skip this command
+                    continue
             if "command" not in cmd_spec:
-                return Result.error(f"'command' key not found in cmd_spec: {cmd_spec}")
+                return Result.error(f"_execute_event_commands: 'command' key missing in {cmd_spec}")
             command = cmd_spec['command']
-            method_name = f"_execute_event_command_{command.replace("-", "_")}"
-            method = getattr(self, method_name)
+            method_name = f"_execute_event_command_{command.replace('-', '_')}"
+            method = getattr(self, method_name, None)
             if method is None:
-                return Result.error(f"'command' key not found in cmd_spec: {cmd_spec}")
-            return method(event_name, command, cmd_spec["data"])
+                return Result.error(f"_execute_event_commands: unknown command '{command}'")
+            res = method(event_name, command, cmd_spec.get("data"))
+            if not res:
+                return Result.error(f"_execute_event_commands: '{command}' failed", res)
 
         return Ok(None)
 

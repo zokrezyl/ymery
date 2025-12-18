@@ -467,26 +467,37 @@ class ColorButton(Widget):
 class Draggable(Widget):
     """Draggable container widget - renders body at draggable absolute screen position.
 
-    Body can contain any widgets (button, composite, etc.) that will be rendered
-    at the draggable position. The invisible button captures drag events while
-    the body widgets handle their own interactions (clicks, etc.).
+    Body widgets (buttons, etc.) handle their own clicks normally.
+    Dragging is detected separately when mouse drags in our area.
 
     Parameters:
         size: Size of draggable area [width, height] (default: [30, 30])
         position: Initial position offset [x, y] from parent widget (default: [5, -35])
+        bounds: Movement bounds. Options:
+            - omitted: constrain to available content region (default)
+            - [min_x, min_y, max_x, max_y]: relative to cursor position
+            - {absolute: [min_x, min_y, max_x, max_y]}: screen coordinates
     """
 
-    # Class-level storage for positions (persists across renders)
-    _positions = {}  # {widget_uid: (x, y)}
+    def init(self) -> Result[None]:
+        self._position = None  # (x, y) offset, initialized on first render
+        self._drag_active = False
+        self._widget_pos = None
+        self._size = None
+        self._bounds = None
+        self._cursor_screen_pos = None
+        self._saved_cursor_pos = None
+        self._offset = None
+        return super().init()
 
     def _pre_render_head(self) -> Result[None]:
-        """Render draggable container with body widgets"""
+        """Position body at draggable location - body handles its own clicks"""
         # Get size
         res = self._data_bag.get("size", [30, 30])
         if not res:
             return Result.error("Draggable: failed to get size", res)
         size_list = res.unwrapped
-        size = imgui.ImVec2(float(size_list[0]), float(size_list[1]))
+        self._size = imgui.ImVec2(float(size_list[0]), float(size_list[1]))
 
         # Get initial position offset
         res = self._data_bag.get("position", [5, -35])
@@ -494,93 +505,125 @@ class Draggable(Widget):
             return Result.error("Draggable: failed to get position", res)
         initial_offset = res.unwrapped
 
-        # Get stored position or use initial
-        if self.uid not in Draggable._positions:
-            Draggable._positions[self.uid] = (float(initial_offset[0]), float(initial_offset[1]))
-
-        offset = Draggable._positions[self.uid]
-
-        # Get parent widget bounds (where we're positioned relative to)
-        # For now, use current cursor screen position as reference
+        # Get cursor screen position (reference point for relative positioning)
         cursor_screen_pos = imgui.get_cursor_screen_pos()
+        self._cursor_screen_pos = cursor_screen_pos
+
+        # Calculate bounds (as screen coordinates)
+        res = self._data_bag.get("bounds", "auto")
+        if not res:
+            return Result.error("Draggable: failed to get bounds", res)
+        bounds_param = res.unwrapped
+
+        if bounds_param == "auto":
+            # cursor_screen_pos is at BOTTOM of subplot (after plot renders)
+            # cursor + content_avail = remaining area BELOW subplot
+            # So subplot is ABOVE cursor, from content start to cursor
+            window_pos = imgui.get_window_pos()
+            window_size = imgui.get_window_size()
+            cursor_start = imgui.get_cursor_start_pos()
+            self._bounds = (
+                window_pos.x,
+                window_pos.y + cursor_start.y,
+                window_pos.x + window_size.x - self._size.x,
+                cursor_screen_pos.y - self._size.y
+            )
+        elif isinstance(bounds_param, dict) and "absolute" in bounds_param:
+            # Absolute screen coordinates
+            abs_bounds = bounds_param["absolute"]
+            self._bounds = (
+                float(abs_bounds[0]),
+                float(abs_bounds[1]),
+                float(abs_bounds[2]) - self._size.x,
+                float(abs_bounds[3]) - self._size.y
+            )
+        elif isinstance(bounds_param, list):
+            # Relative to cursor position
+            self._bounds = (
+                cursor_screen_pos.x + float(bounds_param[0]),
+                cursor_screen_pos.y + float(bounds_param[1]),
+                cursor_screen_pos.x + float(bounds_param[2]) - self._size.x,
+                cursor_screen_pos.y + float(bounds_param[3]) - self._size.y
+            )
+        else:
+            # Invalid bounds, use unbounded
+            self._bounds = None
+
+        # Get stored position or use initial
+        if self._position is None:
+            self._position = (float(initial_offset[0]), float(initial_offset[1]))
+
+        self._offset = self._position
 
         # Calculate absolute position
-        button_pos = imgui.ImVec2(
-            cursor_screen_pos.x + offset[0],
-            cursor_screen_pos.y + offset[1]
+        self._widget_pos = imgui.ImVec2(
+            cursor_screen_pos.x + self._offset[0],
+            cursor_screen_pos.y + self._offset[1]
         )
 
+        # Clamp to bounds if set
+        if self._bounds is not None:
+            clamped_x = max(self._bounds[0], min(self._bounds[2], self._widget_pos.x))
+            clamped_y = max(self._bounds[1], min(self._bounds[3], self._widget_pos.y))
+            if clamped_x != self._widget_pos.x or clamped_y != self._widget_pos.y:
+                self._widget_pos = imgui.ImVec2(clamped_x, clamped_y)
+                # Update stored offset
+                self._offset = (clamped_x - cursor_screen_pos.x, clamped_y - cursor_screen_pos.y)
+                self._position = self._offset
+
         # Save cursor position to restore after rendering
-        cursor_pos_before = imgui.get_cursor_pos()
+        self._saved_cursor_pos = imgui.get_cursor_pos()
 
-        # Render invisible button at absolute position (captures drag events)
-        imgui.set_cursor_screen_pos(button_pos)
-        imgui.invisible_button(f"##drag_area_{self.uid}", size)
+        # Position body at draggable location
+        imgui.set_cursor_screen_pos(self._widget_pos)
 
-        is_active = imgui.is_item_active()
-        is_dragging = is_active and imgui.is_mouse_dragging(imgui.MouseButton_.left)
-        is_deactivated = imgui.is_item_deactivated()
-
-        # Check if released without significant drag (this is a click)
-        was_clicked_not_dragged = is_deactivated and not is_dragging
-
-        # Handle dragging
-        if is_dragging:
-            drag_delta = imgui.get_mouse_drag_delta(imgui.MouseButton_.left)
-            # Update offset with accumulated drag
-            new_offset_x = offset[0] + drag_delta.x
-            new_offset_y = offset[1] + drag_delta.y
-
-            # TODO: Add optional bounds clamping if needed
-            # For now, allow free positioning
-
-            Draggable._positions[self.uid] = (new_offset_x, new_offset_y)
-            imgui.reset_mouse_drag_delta(imgui.MouseButton_.left)
-
-        # Render body widgets at the draggable position
-        # Set cursor to button position for body rendering
-        imgui.set_cursor_screen_pos(button_pos)
-
-        # Body should be activated to render child widgets
+        # Body is always activated - it renders and handles its own clicks
         self._is_body_activated = True
-
-        # If clicked (not dragged), and body exists, tell body button it was clicked
-        # We do this AFTER the body renders, so save the flag
-        self._was_clicked_not_dragged = was_clicked_not_dragged
-
-        # Note: We don't restore cursor here - let _post_render_head do it
-        # Store cursor position to restore later
-        self._saved_cursor_pos = cursor_pos_before
 
         return Ok(None)
 
     def _post_render_head(self) -> Result[None]:
-        """Restore cursor position after body rendering and handle click"""
-        # If we were clicked (not dragged), make the body think it was clicked
-        if hasattr(self, '_was_clicked_not_dragged') and self._was_clicked_not_dragged and self._body:
-            # The body should be a button or composite containing a button
-            # Traverse to find the button and activate it
-            body_widget = self._body
+        """Handle dragging after body renders"""
+        if self._widget_pos is None or self._size is None:
+            return Ok(None)
 
-            # If body is composite, get first child (should be the button)
-            if hasattr(body_widget, 'children'):
-                children_res = body_widget.children
-                if children_res:
-                    children = children_res.unwrapped
-                    if children and len(children) > 0:
-                        button_widget = children[0]
-                    else:
-                        button_widget = body_widget
-                else:
-                    button_widget = body_widget
-            else:
-                button_widget = body_widget
+        # Check if mouse is in our bounds
+        mouse_pos = imgui.get_mouse_pos()
+        in_bounds = (
+            self._widget_pos.x <= mouse_pos.x <= self._widget_pos.x + self._size.x and
+            self._widget_pos.y <= mouse_pos.y <= self._widget_pos.y + self._size.y
+        )
 
-            # Trigger the button's body activation (opens popup)
-            if button_widget:
-                button_widget._is_body_activated = True
+        # Track drag state: start drag only if mouse down in our bounds
+        mouse_down = imgui.is_mouse_down(imgui.MouseButton_.left)
+        mouse_clicked = imgui.is_mouse_clicked(imgui.MouseButton_.left)
+
+        if mouse_clicked and in_bounds:
+            # Mouse just clicked in our area - we might start dragging
+            self._drag_active = True
+
+        if not mouse_down:
+            # Mouse released - stop tracking drag
+            self._drag_active = False
+
+        # Handle dragging only if we started it and mouse is actually dragging
+        if self._drag_active and imgui.is_mouse_dragging(imgui.MouseButton_.left):
+            drag_delta = imgui.get_mouse_drag_delta(imgui.MouseButton_.left)
+            if drag_delta.x != 0 or drag_delta.y != 0:
+                new_x = self._widget_pos.x + drag_delta.x
+                new_y = self._widget_pos.y + drag_delta.y
+
+                # Clamp to bounds if set
+                if self._bounds is not None:
+                    new_x = max(self._bounds[0], min(self._bounds[2], new_x))
+                    new_y = max(self._bounds[1], min(self._bounds[3], new_y))
+
+                # Convert back to offset
+                new_offset_x = new_x - self._cursor_screen_pos.x
+                new_offset_y = new_y - self._cursor_screen_pos.y
+                self._position = (new_offset_x, new_offset_y)
+                imgui.reset_mouse_drag_delta(imgui.MouseButton_.left)
 
         # Restore cursor position so layout continues normally
-        if hasattr(self, '_saved_cursor_pos'):
-            imgui.set_cursor_pos(self._saved_cursor_pos)
+        imgui.set_cursor_pos(self._saved_cursor_pos)
         return Ok(None)

@@ -182,7 +182,11 @@ class TreeNode(Widget):
         imgui_id = f"{label}###{self.uid}"
 
         # Check if body exists and is not empty
-        has_body = self._body is not None and not self._body.is_empty
+        has_body = False
+        if self._body is not None:
+            is_empty_res = self._body.is_empty
+            if is_empty_res:
+                has_body = not is_empty_res.unwrapped
 
         if has_body:
             # Has body - render as expandable
@@ -559,8 +563,16 @@ class Draggable(Widget):
             body_widget = self._body
 
             # If body is composite, get first child (should be the button)
-            if hasattr(body_widget, '_children') and body_widget._children and len(body_widget._children) > 0:
-                button_widget = body_widget._children[0]
+            if hasattr(body_widget, 'children'):
+                children_res = body_widget.children
+                if children_res:
+                    children = children_res.unwrapped
+                    if children and len(children) > 0:
+                        button_widget = children[0]
+                    else:
+                        button_widget = body_widget
+                else:
+                    button_widget = body_widget
             else:
                 button_widget = body_widget
 

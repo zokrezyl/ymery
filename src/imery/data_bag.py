@@ -188,9 +188,10 @@ class DataBag(Object):
 
         Args:
             key: Field name (e.g., "label")
+            default_value: Default value if key not found. If None, returns error.
 
         Returns:
-            Result with field value, or Error if not found
+            Result with field value, or Error if not found and no default
         """
         # Handle string static: treat as "label" value
         if self._static and isinstance(self._static, str):

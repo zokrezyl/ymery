@@ -4,13 +4,10 @@ Composite widgets - containers for other widgets
 
 from imery.frontend.widget import Widget
 from imery.frontend.decorators import widget
-from imery.backend.types import TreeLike
 from imery.types import DataPath
 from imery.result import Result, Ok
 
-from typing import Optional, List
-
-import pprint
+from typing import List
 
 
 @widget
@@ -18,10 +15,29 @@ class Composite(Widget):
     """Composite widget - contains list of child widgets"""
 
     def init(self) -> Result[None]:
+        self._child_groups = {}
+
         res = super().init()
-        self._children: Optional[List] = None
-        self._last_children_names = None  # Track data tree children for refresh
-        return res
+        if not res:
+            return res
+
+        # Read body to determine number of groups
+        res = self._data_bag.get_static("body")
+        if not res:
+            return Result.error("Composite.init: failed to get body", res)
+        body = res.unwrapped
+
+        # Normalize body to list
+        if body is None:
+            return Ok(None)
+        if isinstance(body, (str, dict)):
+            body = [body]
+        elif not isinstance(body, list):
+            return Result.error(f"Composite.init: body must be string, dict, or list, got {type(body)}")
+
+        # Initialize empty dict for each body item index
+        self._child_groups = {i: {} for i in range(len(body))}
+        return Ok(None)
 
 
 
@@ -30,16 +46,23 @@ class Composite(Widget):
         """Check if composite has no children"""
         res = self._ensure_children()
         if not res:
-            return Result.error("could not init children")
-        return len(self._children) == 0
+            return Result.error("could not init children", res)
+        # Check if all groups are empty
+        for group in self._child_groups.values():
+            if len(group) > 0:
+                return Ok(False)
+        return Ok(True)
 
     @property
-    def children(self) -> Result[bool]:
-        """Check if composite has no children"""
+    def children(self) -> Result[List]:
+        """Get all child widgets as flat list"""
         res = self._ensure_children()
         if not res:
             return Result.error("could not init children")
-        return Ok(self._children)
+        result = []
+        for group in self._child_groups.values():
+            result.extend(group.values())
+        return Ok(result)
 
     def _substitute_variables(self, spec, key, value):
         """
@@ -69,244 +92,196 @@ class Composite(Widget):
             return spec
 
     def _ensure_children(self) -> Result[None]:
-        """Create all child widgets from body"""
-        self._children = []
+        """Sync child widgets with data - creates new, reuses existing, garbage collects removed"""
         res = self._data_bag.get_static("body")
         if not res:
-            return Result.error("Composite: _ensure_children: failed to get body", res)
+            self._handle_error(Result.error("Composite: _ensure_children: failed to get body", res))
+            return Ok(None)
         body = res.unwrapped
         if body is None:
-            return Result.error("Composite: _ensure_children: body is required")
+            return Ok(None)
 
-        # Normalize body to always be a list (handle collapsed forms)
-        if isinstance(body, str):
-            # Collapsed: body: "text" → ["text"]
-            body = [body]
-        elif isinstance(body, dict):
-            # Collapsed: body: {text: null} → [{text: null}]
+        # Normalize body to list
+        if isinstance(body, (str, dict)):
             body = [body]
         elif not isinstance(body, list):
-            return Result.error(f"Composite body must be string, dict, or list, got {type(body)}")
+            self._handle_error(Result.error(f"Composite body must be string, dict, or list, got {type(body)}"))
+            return Ok(None)
 
-        for item in body:
-            # Check for foreach-key keyword
-            if isinstance(item, dict) and "foreach-key" in item:
-                # Validate foreach-key dict has only "foreach-key" key (no garbage)
+        res = self._data_bag.get_data_path()
+        if not res:
+            self._handle_error(Result.error("Composite: _ensure_children: failed to get data path", res))
+            return Ok(None)
+        data_path = res.unwrapped
+        tree_like = self._data_bag._main_data_tree
+
+        for i, item in enumerate(body):
+            old_group = self._child_groups.get(i, {})
+
+            # foreach-key-value (also support foreach-key for compatibility)
+            foreach_key = None
+            if isinstance(item, dict):
+                if "foreach-key-value" in item:
+                    foreach_key = "foreach-key-value"
+                elif "foreach-key" in item:
+                    foreach_key = "foreach-key"
+
+            if foreach_key:
                 if len(item) != 1:
-                    return Result.error(f"Composite foreach-key item must have only 'foreach-key' key, got {list(item.keys())}")
+                    self._handle_error(Result.error(f"Composite {foreach_key} item must have only '{foreach_key}' key, got {list(item.keys())}"))
+                    continue
 
-                # This is a foreach-key item - iterate over metadata keys
-                foreach_body = item["foreach-key"]
+                foreach_body = item[foreach_key]
+                widget_spec = foreach_body[0] if isinstance(foreach_body, list) else foreach_body
 
-                # Normalize foreach_body to list (handle collapsed forms)
-                if isinstance(foreach_body, str):
-                    # Collapsed: foreach-key: "text" → ["text"]
-                    foreach_widgets = [foreach_body]
-                elif isinstance(foreach_body, dict):
-                    # Collapsed: foreach-key: {text: null} → [{text: null}]
-                    foreach_widgets = [foreach_body]
-                elif isinstance(foreach_body, list):
-                    foreach_widgets = foreach_body
-                else:
-                    return Result.error(f"Composite foreach-key body must be string, dict, or list, got {type(foreach_body)}")
-
-                # Get metadata at current path
-                data_path = self._data_bag._main_data_path
                 metadata_res = self._data_bag.get_metadata()
                 if not metadata_res:
-                    return Result.error(f"Composite: foreach-key failed to get metadata at path '{data_path}'", metadata_res)
-
+                    self._handle_error(Result.error(f"Composite: {foreach_key} failed to get metadata", metadata_res))
+                    continue
                 metadata = metadata_res.unwrapped
-
-                # Iterate over metadata keys
                 if not isinstance(metadata, dict):
-                    return Result.error(f"Composite: foreach-key requires metadata to be dict, got {type(metadata)}")
+                    self._handle_error(Result.error(f"Composite: {foreach_key} requires metadata to be dict, got {type(metadata)}"))
+                    continue
 
+                new_group = {}
                 for key in metadata.keys():
-                    value = metadata[key]
-
-                    # Create each widget in the foreach-key body
-                    for widget_spec in foreach_widgets:
-                        # Substitute $key and $value in widget_spec
+                    if key in old_group:
+                        new_group[key] = old_group[key]
+                    else:
+                        value = metadata[key]
                         substituted_spec = self._substitute_variables(widget_spec, key, value)
-
-                        if isinstance(substituted_spec, str):
-                            widget_name = substituted_spec
-                            widget_params = None
-                        elif isinstance(substituted_spec, dict):
-                            if len(substituted_spec) != 1:
-                                return Result.error(f"Composite foreach-key item must have one key, got {len(substituted_spec)}")
-                            widget_name = list(substituted_spec.keys())[0]
-                            widget_params = substituted_spec[widget_name]
+                        res = self._create_widget_from_spec(substituted_spec, tree_like, data_path)
+                        if res:
+                            new_group[key] = res.unwrapped
                         else:
-                            return Result.error(f"Composite foreach-key item must be str or dict, got {type(substituted_spec)}")
-
-                        # Prepend namespace if needed
-                        if '.' not in widget_name and self._namespace:
-                            full_widget_name = f"{self._namespace}.{widget_name}"
-                        else:
-                            full_widget_name = widget_name
-
-                        # Create widget at current path (not child path!)
-                        tree_like = self._data_bag._main_data_tree
-                        res = self._factory.create_widget(full_widget_name, tree_like, data_path, widget_params, self._data_bag._data_trees)
-                        if not res:
-                            return Result.error(f"Composite: foreach-key failed to create widget '{widget_name}'", res)
-
-                        child = res.unwrapped
-                        if child.__class__.__name__ == "Popup":
-                            return Result.error(f"Popup '{widget_name}' cannot be child of Composite foreach-key")
-                        self._children.append(child)
-
-                # Continue to next item in body
+                            self._handle_error(Result.error(f"Composite: {foreach_key} failed to create widget for key '{key}'", res))
+                self._child_groups[i] = new_group
                 continue
 
-            # Check for foreach-child keyword
+            # foreach-child: rebuild dict with data children
             if isinstance(item, dict) and "foreach-child" in item:
-                # Validate foreach dict has only "foreach" key (no garbage)
                 if len(item) != 1:
-                    return Result.error(f"Composite foreach item must have only 'foreach-child' key, got {list(item.keys())}")
+                    self._handle_error(Result.error(f"Composite foreach-child item must have only 'foreach-child' key, got {list(item.keys())}"))
+                    continue
 
-                # This is a foreach item - iterate over children
                 foreach_body = item["foreach-child"]
+                widget_spec = foreach_body[0] if isinstance(foreach_body, list) else foreach_body
 
-                # Normalize foreach_body to list (handle collapsed forms)
-                if isinstance(foreach_body, str):
-                    # Collapsed: foreach: "text" → ["text"]
-                    foreach_widgets = [foreach_body]
-                elif isinstance(foreach_body, dict):
-                    # Collapsed: foreach: {text: null} → [{text: null}]
-                    foreach_widgets = [foreach_body]
-                elif isinstance(foreach_body, list):
-                    foreach_widgets = foreach_body
-                else:
-                    return Result.error(f"Composite foreach body must be string, dict, or list, got {type(foreach_body)}")
-
-                # Get children at current path
-                tree_like = self._data_bag._main_data_tree
-                data_path = self._data_bag._main_data_path
-                res = tree_like.get_children_names(data_path)
+                res = self._data_bag.get_children_names()
                 if not res:
-                    return Result.error(f"Composite: foreach failed to get children at path '{data_path}'", res)
-
+                    self._handle_error(Result.error(f"Composite: foreach-child failed to get children", res))
+                    continue
                 child_names = res.unwrapped
 
-                # For each child, create the foreach body widgets
+                new_group = {}
                 for child_name in child_names:
-                    child_path = data_path / child_name
-
-                    # Create each widget in the foreach body at child_path
-                    for widget_spec in foreach_widgets:
-                        if isinstance(widget_spec, str):
-                            widget_name = widget_spec
-                            widget_params = None
-                        elif isinstance(widget_spec, dict):
-                            if len(widget_spec) != 1:
-                                return Result.error(f"Composite foreach item must have one key, got {len(widget_spec)}")
-                            widget_name = list(widget_spec.keys())[0]
-                            widget_params = widget_spec[widget_name]
+                    if child_name in old_group:
+                        new_group[child_name] = old_group[child_name]
+                    else:
+                        child_path = data_path / child_name
+                        res = self._create_widget_from_spec(widget_spec, tree_like, child_path)
+                        if res:
+                            new_group[child_name] = res.unwrapped
                         else:
-                            return Result.error(f"Composite foreach item must be str or dict, got {type(widget_spec)}")
-
-                        # Prepend namespace if needed
-                        if '.' not in widget_name and self._namespace:
-                            full_widget_name = f"{self._namespace}.{widget_name}"
-                        else:
-                            full_widget_name = widget_name
-
-                        # Create widget at child_path
-                        res = self._factory.create_widget(full_widget_name, tree_like, child_path, widget_params, self._data_bag._data_trees)
-                        if not res:
-                            return Result.error(f"Composite: foreach failed to create widget '{widget_name}' at '{child_path}'", res)
-
-                        child = res.unwrapped
-                        if child.__class__.__name__ ==  "Popup":
-                            return Result.error(f"Popup '{widget_name}' cannot be child of Composite foreach")
-                        self._children.append(child)
-
-                # Continue to next item in body
+                            self._handle_error(Result.error(f"Composite: foreach-child failed to create widget at '{child_path}'", res))
+                self._child_groups[i] = new_group
                 continue
 
-            # Handle string format: "separator", "same-line"
-            tree_like = self._data_bag._main_data_tree
-            data_path = self._data_bag._main_data_path
+            # Single widget: create if not exists
+            if "_single" in old_group:
+                continue
+
+            item_tree_like = tree_like
+            item_data_path = data_path
+
             if isinstance(item, str):
                 widget_name = item
                 params = None
-                child_path = data_path
-            # Handle dict format: {"text": "label"} or {"data-id": "foo", "text": "label"}
+                child_path = item_data_path
             elif isinstance(item, dict):
-                # Extract data-tree if present (switches which tree is used as main)
                 child_data_tree = item.get("data-tree")
                 if child_data_tree:
-                    tree_like = self._data_bag._data_trees.get(child_data_tree)
-                    if not tree_like:
-                        return Result.error(f"Composite: unknown data-tree '{child_data_tree}'")
-                    data_path = DataPath("/")  # Start at root of the new tree
+                    item_tree_like = self._data_bag._data_trees.get(child_data_tree)
+                    if not item_tree_like:
+                        self._handle_error(Result.error(f"Composite: unknown data-tree '{child_data_tree}'"))
+                        continue
+                    item_data_path = DataPath("/")
 
-                # Extract data-id if present (navigates within the tree)
                 child_data_id = item.get("data-id")
-                if child_data_id is None:
-                    child_path = data_path
-                else:
-                    child_path = data_path / child_data_id
+                child_path = item_data_path / child_data_id if child_data_id else item_data_path
 
-                # Extract widget name and params (excluding data-id and data-tree)
                 widget_keys = [k for k in item.keys() if k not in ("data-id", "data-tree")]
                 if len(widget_keys) != 1:
-                    return Result.error(f"Composite template item must have one widget key (plus optional data-id/data-tree), got {len(widget_keys)}: {widget_keys}")
-
+                    self._handle_error(Result.error(f"Composite template item must have one widget key (plus optional data-id/data-tree), got {len(widget_keys)}: {widget_keys}"))
+                    continue
                 widget_name = widget_keys[0]
                 params = item[widget_name]
             else:
-                return Result.error(f"Composite template item must be str or dict, got {type(item)}")
+                self._handle_error(Result.error(f"Composite template item must be str or dict, got {type(item)}"))
+                continue
 
-            # Prepend namespace if widget_name doesn't have one
-            # Factory is smart enough to fallback to primitives if needed
             if '.' not in widget_name and self._namespace:
                 full_widget_name = f"{self._namespace}.{widget_name}"
             else:
                 full_widget_name = widget_name
 
-            # Create single child widget via factory
-            res = self._factory.create_widget(full_widget_name, tree_like, child_path, params, self._data_bag._data_trees)
+            res = self._factory.create_widget(full_widget_name, item_tree_like, child_path, params, self._data_bag._data_trees)
             if not res:
-                return Result.error(f"Composite: failed to create child widget '{widget_name}'", res)
+                self._handle_error(Result.error(f"Composite: failed to create child widget '{widget_name}'", res))
+                continue
 
             child = res.unwrapped
-
-            # Popup cannot be a child of Composite - must be standalone
             if child.__class__.__name__ == "Popup":
-                return Result.error(f"Popup '{widget_name}' cannot be child of Composite. Popup must be used standalone (root element or event show)")
+                self._handle_error(Result.error(f"Popup '{widget_name}' cannot be child of Composite"))
+                continue
 
-            # Child is already initialized by factory.create_widget (via Object.create)
-            self._children.append(child)
+            self._child_groups[i] = {"_single": child}
 
         return Ok(None)
+
+    def _create_widget_from_spec(self, spec, tree_like, data_path):
+        """Create a widget from a spec (string or dict)"""
+        if isinstance(spec, str):
+            widget_name = spec
+            widget_params = None
+        elif isinstance(spec, dict):
+            if len(spec) != 1:
+                return Result.error(f"Widget spec must have one key, got {len(spec)}")
+            widget_name = list(spec.keys())[0]
+            widget_params = spec[widget_name]
+        else:
+            return Result.error(f"Widget spec must be str or dict, got {type(spec)}")
+
+        if '.' not in widget_name and self._namespace:
+            full_widget_name = f"{self._namespace}.{widget_name}"
+        else:
+            full_widget_name = widget_name
+
+        res = self._factory.create_widget(full_widget_name, tree_like, data_path, widget_params, self._data_bag._data_trees)
+        if not res:
+            return Result.error(f"Failed to create widget '{widget_name}'", res)
+
+        child = res.unwrapped
+        if child.__class__.__name__ == "Popup":
+            return Result.error(f"Popup '{widget_name}' cannot be child of Composite")
+
+        return Ok(child)
 
     def render(self) -> Result[None]:
         """Render all children - Composite doesn't use head/body pattern"""
         # Check if data children changed (for foreach-child refresh)
-        res = self._data_bag.get_children_names()
-        current_names = tuple(res.unwrapped) if res and res.unwrapped else None
-        if self._children is None or (current_names is not None and current_names != self._last_children_names):
-            if self._children is not None:
-                for child in self._children:
-                    child.dispose()
-            res = self._ensure_children()
-            if not res:
-                return Result.error(f"Composite: _ensure_children failed", res)
-            self._last_children_names = current_names
+        self._ensure_children()
 
         # Push styles before rendering children
         res = self._push_styles()
         if not res:
             self._handle_error(Result.error("Composite: _push_styles failed", res))
 
-        for child in self._children:
-            res = child.render()
-            if not res:
-                self._handle_error(Result.error(f"Composite: child render failed", res))
+        for _, child_group in self._child_groups.items():
+            for _, child in child_group.items():
+                res = child.render()
+                if not res:
+                    self._handle_error(Result.error(f"Composite: child render failed", res))
 
         # Pop styles after rendering children
         res = self._pop_styles()
@@ -318,9 +293,6 @@ class Composite(Widget):
 
     def dispose(self) -> Result[None]:
         """Dispose all children"""
-        for child in self._children:
-            res = child.dispose()
-            if not res:
-                return Result.error(f"Composite: child dispose failed", res)
+        self._child_groups = {}
         return Ok(None)
 

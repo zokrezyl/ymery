@@ -110,7 +110,7 @@ class SliderInt(Widget):
         if res:
             scale = res.unwrapped
 
-        display_format = None
+        display_format = ""
         res = self._handle_error(self._data_bag.get("display-format", display_format))
         if res:
             display_format = res.unwrapped

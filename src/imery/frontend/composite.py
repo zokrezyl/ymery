@@ -108,13 +108,6 @@ class Composite(Widget):
             self._handle_error(Result.error(f"Composite body must be string, dict, or list, got {type(body)}"))
             return Ok(None)
 
-        res = self._data_bag.get_data_path()
-        if not res:
-            self._handle_error(Result.error("Composite: _ensure_children: failed to get data path", res))
-            return Ok(None)
-        data_path = res.unwrapped
-        tree_like = self._data_bag._main_data_tree
-
         for i, item in enumerate(body):
             old_group = self._child_groups.get(i, {})
 
@@ -150,7 +143,7 @@ class Composite(Widget):
                     else:
                         value = metadata[key]
                         substituted_spec = self._substitute_variables(widget_spec, key, value)
-                        res = self._create_widget_from_spec(substituted_spec, tree_like, data_path)
+                        res = self._create_widget_from_spec(substituted_spec)
                         if res:
                             new_group[key] = res.unwrapped
                         else:
@@ -178,12 +171,11 @@ class Composite(Widget):
                     if child_name in old_group:
                         new_group[child_name] = old_group[child_name]
                     else:
-                        child_path = data_path / child_name
-                        res = self._create_widget_from_spec(widget_spec, tree_like, child_path)
+                        res = self._create_widget_from_spec(widget_spec, child_name)
                         if res:
                             new_group[child_name] = res.unwrapped
                         else:
-                            self._handle_error(Result.error(f"Composite: foreach-child failed to create widget at '{child_path}'", res))
+                            self._handle_error(Result.error(f"Composite: foreach-child failed to create widget for '{child_name}'", res))
                 self._child_groups[i] = new_group
                 continue
 
@@ -191,28 +183,16 @@ class Composite(Widget):
             if "_single" in old_group:
                 continue
 
-            item_tree_like = tree_like
-            item_data_path = data_path
-
             if isinstance(item, str):
                 widget_name = item
                 params = None
-                child_path = item_data_path
+                path_spec = None
             elif isinstance(item, dict):
-                child_data_tree = item.get("data-tree")
-                if child_data_tree:
-                    item_tree_like = self._data_bag._data_trees.get(child_data_tree)
-                    if not item_tree_like:
-                        self._handle_error(Result.error(f"Composite: unknown data-tree '{child_data_tree}'"))
-                        continue
-                    item_data_path = DataPath("/")
+                path_spec = item.get("data-path")
 
-                child_data_id = item.get("data-id")
-                child_path = item_data_path / child_data_id if child_data_id else item_data_path
-
-                widget_keys = [k for k in item.keys() if k not in ("data-id", "data-tree")]
+                widget_keys = [k for k in item.keys() if k != "data-path"]
                 if len(widget_keys) != 1:
-                    self._handle_error(Result.error(f"Composite template item must have one widget key (plus optional data-id/data-tree), got {len(widget_keys)}: {widget_keys}"))
+                    self._handle_error(Result.error(f"Composite template item must have one widget key (plus optional data-path), got {len(widget_keys)}: {widget_keys}"))
                     continue
                 widget_name = widget_keys[0]
                 params = item[widget_name]
@@ -225,7 +205,14 @@ class Composite(Widget):
             else:
                 full_widget_name = widget_name
 
-            res = self._factory.create_widget(full_widget_name, item_tree_like, child_path, params, self._data_bag._data_trees)
+            # Create child DataBag with inherited path
+            res = self._data_bag.inherit(path_spec, params)
+            if not res:
+                self._handle_error(Result.error(f"Composite: failed to create child DataBag for '{widget_name}'", res))
+                continue
+            child_bag = res.unwrapped
+
+            res = self._factory.create_widget_from_bag(full_widget_name, child_bag)
             if not res:
                 self._handle_error(Result.error(f"Composite: failed to create child widget '{widget_name}'", res))
                 continue
@@ -239,7 +226,7 @@ class Composite(Widget):
 
         return Ok(None)
 
-    def _create_widget_from_spec(self, spec, tree_like, data_path):
+    def _create_widget_from_spec(self, spec, path_spec=None):
         """Create a widget from a spec (string or dict)"""
         if isinstance(spec, str):
             widget_name = spec
@@ -257,7 +244,13 @@ class Composite(Widget):
         else:
             full_widget_name = widget_name
 
-        res = self._factory.create_widget(full_widget_name, tree_like, data_path, widget_params, self._data_bag._data_trees)
+        # Create child DataBag with inherited path
+        res = self._data_bag.inherit(path_spec, widget_params)
+        if not res:
+            return Result.error(f"Failed to create child DataBag for '{widget_name}'", res)
+        child_bag = res.unwrapped
+
+        res = self._factory.create_widget_from_bag(full_widget_name, child_bag)
         if not res:
             return Result.error(f"Failed to create widget '{widget_name}'", res)
 

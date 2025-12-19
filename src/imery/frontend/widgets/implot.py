@@ -47,7 +47,7 @@ class ImplotLayer(Widget):
                 openable = capabilities.get("openable")
                 if category == "audio-channel" and openable:
                     # This is an openable channel - need to call open() ONCE to get buffer
-                    tree_like = self._data_bag._main_data_tree
+                    tree_like = self._data_bag._data_trees.get(self._data_bag._main_data_key)
                     data_path = self._data_bag._main_data_path
                     if not tree_like:
                         return Result.error("ImplotLayer: no tree_like available for opening channel")

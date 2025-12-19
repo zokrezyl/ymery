@@ -22,18 +22,18 @@ class DataBag(Object):
     - $tree@/abs - absolute path in named tree
     """
     def __init__(self, data_trees: Dict, main_data_key: str, main_data_path: DataPath, static: Optional[Dict]):
-        self._data_trees = data_trees
+        self._data_trees = data_trees if data_trees else {}
         self._main_data_key = main_data_key
         self._main_data_path = main_data_path
         self._static = static
-        self._main_data_tree = None
 
     @property
     def as_tree(self):
+        tree = self._data_trees.get(self._main_data_key)
         return {
             "data-path": str(self._main_data_path),
             "static": self._static,
-            "main-data-tree": self._main_data_tree.as_tree if self._main_data_tree else None,
+            "main-data-tree": tree.as_tree if tree else None,
         }
 
     def init(self) -> Result[None]:
@@ -41,21 +41,30 @@ class DataBag(Object):
         if self._static is not None and not isinstance(self._static, (str, dict)):
             return Result.error(f"DataBag.init: static must be None, str, or dict, got {type(self._static)}")
 
-        # Lookup main data tree
-        if self._data_trees and self._main_data_key:
-            self._main_data_tree = self._data_trees.get(self._main_data_key)
+        # Extract 'data' from static - becomes the main data tree
+        # Each top-level key becomes a tree ID, first one becomes main tree
+        if self._static and isinstance(self._static, dict) and "data" in self._static:
+            widget_data = self._static["data"]
+            if isinstance(widget_data, dict):
+                first_tree_id = None
+                for tree_id, tree_content in widget_data.items():
+                    # Check for key conflict
+                    if tree_id in self._data_trees:
+                        return Result.error(f"DataBag.init: data key '{tree_id}' already exists")
 
-        # Extract 'local' from static and create local DataTree
-        if self._static and isinstance(self._static, dict) and "local" in self._static:
-            local_data = self._static["local"]
-            if isinstance(local_data, dict):
-                local_tree = DataTree(local_data)
-                res = local_tree.init()
-                if not res:
-                    return Result.error("DataBag.init: failed to init local DataTree", res)
-                if self._data_trees is None:
-                    self._data_trees = {}
-                self._data_trees["local"] = local_tree
+                    tree = DataTree(tree_content)
+                    res = tree.init()
+                    if not res:
+                        return Result.error(f"DataBag.init: failed to init DataTree '{tree_id}'", res)
+
+                    self._data_trees[tree_id] = tree
+                    if first_tree_id is None:
+                        first_tree_id = tree_id
+
+                # First tree becomes the main tree
+                if first_tree_id:
+                    self._main_data_key = first_tree_id
+                    self._main_data_path = DataPath("/")
 
         return Ok(None)
 
@@ -129,7 +138,7 @@ class DataBag(Object):
                 path_str = '/' + path_str
         else:
             # Main tree: @path
-            tree = self._main_data_tree
+            tree = self._data_trees.get(self._main_data_key)
             if not tree:
                 return Result.error(f"DataBag: no main tree available for reference '@{path_str}'")
 
@@ -221,16 +230,17 @@ class DataBag(Object):
                 return self._resolve_reference(value)
             return Ok(value)
 
-        # No static value - try to get from main_data_tree metadata
-        if not self._main_data_tree:
+        # No static value - try to get from main data tree metadata
+        tree = self._data_trees.get(self._main_data_key)
+        if not tree:
             if default_value is None:
-                return Result.error(f"DataBag.get: no main_data_tree available and key '{key}' not in static")
+                return Result.error(f"DataBag.get: no main data tree available and key '{key}' not in static")
             else:
                 return Ok(default_value)
 
         # Get from tree at current path
         full_path = self._main_data_path / key
-        res = self._main_data_tree.get(full_path)
+        res = tree.get(full_path)
         if not res:
             if default_value is None:
                 return Result.error(f"DataBag.get: failed to get '{key}' from main_data_tree at path '{full_path}'", res)
@@ -248,7 +258,8 @@ class DataBag(Object):
         """
         return the metadata view at current path
         """
-        if self._main_data_tree is None:
+        tree = self._data_trees.get(self._main_data_key)
+        if tree is None:
             if self._static is None:
                 return Ok(None)
             if isinstance(self._static, dict):
@@ -257,7 +268,7 @@ class DataBag(Object):
                 return Ok({"label": self._static})
             return Ok(None)
 
-        res = self._main_data_tree.get_metadata(self._main_data_path)
+        res = tree.get_metadata(self._main_data_path)
         if not res:
             return Result.error(f"DataBag.get_metadata: no data found at {self._main_data_path}", res)
         metadata = res.unwrapped.copy()
@@ -299,9 +310,9 @@ class DataBag(Object):
                         if not path_str.startswith('/'):
                             path_str = '/' + path_str
                     else:
-                        tree = self._main_data_tree
+                        tree = self._data_trees.get(self._main_data_key)
                         if not tree:
-                            return Result.error(f"DataBag.set: no main_data_tree available")
+                            return Result.error(f"DataBag.set: no main data tree available")
 
                     # Resolve path
                     if path_str.startswith('/'):
@@ -324,11 +335,12 @@ class DataBag(Object):
                     return Ok(None)
 
         # No reference - set at current path in main tree
-        if not self._main_data_tree:
-            return Result.error(f"DataBag.set: no main_data_tree available")
+        tree = self._data_trees.get(self._main_data_key)
+        if not tree:
+            return Result.error(f"DataBag.set: no main data tree available")
 
         full_path = self._main_data_path / key
-        res = self._main_data_tree.set(full_path, value)
+        res = tree.set(full_path, value)
         if not res:
             return Result.error(f"DataBag.set: failed to set '{key}' at path '{full_path}'", res)
 
@@ -344,12 +356,13 @@ class DataBag(Object):
         Returns:
             Result[None]
         """
+        tree = self._data_trees.get(self._main_data_key)
         print(f"DataBag.add_child: input data={data}")
-        print(f"DataBag.add_child: main_data_tree={self._main_data_tree}")
+        print(f"DataBag.add_child: main_data_tree={tree}")
         print(f"DataBag.add_child: main_data_path={self._main_data_path}")
-        print(f"DataBag.add_child: data_trees keys={list(self._data_trees.keys()) if self._data_trees else None}")
-        if not self._main_data_tree:
-            return Result.error(f"DataBag.add_child: no main_data_tree available")
+        print(f"DataBag.add_child: data_trees keys={list(self._data_trees.keys())}")
+        if not tree:
+            return Result.error(f"DataBag.add_child: no main data tree available")
 
         # Resolve references in data
         resolved = {}
@@ -395,7 +408,7 @@ class DataBag(Object):
 
         print(f"DataBag.add_child: resolved name={child_name}, metadata={child_metadata}, target_path={target_path}")
 
-        res = self._main_data_tree.add_child(target_path, child_name, {"metadata": child_metadata})
+        res = tree.add_child(target_path, child_name, {"metadata": child_metadata})
         if not res:
             return Result.error(f"DataBag.add_child: failed at '{target_path}'", res)
 
@@ -403,6 +416,56 @@ class DataBag(Object):
 
     def get_children_names(self) -> Result[List[str]]:
         """Get children names at current path from main data tree"""
-        if not self._main_data_tree:
+        tree = self._data_trees.get(self._main_data_key)
+        if not tree:
             return Ok([])
-        return self._main_data_tree.get_children_names(self._main_data_path)
+        return tree.get_children_names(self._main_data_path)
+
+    def inherit(self, data_path: str = None, static = None) -> Result["DataBag"]:
+        """
+        Create a child DataBag with inherited/modified path.
+
+        Args:
+            data_path: Path for the child (relative, absolute, or $tree@path)
+            static: Static params for the child widget
+
+        Supports:
+        - relative-path -> current_path / relative-path
+        - /absolute/path -> absolute path in main tree
+        - ../parent/path -> parent-relative (handled by DataPath)
+        - $tree@path -> path in named tree
+
+        Returns:
+            Result[DataBag]: New child DataBag
+        """
+        new_key = self._main_data_key
+        new_path = self._main_data_path
+
+        if data_path:
+            # Check for named tree reference: $tree@path
+            if data_path.startswith('$'):
+                match = REF_PATTERN.match(data_path)
+                if match:
+                    tree_name = match.group(1)  # $tree
+                    path_str = match.group(2)   # path after @
+
+                    tree_key = tree_name[1:]  # Remove $ prefix
+                    if tree_key not in self._data_trees:
+                        return Result.error(f"DataBag.inherit: unknown tree '{tree_key}'")
+
+                    new_key = tree_key
+                    # Named trees use root-relative paths
+                    if path_str.startswith('/'):
+                        new_path = DataPath(path_str)
+                    else:
+                        new_path = DataPath('/') / path_str
+                else:
+                    return Result.error(f"DataBag.inherit: invalid tree reference '{data_path}'")
+            elif data_path.startswith('/'):
+                # Absolute path
+                new_path = DataPath(data_path)
+            else:
+                # Relative path - DataPath handles ..
+                new_path = self._main_data_path / data_path
+
+        return DataBag.create(self._data_trees, new_key, new_path, static)

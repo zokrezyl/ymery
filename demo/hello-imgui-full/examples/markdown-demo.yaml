@@ -4,33 +4,33 @@ widgets:
     body:
       - separator-text: "Basic Markdown"
 
-      - data-id: markdown-basic
+      - data-path: markdown-basic
         markdown:
 
       - separator:
 
       - separator-text: "Tables"
 
-      - data-id: markdown-tables
+      - data-path: markdown-tables
         markdown:
 
       - separator:
 
       - separator-text: "Links and Horizontal Rules"
 
-      - data-id: markdown-links
+      - data-path: markdown-links
         markdown:
 
       - separator:
 
       - separator-text: "Advanced Features"
 
-      - data-id: markdown-advanced
+      - data-path: markdown-advanced
         markdown:
 
       - separator:
 
       - separator-text: "Complete Reference"
 
-      - data-id: markdown-comprehensive
+      - data-path: markdown-comprehensive
         markdown:

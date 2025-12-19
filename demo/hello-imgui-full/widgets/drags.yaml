@@ -4,7 +4,7 @@ widgets:
     body:
       - separator-text: "Drag Int"
 
-      - data-id: drag-int
+      - data-path: drag-int
         drag-int:
           head:
             tooltip: "Drag to adjust integer value (0-100)"
@@ -13,7 +13,7 @@ widgets:
 
       - separator-text: "Drag Float"
 
-      - data-id: drag-float
+      - data-path: drag-float
         drag-float:
           head:
             tooltip: "Drag to adjust float value (0.0-1.0)"
@@ -22,14 +22,14 @@ widgets:
 
       - separator-text: "Drag Range"
 
-      - data-id: drag-int-min
+      - data-path: drag-int-min
         drag-int:
           head:
             tooltip: "Drag to set minimum value"
           min: 0
           max: 100
 
-      - data-id: drag-int-max
+      - data-path: drag-int-max
         drag-int:
           head:
             tooltip: "Drag to set maximum value"

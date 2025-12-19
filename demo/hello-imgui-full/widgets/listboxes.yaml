@@ -4,7 +4,7 @@ widgets:
     body:
       - separator-text: "List Box"
 
-      - data-id: listbox-selection
+      - data-path: listbox-selection
         listbox:
           head:
             tooltip: "Select an item from the list"

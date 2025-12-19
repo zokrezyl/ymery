@@ -39,20 +39,20 @@ widgets:
           # Toggle Switch
           [imgui_toggle](https://github.com/cmdwtf/imgui_toggle) provides toggle switches for ImGui.
 
-      - data-id: toggle-flag
+      - data-path: toggle-flag
         toggle:
           label: "Default Toggle"
 
       - same-line:
 
-      - data-id: toggle-flag
+      - data-path: toggle-flag
         toggle:
           label: "Animated Toggle"
           animated: true
 
       - same-line:
 
-      - data-id: toggle-flag
+      - data-path: toggle-flag
         toggle:
           label: "Material Style (with slowed anim)"
           style: "material"
@@ -60,7 +60,7 @@ widgets:
 
       - same-line:
 
-      - data-id: toggle-flag
+      - data-path: toggle-flag
         toggle:
           label: "iOS style"
           style: "ios"
@@ -68,7 +68,7 @@ widgets:
 
       - same-line:
 
-      - data-id: toggle-flag
+      - data-path: toggle-flag
         toggle:
           label: "iOS style (light)"
           style: "ios"

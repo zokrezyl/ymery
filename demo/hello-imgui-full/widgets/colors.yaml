@@ -4,7 +4,7 @@ widgets:
     body:
       - separator-text: "Color Edit"
 
-      - data-id: color-rgb
+      - data-path: color-rgb
         color-edit:
           head:
             tooltip: "Click to edit RGB color"
@@ -12,7 +12,7 @@ widgets:
 
       - separator-text: "Color Edit with Alpha"
 
-      - data-id: color-rgba
+      - data-path: color-rgba
         color-edit:
           head:
             tooltip: "Click to edit RGBA color with alpha"
@@ -20,7 +20,7 @@ widgets:
 
       - separator-text: "Color Button"
 
-      - data-id: color-button
+      - data-path: color-button
         color-button:
           head:
             tooltip: "Click to pick a color"

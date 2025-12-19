@@ -40,13 +40,13 @@ widgets:
           label: "Kernel Browser"
           dock-space-name: "LeftPanel"
           body:
-            - data-id: kernel
+            - data-path: kernel
               kernel.kernel-tree-view:
       - dockable-window:
           label: "Plots"
           dock-space-name: "MainDockSpace"
           body:
-            - data-id: plots
+            - data-path: plots
               implot.implot-wrapper-stack:
       - dockable-window:
           label: "Errors"

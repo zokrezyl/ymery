@@ -491,7 +491,7 @@ widgets:
                     if not path_str.startswith('/'):
                         path_str = '/' + path_str
                 else:
-                    tree = self._data_bag._main_data_tree
+                    tree = self._data_bag._data_trees.get(self._data_bag._main_data_key)
 
                 # Resolve path
                 if path_str.startswith('/'):
@@ -651,10 +651,6 @@ widgets:
         Returns:
             Result[Widget]: Created widget instance
         """
-        tree_like = self._data_bag._main_data_tree
-        data_path = self._data_bag._main_data_path
-        parent_data_trees = self._data_bag._data_trees
-
         # String → widget reference
         if isinstance(widget_spec, str):
             widget_name = widget_spec
@@ -662,14 +658,19 @@ widgets:
                 full_widget_name = f"{self._namespace}.{widget_name}"
             else:
                 full_widget_name = widget_spec
-            return self._factory.create_widget(full_widget_name, tree_like, data_path, None, parent_data_trees)
+            res = self._data_bag.inherit()
+            if not res:
+                return Result.error(f"Widget: _create_widget_from_spec: failed to create child DataBag", res)
+            return self._factory.create_widget_from_bag(full_widget_name, res.unwrapped)
 
         # Dict or list → composite - use factory to avoid circular import
         if isinstance(widget_spec, (dict, list)):
             params = {"type": "composite", "body": [widget_spec] if isinstance(widget_spec, dict) else widget_spec}
-            # Use full widget name with namespace to preserve context
             full_widget_name = f"{self._namespace}.composite" if self._namespace else "composite"
-            res = self._factory.create_widget(full_widget_name, tree_like, data_path, params, parent_data_trees)
+            res = self._data_bag.inherit(None, params)
+            if not res:
+                return Result.error("Widget: _create_widget_from_spec: failed to create child DataBag", res)
+            res = self._factory.create_widget_from_bag(full_widget_name, res.unwrapped)
             if not res:
                 return Result.error("Widget: _create_widget_from_spec: could not create widget", res)
             return Ok(res.unwrapped)

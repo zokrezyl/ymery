@@ -4,14 +4,14 @@ widgets:
     body:
       - separator-text: "Python Editor"
 
-      - data-id: python-code
+      - data-path: python-code
         text-editor:
           language: "python"
           size: [700, 400]
 
       - separator-text: "C++ Editor"
 
-      - data-id: cpp-code
+      - data-path: cpp-code
         text-editor:
           language: "cpp"
           size: [700, 300]

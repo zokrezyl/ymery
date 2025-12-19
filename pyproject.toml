@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "imery"
-version = "0.0.59"
+version = "0.0.60"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"

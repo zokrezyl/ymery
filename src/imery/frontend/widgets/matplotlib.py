@@ -10,10 +10,6 @@ from imery.decorators import widget
 from imery.result import Result, Ok
 
 
-# Figure cache to avoid re-rendering unchanged figures
-_fig_cache: dict = {}
-
-
 def _ensure_agg_backend():
     """Ensure matplotlib uses Agg backend for headless rendering."""
     import matplotlib
@@ -21,45 +17,30 @@ def _ensure_agg_backend():
         matplotlib.use('Agg')
 
 
-def _fig_to_image(label_id: str, figure, refresh: bool = False) -> np.ndarray:
+def _fig_to_image_nocache(figure) -> np.ndarray:
     """
-    Convert a matplotlib figure to an RGBA numpy array.
+    Convert a matplotlib figure to an RGBA numpy array without caching.
 
     Parameters:
-        label_id: Unique identifier for caching
         figure: matplotlib.figure.Figure to convert
-        refresh: Force re-render even if cached
 
     Returns:
         numpy.ndarray: RGBA image as uint8 array
     """
     import matplotlib.pyplot as plt
 
-    # Use label string as cache key (imgui.get_id requires active context)
-    fig_id = label_id
+    figure.canvas.draw()
+    w, h = figure.canvas.get_width_height()
+    buf = np.frombuffer(figure.canvas.buffer_rgba(), dtype=np.uint8)
 
-    # Check cache
-    if refresh and fig_id in _fig_cache:
-        del _fig_cache[fig_id]
-
-    if fig_id not in _fig_cache:
-        # Draw the figure
-        figure.canvas.draw()
-
-        # Get RGBA buffer
-        w, h = figure.canvas.get_width_height()
-        buf = np.frombuffer(figure.canvas.buffer_rgba(), dtype=np.uint8)
-
-        try:
-            buf = buf.reshape((h, w, 4)).copy()
-            _fig_cache[fig_id] = buf
-            plt.close(figure)
-        except ValueError as e:
-            print(f"Warning: matplotlib figure conversion failed: {e}")
-            print("Make sure matplotlib.use('Agg') is called before importing pyplot")
-            return np.zeros((100, 100, 4), dtype=np.uint8)
-
-    return _fig_cache[fig_id]
+    try:
+        image = buf.reshape((h, w, 4)).copy()
+        plt.close(figure)
+        return image
+    except ValueError as e:
+        print(f"Warning: matplotlib figure conversion failed: {e}")
+        plt.close(figure)
+        return np.zeros((100, 100, 4), dtype=np.uint8)
 
 
 @widget
@@ -92,14 +73,12 @@ class MatplotlibFig(Widget):
 
         # Store figure reference
         self._figure = None
-        self._image = None
 
         return Ok(None)
 
     def set_figure(self, figure):
         """Set the matplotlib figure to display."""
         self._figure = figure
-        self._image = None  # Force refresh
 
     def _pre_render_head(self) -> Result[None]:
         """Render matplotlib figure"""
@@ -133,7 +112,7 @@ class MatplotlibFig(Widget):
 
         # Convert figure to image
         if self._image is None or refresh:
-            self._image = _fig_to_image(label, self._figure, refresh)
+            self._image = _fig_to_image_nocache(self._figure)
 
         # Display using immvision
         immvision.push_color_order_rgb()
@@ -258,7 +237,7 @@ class MatplotlibLinePlot(Widget):
         data_hash = hash((tuple(x_data), tuple(y_data), title, xlabel, ylabel))
         if data_hash != self._last_data_hash:
             fig = self._create_figure(x_data, y_data, title, xlabel, ylabel)
-            self._image = _fig_to_image(label, fig, refresh=True)
+            self._image = _fig_to_image_nocache(fig)
             self._last_data_hash = data_hash
 
         if self._image is not None:
@@ -292,25 +271,14 @@ class Matplotlib(Widget):
 
         _ensure_agg_backend()
 
-        # Initialize size
-        size_list = [500, 400]
-        res = self._handle_error(self._data_bag.get("size", size_list))
-        if res:
-            size_list = res.unwrapped
-        self._size = ImVec2(size_list[0], size_list[1])
-
-        # For change detection
-        self._last_params_hash = None
-        self._image = None
-
         return Ok(None)
 
-    def _create_demo_figure(self, plot_type, num_points, amplitude, frequency, noise_level):
+    def _create_demo_figure(self, plot_type, num_points, amplitude, frequency, noise_level, size):
         """Create demo figure based on parameters."""
         import matplotlib.pyplot as plt
 
         dpi = 100
-        figsize = (self._size.x / dpi, self._size.y / dpi)
+        figsize = (size[0] / dpi, size[1] / dpi)
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
 
         x = np.linspace(0, 4 * np.pi, num_points)
@@ -345,6 +313,12 @@ class Matplotlib(Widget):
 
     def _pre_render_head(self) -> Result[None]:
         """Render plot based on data_bag parameters"""
+        # Read size
+        size = [500, 400]
+        res = self._handle_error(self._data_bag.get("size", size))
+        if res:
+            size = res.unwrapped
+
         # Read parameters from data_bag
         plot_type = "line"
         res = self._handle_error(self._data_bag.get("plot_type", plot_type))
@@ -371,17 +345,14 @@ class Matplotlib(Widget):
         if res:
             noise_level = float(res.unwrapped)
 
-        # Check if parameters changed
-        params_hash = hash((plot_type, num_points, amplitude, frequency, noise_level))
-        if params_hash != self._last_params_hash or self._image is None:
-            fig = self._create_demo_figure(plot_type, num_points, amplitude, frequency, noise_level)
-            self._image = _fig_to_image("matplotlib_demo", fig, refresh=True)
-            self._last_params_hash = params_hash
+        # Create figure and convert to image - no caching
+        fig = self._create_demo_figure(plot_type, num_points, amplitude, frequency, noise_level, size)
+        image = _fig_to_image_nocache(fig)
 
-        # Display
-        if self._image is not None:
-            immvision.push_color_order_rgb()
-            immvision.image_display_resizable("matplotlib_demo", self._image, size=self._size)
-            immvision.pop_color_order()
+        # Display - clear texture cache to force refresh
+        immvision.clear_texture_cache()
+        immvision.push_color_order_rgb()
+        immvision.image_display_resizable("matplotlib_demo", image, size=ImVec2(size[0], size[1]))
+        immvision.pop_color_order()
 
         return Ok(None)

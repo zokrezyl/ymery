@@ -9,15 +9,15 @@ widgets:
           label: "Object Properties"
           flags: [default-open]
           body:
-            - data-id: prop-name
+            - data-path: prop-name
               input-text:
-            - data-id: prop-x
+            - data-path: prop-x
               drag-float:
                 min: 0.0
                 max: 100.0
-            - data-id: prop-y
+            - data-path: prop-y
               drag-float:
                 min: 0.0
                 max: 100.0
-            - data-id: prop-enabled
+            - data-path: prop-enabled
               checkbox:

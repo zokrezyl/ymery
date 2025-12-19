@@ -4,7 +4,7 @@ widgets:
     body:
       - separator-text: "Combo Box"
 
-      - data-id: combo-selection
+      - data-path: combo-selection
         combo:
           head:
             tooltip: "Click to select from available options"
@@ -12,5 +12,5 @@ widgets:
 
       - separator-text: "Current Selection"
 
-      - data-id: combo-selection
+      - data-path: combo-selection
         text:

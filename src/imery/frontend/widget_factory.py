@@ -114,16 +114,13 @@ class WidgetFactory(Object):
 
         return Ok(None)
 
-    def create_widget(self, widget_name: str, tree_like: TreeLike, data_path: DataPath, params=None, parent_data_trees=None) -> Result["Widget"]:
+    def create_widget_from_bag(self, widget_name: str, data_bag: DataBag) -> Result["Widget"]:
         """
-        Create widget from widget_name
+        Create widget from widget_name using a pre-created DataBag.
 
         Args:
             widget_name: Widget name (e.g., "demo_widgets.demo-form", "text", "button")
-            tree_like: TreeLike instance (can be None) - used as main data tree
-            data_path: DataPath to data
-            params: Parameters for the widget (can be None) - used as static
-            parent_data_trees: Optional data_trees from parent widget (for inheriting local, etc.)
+            data_bag: DataBag with data context for the widget
 
         Returns:
             Result[Widget]: Created widget instance
@@ -141,7 +138,6 @@ class WidgetFactory(Object):
         if lookup_name in self._widget_cache:
             cached_item = self._widget_cache[lookup_name]
         elif '.' in lookup_name:
-            # Try without namespace (e.g., "demo_widgets.text" -> "text")
             widget_only = lookup_name.split('.')[-1]
             if widget_only in self._widget_cache:
                 cached_item = self._widget_cache[widget_only]
@@ -150,23 +146,8 @@ class WidgetFactory(Object):
         if cached_item is None:
             return Result.error(f"Widget '{widget_name}' not found in cache")
 
-        # Create data_trees dict with tree_like as main entry
-        # Use "main" as default key if tree_like is provided
-        data_trees = dict(self._data_trees)  # Copy factory's data_trees
-        # Inherit from parent's data_trees (for local, etc.)
-        if parent_data_trees:
-            for key, value in parent_data_trees.items():
-                if key not in data_trees:
-                    data_trees[key] = value
-        if tree_like:
-            data_trees["main"] = tree_like
-        main_data_key = "main" if tree_like else None
-
-        # Check if it's a widget class (registered via @widget decorator or cached)
+        # Check if it's a widget class
         if isinstance(cached_item, type):
-            # It's a widget class - create DataBag and call create()
-            static = params if params is not None else {}
-            data_bag = DataBag(data_trees, main_data_key, data_path, static)
             return cached_item.create(
                 factory=self,
                 dispatcher=self._dispatcher,
@@ -174,10 +155,8 @@ class WidgetFactory(Object):
                 data_bag=data_bag
             )
         elif isinstance(cached_item, dict) and "type" in cached_item:
-            # YAML widget definition: {"type": "...", "body": ..., other metadata...}
+            # YAML widget definition
             widget_type = cached_item["type"]
-
-            # Look up the widget class by type
             if widget_type not in self._widget_cache:
                 return Result.error(f"Widget type '{widget_type}' not found in cache")
 
@@ -185,11 +164,14 @@ class WidgetFactory(Object):
             if not isinstance(widget_class, type):
                 return Result.error(f"Widget type '{widget_type}' is not a class")
 
-            # Merge params with cached_item (params override cached_item)
-            static = dict(cached_item)
-            if params:
-                static.update(params)
-            data_bag = DataBag(data_trees, main_data_key, data_path, static)
+            # For YAML widgets, merge cached_item into data_bag's static
+            if data_bag._static is None:
+                data_bag._static = dict(cached_item)
+            else:
+                merged = dict(cached_item)
+                merged.update(data_bag._static)
+                data_bag._static = merged
+
             return widget_class.create(
                 factory=self,
                 dispatcher=self._dispatcher,
@@ -198,6 +180,35 @@ class WidgetFactory(Object):
             )
         else:
             return Result.error(f"WidgetFactory: cached_item must be a class or dict with 'type', got {type(cached_item)}")
+
+    def create_widget(self, widget_name: str, tree_like: TreeLike, data_path: DataPath, params=None, parent_data_trees=None) -> Result["Widget"]:
+        """
+        Create widget from widget_name
+
+        Args:
+            widget_name: Widget name (e.g., "demo_widgets.demo-form", "text", "button")
+            tree_like: TreeLike instance (can be None) - used as main data tree
+            data_path: DataPath to data
+            params: Parameters for the widget (can be None) - used as static
+            parent_data_trees: Optional data_trees from parent widget (for inheriting local, etc.)
+
+        Returns:
+            Result[Widget]: Created widget instance
+        """
+        # Create data_trees dict with tree_like as main entry
+        data_trees = dict(self._data_trees)
+        if parent_data_trees:
+            for key, value in parent_data_trees.items():
+                if key not in data_trees:
+                    data_trees[key] = value
+        if tree_like:
+            data_trees["main"] = tree_like
+        main_data_key = "main" if tree_like else None
+
+        static = params if params is not None else {}
+        data_bag = DataBag(data_trees, main_data_key, data_path, static)
+
+        return self.create_widget_from_bag(widget_name, data_bag)
 
     def dispose(self) -> Result[None]:
         return Ok(None)

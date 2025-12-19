@@ -22,7 +22,7 @@ widgets:
           style:
             text: [0.2, 1.0, 0.2, 1.0]
       - separator
-      - data-id: kernel
+      - data-path: kernel
         widgets.kernel-recursive:
 
   # ============================================================================
@@ -47,19 +47,19 @@ widgets:
                 body:
                   - implot-layer:
                       label: "Sine"
-                    data-id: /kernel/providers/waveform-st/available/sine/0
+                    data-path: /kernel/providers/waveform-st/available/sine/0
             - implot:
                 label: "Square Wave"
                 body:
                   - implot-layer:
                       label: "Square"
-                    data-id: /kernel/providers/waveform-st/available/square/0
+                    data-path: /kernel/providers/waveform-st/available/square/0
             - implot:
                 label: "Triangle Wave"
                 body:
                   - implot-layer:
                       label: "Triangle"
-                    data-id: /kernel/providers/waveform-st/available/triangle/0
+                    data-path: /kernel/providers/waveform-st/available/triangle/0
 
   # ============================================================================
   # LOGS VIEW for dockable window
@@ -96,19 +96,19 @@ widgets:
           label: "Stop Recording"
       - separator
       - text: "Volume:"
-      - data-id: volume
+      - data-path: volume
         slider-float:
           min: 0.0
           max: 1.0
       - separator
       - text: "Sample Rate:"
-      - data-id: sample-rate
+      - data-path: sample-rate
         combo:
           items:
             - "44100 Hz"
             - "48000 Hz"
             - "96000 Hz"
       - separator
-      - data-id: monitoring
+      - data-path: monitoring
         checkbox:
           label: "Enable Monitoring"

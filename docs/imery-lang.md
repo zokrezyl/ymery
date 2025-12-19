@@ -216,7 +216,7 @@ body:
 text: "Hello World"
 
 # Dynamic (from data tree)
-data-id: my-node
+data-path: my-node
 text:                             # label comes from my-node/label
 ```
 
@@ -225,7 +225,7 @@ text:                             # label comes from my-node/label
 Links a widget to a data path:
 
 ```yaml
-- data-id: user-name
+- data-path: user-name
   text:                           # Reads label from current-path/user-name/label
 ```
 
@@ -295,7 +295,7 @@ my-popup:
 Iterates over children of the current data node:
 
 ```yaml
-data-id: items-list
+data-path: items-list
 body:
   foreach-child:
     - text                        # Creates text widget for each child
@@ -437,7 +437,7 @@ widgets:
       - button:
           label: "Show Items"
           body: app.items-popup
-      - data-id: items
+      - data-path: items
         collapsing-header:
           label: "Items List"
           body:

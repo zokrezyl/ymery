@@ -7,7 +7,7 @@ widgets:
     body:
       - text: "Error Tree Demo - builtin.tree-view"
       - separator
-      - data-id: error-data
+      - data-path: error-data
         builtin.tree-view:
 
   main-window:
@@ -51,7 +51,7 @@ widgets:
           body: app.error-tree-demo-popup
       - separator
       - text: "Draggable Button Demo:"
-      - data-id: # we leave it empty (python: None) so that the widget does not inherit any data
+      - data-path: # we leave it empty (python: None) so that the widget does not inherit any data
         draggable:
           head:
             size: [40, 40]

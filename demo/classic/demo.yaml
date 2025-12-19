@@ -14,30 +14,30 @@ widgets:
       - builtin.collapsing-header:
           label: "Text - With Red Color Style"
           body:
-            - data-id: text-single
+            - data-path: text-single
               text:
                 style:
                   text: [1.0, 0.0, 0.0, 1.0]
       - collapsing-header:
           label: "Text - With Blue Color Style"
           body:
-            - data-id: text-single
+            - data-path: text-single
               text:
                 style:
                   text: [0.0, 0.5, 1.0, 1.0]
       - collapsing-header:
           label: "Text - With Yellow Color Style"
           body:
-            - data-id: text-single
+            - data-path: text-single
               text:
                 style:
                   text: [1.0, 1.0, 0.0, 1.0]
       - collapsing-header:
           label: "Text - Dynamic Single Value"
           body:
-            - data-id: text-single
+            - data-path: text-single
               text:
-      - data-id: text-dict
+      - data-path: text-dict
         collapsing-header:
           label: "Text - Dynamic Dict (renders keys)"
           body:
@@ -59,9 +59,9 @@ widgets:
       - collapsing-header:
           label: "BulletText - Dynamic Single Value"
           body:
-            - data-id: bullet-single
+            - data-path: bullet-single
               bullet-text:
-      - data-id: bullet-dict
+      - data-path: bullet-dict
         collapsing-header:
           label: "BulletText - Dynamic Dict (renders keys)"
           body:
@@ -83,9 +83,9 @@ widgets:
       - collapsing-header:
           label: "SeparatorText - Dynamic Single Value"
           body:
-            - data-id: separator-single
+            - data-path: separator-single
               separator-text:
-      - data-id: separator-dict
+      - data-path: separator-dict
         collapsing-header:
           label: "SeparatorText - Dynamic Dict (renders keys)"
           body:
@@ -127,13 +127,13 @@ widgets:
           label: "Button - Dynamic Single Value"
           body:
             - button:
-              data-id: button-single
+              data-path: button-single
       - collapsing-header:
           label: "Button - Dynamic Dict (renders keys)"
           body:
             foreach-child:
               - button
-        data-id: button-dict
+        data-path: button-dict
 
   # ============================================================================
   # TREE NODE WIDGET DEMOS
@@ -162,13 +162,13 @@ widgets:
           body:
             - tree-node:
                 body: tree-recursive
-              data-id: tree-single
+              data-path: tree-single
       - collapsing-header:
           label: "TreeNode - Dynamic Dict (renders keys)"
           body:
             - tree-node:
                 body: tree-recursive
-              data-id: tree-dict
+              data-path: tree-dict
 
   # ============================================================================
   # COLLAPSING HEADER WIDGET DEMOS
@@ -194,13 +194,13 @@ widgets:
           body:
             - collapsing-header:
                 body: collapsing-header-recursive
-              data-id: collapse-single
+              data-path: collapse-single
       - collapsing-header:
           label: "CollapsingHeader - Dynamic Dict (renders keys)"
           body:
             - collapsing-header:
                 body: collapsing-header-recursive
-              data-id: collapse-dict
+              data-path: collapse-dict
 
   # ============================================================================
   # MENU WIDGET DEMOS
@@ -230,13 +230,13 @@ widgets:
           body:
             - menu:
                 body: menu-recursive
-              data-id: menu-single
+              data-path: menu-single
       - collapsing-header:
           label: "Menu - Dynamic Dict (renders keys)"
           body:
             - menu:
                 body: menu-recursive
-              data-id: menu-dict
+              data-path: menu-dict
 
   # ============================================================================
   # MENU ITEM WIDGET DEMOS
@@ -260,7 +260,7 @@ widgets:
                 label: "Container Menu"
                 body:
                   - menu-item:
-                    data-id: menuitem-single
+                    data-path: menuitem-single
       - collapsing-header:
           label: "MenuItem - Dynamic Dict (renders keys)"
           body:
@@ -269,7 +269,7 @@ widgets:
                 body:
                   foreach-child:
                     - menu-item
-              data-id: menuitem-dict
+              data-path: menuitem-dict
 
   # ============================================================================
   # INPUT WIDGETS DEMOS
@@ -283,27 +283,27 @@ widgets:
           flags: [default-open]
           body:
             - text: "Text Input:"
-            - data-id: input-text
+            - data-path: input-text
               input-text:
             - separator
             - text: "Integer Input:"
-            - data-id: input-int
+            - data-path: input-int
               input-int:
             - separator
             - text: "Integer Slider:"
-            - data-id: slider-int
+            - data-path: slider-int
               slider-int:
                 min: 0
                 max: 100
             - separator
             - text: "Float Slider:"
-            - data-id: slider-float
+            - data-path: slider-float
               slider-float:
                 min: 0.0
                 max: 1.0
             - separator
             - text: "Combo:"
-            - data-id: combo
+            - data-path: combo
               combo:
                 items:
                   - Option A
@@ -311,7 +311,7 @@ widgets:
                   - Option C
             - separator
             - text: "Checkbox:"
-            - data-id: checkbox
+            - data-path: checkbox
               checkbox:
       - collapsing-header:
           label: "Input Widgets - With Custom Styles"
@@ -320,7 +320,7 @@ widgets:
                 style:
                   text: [0.0, 1.0, 1.0, 1.0]
             - text: "Styled Text Input (cyan frame):"
-            - data-id: input-text
+            - data-path: input-text
               input-text:
                 style:
                   frame-bg: [0.0, 0.3, 0.3, 0.5]
@@ -328,7 +328,7 @@ widgets:
                   frame-bg-active: [0.0, 0.5, 0.5, 0.9]
             - separator
             - text: "Styled Slider (orange):"
-            - data-id: slider-float
+            - data-path: slider-float
               slider-float:
                 min: 0.0
                 max: 1.0
@@ -455,7 +455,7 @@ widgets:
           style:
             text: [0.2, 1.0, 0.2, 1.0]
       - separator
-      - data-id: kernel
+      - data-path: kernel
         kernel-recursive:
 
   implot-demo-popup:
@@ -468,13 +468,13 @@ widgets:
           body:
             - implot-layer:
                 label: "Sine"
-              data-id: sine
+              data-path: sine
             - implot-layer:
                 label: "Square"
-              data-id: square
+              data-path: square
             - implot-layer:
                 label: "Triangle"
-              data-id: triangle
+              data-path: triangle
 
   table-demo-popup:
     type: popup
@@ -554,13 +554,13 @@ widgets:
                 body:
                   - text: "Content of Tab 2"
                   - separator
-                  - data-id: input-text
+                  - data-path: input-text
                     text: "Text Input:"
-                  - data-id: input-text
+                  - data-path: input-text
                     input-text:
                   - separator
                   - text: "Slider:"
-                  - data-id: slider-int
+                  - data-path: slider-int
                     slider-int:
                       min: 0
                       max: 100
@@ -581,11 +581,11 @@ widgets:
                   - text: "Color Widgets Demo"
                   - separator
                   - text: "Color Edit (RGBA):"
-                  - data-id: color-edit
+                  - data-path: color-edit
                     color-edit:
                   - separator
                   - text: "Color Button:"
-                  - data-id: color-button
+                  - data-path: color-button
                     color-button:
                   - same-line
                   - text: "Click to see color"

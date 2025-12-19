@@ -146,7 +146,7 @@ widgets:
                     label: "Basic"
                     flags: [default-open]
                     body:
-                      - data-id: basic-demo-data
+                      - data-path: basic-demo-data
                         widgets.basic.basic-demo:
 
                 # Tree Node: Tooltips

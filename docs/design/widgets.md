@@ -79,15 +79,15 @@ ObjectPath("foo/bar") → relative path (from current _data_path)
 The `data-id` parameter in YAML specifies which data node a widget should bind to:
 
 ```yaml
-# Without data-id: widget uses parent's data path
+# Without data-path: widget uses parent's data path
 - text:
 
-# With data-id: widget uses /parent/child-name
-- data-id: child-name
+# With data-path: widget uses /parent/child-name
+- data-path: child-name
   text:
 
 # Absolute path: widget uses /absolute/path
-- data-id: /absolute/path
+- data-path: /absolute/path
   text:
 ```
 

@@ -1,17 +1,17 @@
-# Imery Pyodide Web Demos
+# Ymery Pyodide Web Demos
 
-This directory contains the web-based interactive demo system for Imery, powered by Pyodide to run Python code directly in the browser.
+This directory contains the web-based interactive demo system for Ymery, powered by Pyodide to run Python code directly in the browser.
 
 ## 🌐 Live Demo
 
-Visit the live demo at: `https://zokrezyl.github.io/imery/`
+Visit the live demo at: `https://zokrezyl.github.io/ymery/`
 
 ## 📋 Overview
 
 The Pyodide demo allows users to:
 - **Edit YAML configuration** in an interactive editor
 - **Load demo layouts from GitHub** automatically
-- **Run Imery demos** in real-time in their browser
+- **Run Ymery demos** in real-time in their browser
 - **See live ImGui rendering** via WebGL canvas
 - **Switch between different example demos** from the repo
 
@@ -29,7 +29,7 @@ The Pyodide demo allows users to:
 │  ↓              │
 │  Pyodide        │ ← Python interpreter (WebAssembly)
 │  ↓              │
-│  imery package  │ ← Your Python code + YAML demos
+│  ymery package  │ ← Your Python code + YAML demos
 │  ↓              │
 │  imgui_bundle   │ ← ImGui rendering
 │  ↓              │
@@ -42,7 +42,7 @@ The Pyodide demo allows users to:
 1. **Code Editor (CodeMirror)**: Allows users to edit Python code
 2. **Pyodide Runtime**: Executes Python code in WebAssembly
 3. **ImGui + HelloImGui**: Renders UI to WebGL canvas via Emscripten
-4. **Imery Package**: Bundled as a Python wheel, loaded into Pyodide
+4. **Ymery Package**: Bundled as a Python wheel, loaded into Pyodide
 
 ### Directory Structure
 
@@ -65,7 +65,7 @@ docs/
 │   ├── pyodide.js
 │   ├── pyodide.asm.js
 │   ├── packages/          # Python packages (numpy, imgui_bundle, etc.)
-│   └── imery-*.whl        # Imery wheel
+│   └── ymery-*.whl        # Ymery wheel
 └── images/                # Logos and assets
 ```
 
@@ -73,7 +73,7 @@ docs/
 
 ### Problem: YAML Files Need to Be Accessible in Browser
 
-Imery demos are defined in YAML files under `demo/hello-imgui-full/`. For these to work in Pyodide:
+Ymery demos are defined in YAML files under `demo/hello-imgui-full/`. For these to work in Pyodide:
 
 1. **YAML files must be bundled inside the Python wheel**
 2. **Demo files must be accessible at runtime**
@@ -84,20 +84,20 @@ In `pyproject.toml`:
 
 ```toml
 [tool.hatch.build.targets.wheel.force-include]
-"demo" = "imery/demo"
+"demo" = "ymery/demo"
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "src/imery/**/*.py",
-    "src/imery/**/*.yaml",
+    "src/ymery/**/*.py",
+    "src/ymery/**/*.yaml",
     "demo/**/*",
 ]
 ```
 
 This ensures:
-- ✅ All `demo/**/*` files are copied to `imery/demo/` inside the wheel
-- ✅ All `*.yaml` files in `src/imery/` are included
-- ✅ When imery is installed in Pyodide, YAML files are accessible via Python's package system
+- ✅ All `demo/**/*` files are copied to `ymery/demo/` inside the wheel
+- ✅ All `*.yaml` files in `src/ymery/` are included
+- ✅ When ymery is installed in Pyodide, YAML files are accessible via Python's package system
 
 ### Accessing YAML Files in Python
 
@@ -109,16 +109,16 @@ import sys
 from pathlib import Path
 
 sys.argv = [
-    'imery',
+    'ymery',
     '--main', 'hello-imgui-full',
     '--layouts-path', str(Path(__file__).parent.parent / 'demo' / 'hello-imgui-full')
 ]
 
-from imery.app import main
+from ymery.app import main
 main()
 ```
 
-The imery CLI (`--layouts-path`) tells the framework where to find YAML layouts.
+The ymery CLI (`--layouts-path`) tells the framework where to find YAML layouts.
 
 ## 🚀 GitHub Actions Pipeline
 
@@ -146,7 +146,7 @@ graph TD
 - **Simple**: Just static files, no build step
 - **Fast**: No wheel building or Pyodide downloading
 - **CDN-Powered**: Pyodide loaded from jsdelivr CDN
-- **PyPI-Based**: Imery installed from PyPI via micropip
+- **PyPI-Based**: Ymery installed from PyPI via micropip
 - **Aggressive Caching**: CDN and browser cache everything efficiently
 
 ## 🔧 JavaScript Module Breakdown
@@ -162,10 +162,10 @@ const pyodide = await loadPyodide();
 // Install packages from PyPI via micropip
 await pyodide.loadPackage(['numpy', 'pillow']);
 
-// Install imery from PyPI
+// Install ymery from PyPI
 await pyodide.runPythonAsync(`
     import micropip
-    await micropip.install('imery')
+    await micropip.install('ymery')
 `);
 ```
 
@@ -245,7 +245,7 @@ runButton.onclick = async () => {
 4. **User edits YAML** in the editor
 5. **User clicks "Run"**:
    - Edited YAML written to Pyodide virtual filesystem
-   - Imery runs with `--layouts-url` pointing to GitHub
+   - Ymery runs with `--layouts-url` pointing to GitHub
    - Imported YAML files downloaded automatically from GitHub
    - ImGui renders to WebGL canvas
    - User sees live interactive UI
@@ -259,11 +259,11 @@ JavaScript: pyodide.runPythonAsync(code)
     ↓
 Pyodide: Execute Python code
     ↓
-Python: from imery.app import main
+Python: from ymery.app import main
     ↓
-Imery: Load YAML from bundled demo/
+Ymery: Load YAML from bundled demo/
     ↓
-Imery: Create widgets from YAML
+Ymery: Create widgets from YAML
     ↓
 ImGui Bundle: Render widgets
     ↓
@@ -285,7 +285,7 @@ python3 -m http.server 8000
 
 Then visit: `http://localhost:8000`
 
-**Note**: The demo will install imery from PyPI, so make sure your latest changes are published to PyPI first if you want to test them.
+**Note**: The demo will install ymery from PyPI, so make sure your latest changes are published to PyPI first if you want to test them.
 
 ## 📝 Adding New Examples
 
@@ -359,7 +359,7 @@ print("Debug: value =", some_value)  # Shows in browser DevTools
 
 ### Demo Not Running
 
-- Check if YAML files are in the wheel: `unzip -l dist/imery-*.whl | grep demo`
+- Check if YAML files are in the wheel: `unzip -l dist/ymery-*.whl | grep demo`
 - Verify layouts path in demo wrapper script
 - Check Python exceptions in browser console
 

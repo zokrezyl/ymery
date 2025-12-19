@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Version bumping script for imery.
+Version bumping script for ymery.
 
 This script automatically bumps the version in pyproject.toml
 and updates the CHANGELOG.md with a new version section.
@@ -78,7 +78,7 @@ def update_pyproject_toml(new_version):
 
 
 def update_pyodide_loader(new_version):
-    """Update IMERY_VERSION in pyodide_loader.js"""
+    """Update YMERY_VERSION in pyodide_loader.js"""
     loader_file = Path("docs/demo/js/pyodide_loader.js")
 
     if not loader_file.exists():
@@ -87,8 +87,8 @@ def update_pyodide_loader(new_version):
 
     content = loader_file.read_text()
     new_content = re.sub(
-        r'const IMERY_VERSION = "[^"]+";',
-        f'const IMERY_VERSION = "{new_version}";',
+        r'const YMERY_VERSION = "[^"]+";',
+        f'const YMERY_VERSION = "{new_version}";',
         content
     )
     loader_file.write_text(new_content)

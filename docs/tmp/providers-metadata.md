@@ -1,13 +1,13 @@
 # Provider Metadata Analysis and Standardization Recommendations
 
-This document analyzes metadata fields across all providers in both imery and waew codebases.
+This document analyzes metadata fields across all providers in both ymery and waew codebases.
 
 ## Analysis Date
 2025-12-08
 
 ---
 
-## 1. IMERY WAVEFORM PROVIDER
+## 1. YMERY WAVEFORM PROVIDER
 
 ### WaveformManager (Provider Root)
 **Path:** `/`
@@ -687,7 +687,7 @@ Replace "open-arguments" with structured "config-schema":
 - `audio-file` for audio files
 - `shortcut` for virtual shortcuts
 
-**Note**: ALSA cards and hardware devices are NOT exposed as separate abstractions. The imery `audio-device` abstraction encompasses them. ALSA-specific metadata (card-num, device-num, subdevice-num) goes in the `details` object.
+**Note**: ALSA cards and hardware devices are NOT exposed as separate abstractions. The ymery `audio-device` abstraction encompasses them. ALSA-specific metadata (card-num, device-num, subdevice-num) goes in the `details` object.
 
 **UI widgets key off `category` field:**
 - Folder icon for `category: "folder"`

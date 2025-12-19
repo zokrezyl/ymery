@@ -1,5 +1,5 @@
 // js/examples.js
-// Handles loading aggregated YAML demos from the imery package
+// Handles loading aggregated YAML demos from the ymery package
 
 // Load initial example
 async function loadInitialExample() {
@@ -18,7 +18,7 @@ app:
 data:
   demo-data:
     metadata:
-      label: "Hello from Imery!"
+      label: "Hello from Ymery!"
 `);
     }
 }
@@ -36,7 +36,7 @@ async function fetchExampleMetadata() {
     }
 }
 
-// Load aggregated YAML from the imery package
+// Load aggregated YAML from the ymery package
 async function loadExample(example) {
     try {
         // Wait for Pyodide to be ready
@@ -47,13 +47,13 @@ async function loadExample(example) {
 
         console.log(`Loading aggregated example: ${example.aggregated_file}`);
 
-        // Read the aggregated YAML file from the imery package
+        // Read the aggregated YAML file from the ymery package
         const yamlContent = await window.pyodide.runPythonAsync(`
 import importlib.resources
-import imery.demo_aggregated
+import ymery.demo_aggregated
 
 # Read the aggregated YAML file
-yaml_path = importlib.resources.files('imery.demo_aggregated') / '${example.aggregated_file}'
+yaml_path = importlib.resources.files('ymery.demo_aggregated') / '${example.aggregated_file}'
 yaml_path.read_text()
 `);
 

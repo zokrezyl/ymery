@@ -1,24 +1,24 @@
-# Imery
+# Ymery
 
 **Build interactive GUI applications with YAML instead of code.**
 
-Imery lets you create [Dear ImGui](https://github.com/ocornut/imgui) applications using declarative YAML files, powered by [Dear ImGui Bundle](https://github.com/pthom/imgui_bundle) for Python.
+Ymery lets you create [Dear ImGui](https://github.com/ocornut/imgui) applications using declarative YAML files, powered by [Dear ImGui Bundle](https://github.com/pthom/imgui_bundle) for Python.
 
-## Why Imery?
+## Why Ymery?
 
 Traditional GUI development with ImGui requires writing repetitive boilerplate code. Every button, slider, or layout change means modifying and recompiling your application.
 
 ### Origins
 
-Imery emerged from building an audio viewing and analysis tool with imgui-bundle. We discovered that live data observation and manipulation was a central pattern - UI components constantly consuming and updating data in real-time. This led us to separate concerns in an MVC-like direction: the UI as a tree structure consuming an equivalent data tree, similar to React's approach in the web world.
+Ymery emerged from building an audio viewing and analysis tool with imgui-bundle. We discovered that live data observation and manipulation was a central pattern - UI components constantly consuming and updating data in real-time. This led us to separate concerns in an MVC-like direction: the UI as a tree structure consuming an equivalent data tree, similar to React's approach in the web world.
 
-While most UI elements directly manipulate or observe data tree nodes, the framework also supports event generation and handling. We're also exploring a broader vision: an "Imery browser" where you write interactive applications with Python and YAML instead of HTML and JavaScript.
+While most UI elements directly manipulate or observe data tree nodes, the framework also supports event generation and handling. We're also exploring a broader vision: an "Ymery browser" where you write interactive applications with Python and YAML instead of HTML and JavaScript.
 
 These concepts are in early alpha. **We'd love to hear your thoughts and suggestions.**
 
 For architectural details, see [docs/design/main.md](docs/design/main.md).
 
-**Imery changes this:**
+**Ymery changes this:**
 - **Declarative** - Define your UI in YAML, not code
 - **Rapid iteration** - Edit layouts without recompiling
 - **No programming required** - Create simple UIs with just YAML
@@ -31,25 +31,25 @@ Create a simple GUI in `app.yaml`:
 
 ```yaml
 app:
-  window_title: "Hello Imery"
+  window_title: "Hello Ymery"
   widget: builtin.text
   data: greeting
 
 data:
   greeting:
     metadata:
-      label: "Welcome to Imery!"
+      label: "Welcome to Ymery!"
 ```
 
 Run it:
 
 ```bash
-imery --main app
+ymery --main app
 ```
 
 That's it. No Python code, no compilation - just a YAML file describing what you want.
 
-## Who is Imery for?
+## Who is Ymery for?
 
 - **Python developers** who prefer declarative approaches
 - **ImGui users** frustrated with boilerplate code
@@ -59,16 +59,16 @@ That's it. No Python code, no compilation - just a YAML file describing what you
 
 ## Framework or Library?
 
-Both. Imery provides structure and patterns (like a framework) but you can use it flexibly, picking what you need (like a library). Use it however it serves you best.
+Both. Ymery provides structure and patterns (like a framework) but you can use it flexibly, picking what you need (like a library). Use it however it serves you best.
 
 ## Project Status
 
-⚠️ **Early Alpha** - Imery is experimental. APIs will change, features are incomplete, and breaking changes should be expected. We welcome feedback and contributions!
+⚠️ **Early Alpha** - Ymery is experimental. APIs will change, features are incomplete, and breaking changes should be expected. We welcome feedback and contributions!
 
 ## Installation
 
 ```bash
-pip install imery
+pip install ymery
 ```
 
 Requires Python 3.12+
@@ -83,12 +83,12 @@ Check out the [demo](demo/) directory for examples:
 Run any demo:
 
 ```bash
-imery --layouts-path demo/hello-imgui-full --main app
+ymery --layouts-path demo/hello-imgui-full --main app
 ```
 
 ## Documentation
 
-- [Imery Lang Reference](docs/imery-lang.md) - YAML syntax and widget reference
+- [Ymery Lang Reference](docs/ymery-lang.md) - YAML syntax and widget reference
 - [Design Overview](docs/design/main.md) - Architecture and design patterns
 
 For more examples, explore the YAML files in the demo directories.
@@ -97,17 +97,17 @@ For more examples, explore the YAML files in the demo directories.
 
 1. **Write YAML** - Define your UI structure, widgets, and data
 2. **Import modules** - Compose UIs from reusable components
-3. **Run** - Imery renders your YAML as a native ImGui application
+3. **Run** - Ymery renders your YAML as a native ImGui application
 4. **Iterate** - Change the YAML and see updates immediately
 
 ## Contributing
 
 We're in early development and actively seeking feedback:
-- Try Imery with your use cases
+- Try Ymery with your use cases
 - Report issues and suggest features
 - Share what works and what doesn't
 
-Your input helps shape Imery's direction.
+Your input helps shape Ymery's direction.
 
 ## License
 

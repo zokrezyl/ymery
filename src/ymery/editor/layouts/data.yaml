@@ -1,0 +1,22 @@
+data:
+  waew-data:
+    metadata:
+      label: "Ymery widgets file"
+    children:
+      kernel-data:
+        metadata:
+          selection: None
+          label: "kernel tree selection"
+      kernel: $kernel
+      plots:
+        metadata:
+          label: "Plots"
+        children:
+          plot-0:
+            metadata:
+              label: "Plot 1"
+            children:
+              subplot-0:
+                metadata:
+                  label: "Subplot 1"
+                children: {}  # No layers initially

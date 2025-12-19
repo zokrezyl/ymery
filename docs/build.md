@@ -2,7 +2,7 @@
 
 ## Overview
 
-Imery uses **uv** for dependency management and **hatchling** as the build backend. The build process includes automatic YAML aggregation for browser demos.
+Ymery uses **uv** for dependency management and **hatchling** as the build backend. The build process includes automatic YAML aggregation for browser demos.
 
 ## Project Configuration
 
@@ -53,9 +53,9 @@ make build
 2. Hatchling runs the custom build hook (`scripts/hatch_build.py`)
 3. The hook aggregates demo YAML files
 4. Final wheel includes:
-   - `imery/` - Main package
-   - `imery/demo/` - Modular demo files
-   - `imery/demo_aggregated/` - Aggregated demos for browser
+   - `ymery/` - Main package
+   - `ymery/demo/` - Modular demo files
+   - `ymery/demo_aggregated/` - Aggregated demos for browser
 
 ## YAML Aggregation
 
@@ -94,7 +94,7 @@ widgets:
 
 ### Output
 
-Aggregated files are written to `demo-aggregated/` during build and included in the wheel as `imery/demo_aggregated/`.
+Aggregated files are written to `demo-aggregated/` during build and included in the wheel as `ymery/demo_aggregated/`.
 
 ## Publishing to PyPI
 
@@ -135,18 +135,18 @@ Browser
 │   └── ui.js             - Editor UI
 ├── Pyodide (Python WebAssembly)
 │   ├── imgui_bundle      - From Pyodide 0.29.0
-│   └── imery             - From PyPI via micropip
+│   └── ymery             - From PyPI via micropip
 └── WebGL Canvas          - ImGui rendering
 ```
 
 ### How It Works
 
 1. Browser loads Pyodide from CDN
-2. `pyodide_loader.js` installs imery from PyPI via micropip
+2. `pyodide_loader.js` installs ymery from PyPI via micropip
 3. User selects a demo from dropdown
 4. Aggregated YAML is fetched from `docs/demo/examples/aggregated/`
 5. YAML is written to Pyodide virtual filesystem
-6. Imery runs with `--layouts-path /tmp/imery_demo --main app`
+6. Ymery runs with `--layouts-path /tmp/ymery_demo --main app`
 
 ### Updating Browser Demos
 
@@ -155,7 +155,7 @@ After publishing a new version to PyPI:
 1. Copy aggregated files to docs:
    ```bash
    # Extract from wheel
-   unzip -j dist/imery-*.whl "imery/demo_aggregated/*.yaml" -d docs/demo/examples/aggregated/
+   unzip -j dist/ymery-*.whl "ymery/demo_aggregated/*.yaml" -d docs/demo/examples/aggregated/
    ```
 
 2. Update `docs/demo/examples/examples.json` if demos changed
@@ -185,8 +185,8 @@ After publishing a new version to PyPI:
 │   └── hello-imgui-full/
 ├── demo-aggregated/         # Generated during build (not in repo)
 ├── dist/                    # Build output
-│   ├── imery-X.X.X.tar.gz
-│   └── imery-X.X.X-py3-none-any.whl
+│   ├── ymery-X.X.X.tar.gz
+│   └── ymery-X.X.X-py3-none-any.whl
 └── docs/
     └── demo/                # Browser demo (GitHub Pages)
         ├── index.html

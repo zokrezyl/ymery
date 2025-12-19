@@ -1,7 +1,7 @@
 data:
   demo-data:
     metadata:
-      label: "Imery Docking Demo"
+      label: "Ymery Docking Demo"
       node-selection: None
     children:
       kernel: $kernel

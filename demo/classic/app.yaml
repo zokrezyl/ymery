@@ -12,7 +12,7 @@ widgets:
 
   main-window:
     type: imgui-main-window
-    window-title: "Imery Widget Demo"
+    window-title: "Ymery Widget Demo"
     window-size: [1200, 800]
     fps-idle: 0
     body:

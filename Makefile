@@ -1,9 +1,9 @@
-# imery Makefile - using uv for all Python operations
+# ymery Makefile - using uv for all Python operations
 
 .PHONY: help install dev-install test lint format type-check build clean upload upload-test release bump-patch bump-minor bump-major show-version
 
 help:  ## Show this help message
-	@echo "imery Development Commands (using uv)"
+	@echo "ymery Development Commands (using uv)"
 	@echo ""
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ { printf "\033[36m%-15s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
@@ -17,7 +17,7 @@ test:  ## Run tests
 	uv run pytest
 
 test-cov:  ## Run tests with coverage
-	uv run pytest --cov=imery --cov-report=html --cov-report=term
+	uv run pytest --cov=ymery --cov-report=html --cov-report=term
 
 lint:  ## Run linting (ruff)
 	uv run ruff check src/ tests/
@@ -59,7 +59,7 @@ release:  ## Clean, build, and upload to PyPI (production release)
 	@echo "🎉 Package published to PyPI"
 
 show-version:  ## Show current version
-	@python -c "import sys; sys.path.insert(0, 'src'); import imery; print(f'Current version: {imery.__version__}')"
+	@python -c "import sys; sys.path.insert(0, 'src'); import ymery; print(f'Current version: {ymery.__version__}')"
 
 bump-patch:  ## Bump patch version (0.0.X)
 	@echo "🔢 Bumping patch version..."
@@ -89,17 +89,17 @@ bump-major:  ## Bump major version (X.0.0)
 	@$(MAKE) build
 
 test-plugin:  ## Test the test plugin
-	@echo "Testing imery with test plugin..."
-	@PYTHONPATH=src python -c "from imery.app import imery; import imery.plugins.test.plugin; from imery.expose import apply_pending_registrations; app = imery(auto_discover=False); apply_pending_registrations(app); result = app._execute_from_registry('test'); test = result.unwrap(); print('✅ Test plugin loaded'); print('hello():', test.hello()); print('echo():', test.echo('test message')); print('status():', test.status())"
+	@echo "Testing ymery with test plugin..."
+	@PYTHONPATH=src python -c "from ymery.app import ymery; import ymery.plugins.test.plugin; from ymery.expose import apply_pending_registrations; app = ymery(auto_discover=False); apply_pending_registrations(app); result = app._execute_from_registry('test'); test = result.unwrap(); print('✅ Test plugin loaded'); print('hello():', test.hello()); print('echo():', test.echo('test message')); print('status():', test.status())"
 
 test-cli:  ## Test CLI with test plugin
 	@echo "Testing CLI with test plugin..."
-	@PYTHONPATH=src python -c "from imery import run; run()" test hello --name imery
+	@PYTHONPATH=src python -c "from ymery import run; run()" test hello --name ymery
 
-imery-dev:  ## Run imery CLI in development mode
-	@echo "Running imery CLI in development mode..."
-	@echo "Usage: make imery-dev ARGS='--help'"
-	@PYTHONPATH=src python -m imery $(ARGS)
+ymery-dev:  ## Run ymery CLI in development mode
+	@echo "Running ymery CLI in development mode..."
+	@echo "Usage: make ymery-dev ARGS='--help'"
+	@PYTHONPATH=src python -m ymery $(ARGS)
 
-imery-dev-help:  ## Show imery development CLI help
-	@PYTHONPATH=src python -m imery --help
+ymery-dev-help:  ## Show ymery development CLI help
+	@PYTHONPATH=src python -m ymery --help

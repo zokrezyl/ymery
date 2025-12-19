@@ -1,7 +1,7 @@
 // js/pyodide.js
 
-// Imery version - updated by build process
-const IMERY_VERSION = "0.0.61";
+// Ymery version - updated by build process
+const YMERY_VERSION = "0.0.62";
 
 async function load_pyodide_imgui_render() {
     console.log('Loading load_pyodide_imgui_render.py');
@@ -64,7 +64,7 @@ async function loadPyodideAndPackages() {
         showLoadingModal();
         updateProgress(0, 'Loading Pyodide...');
 
-        console.log(`Target imery version: ${IMERY_VERSION}`);
+        console.log(`Target ymery version: ${YMERY_VERSION}`);
 
         pyodide = await loadPyodide();
         const pythonVersion = pyodide.runPython("import sys; sys.version");
@@ -94,9 +94,9 @@ async function loadPyodideAndPackages() {
             // ----------------------------------------------------------
             'imgui_bundle',
 
-            // Imery (from PyPI) - pinned to version from build
+            // Ymery (from PyPI) - pinned to version from build
             // -----------------
-            `imery==${IMERY_VERSION}`,
+            `ymery==${YMERY_VERSION}`,
         ];
 
         const totalSteps = packages.length;
@@ -106,15 +106,15 @@ async function loadPyodideAndPackages() {
             updateProgress(10 + (currentStep / totalSteps) * 80, `Installing ${pkg}...`);
             console.log(`Installing ${pkg}...`);
             try {
-                const installCode = pkg.startsWith('imery')
+                const installCode = pkg.startsWith('ymery')
                     ? `
 import micropip
 import sys
 print(f"Python version: {sys.version}")
 print(f"Installing ${pkg}...")
 await micropip.install('${pkg}', keep_going=True, deps=True)
-import imery
-print(f"imery version: {imery.__version__ if hasattr(imery, '__version__') else 'unknown'}")
+import ymery
+print(f"ymery version: {ymery.__version__ if hasattr(ymery, '__version__') else 'unknown'}")
 `
                     : `
 import micropip
@@ -145,7 +145,7 @@ print(f"Successfully installed ${pkg}")
     }
 }
 
-// Function to run imery with aggregated YAML from editor
+// Function to run ymery with aggregated YAML from editor
 async function runEditorPythonCode() {
     if (!pyodide) {
         console.error('Pyodide not loaded yet');
@@ -178,24 +178,24 @@ async function runEditorPythonCode() {
 
         // Write the edited aggregated YAML to Pyodide's virtual filesystem
         const fs = pyodide.FS;
-        const tempDir = '/tmp/imery_demo';
+        const tempDir = '/tmp/ymery_demo';
         fs.mkdirTree(tempDir);
         fs.writeFile(`${tempDir}/app.yaml`, yamlContent);
 
-        // Run imery with the aggregated YAML (no imports needed since everything is inline)
+        // Run ymery with the aggregated YAML (no imports needed since everything is inline)
         const pythonCode = `
 import sys
 sys.argv = [
-    'imery',
+    'ymery',
     '--layouts-path', '${tempDir}',
     '--main', 'app'
 ]
 
-from imery.app import main
+from ymery.app import main
 main(standalone_mode=False)
 `;
 
-        console.log('Running imery with aggregated YAML from editor');
+        console.log('Running ymery with aggregated YAML from editor');
         await pyodide.runPythonAsync(pythonCode);
 
     } catch (err) {

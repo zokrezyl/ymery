@@ -270,14 +270,19 @@ class MatplotlibLinePlot(Widget):
 
 
 @widget
-class MatplotlibDemo(Widget):
-    """Interactive matplotlib demo widget
+class Matplotlib(Widget):
+    """Interactive matplotlib widget - reads parameters from data_bag
 
-    Shows various plot types with interactive controls.
+    Parameters are controlled via separate slider widgets in YAML.
 
     YAML usage:
-        matplotlib-demo:
+        matplotlib:
             size: [500, 400]
+            plot_type: "line"  # line, scatter, bar, multi
+            points: 50
+            amplitude: 1.0
+            frequency: 1.0
+            noise: 0.1
     """
 
     def init(self) -> Result[None]:
@@ -294,44 +299,39 @@ class MatplotlibDemo(Widget):
             size_list = res.unwrapped
         self._size = ImVec2(size_list[0], size_list[1])
 
-        # Demo state
-        self._plot_type = 0  # 0=line, 1=scatter, 2=bar, 3=sin
-        self._num_points = 50
-        self._amplitude = 1.0
-        self._frequency = 1.0
-        self._noise = 0.1
-        self._refresh = True
+        # For change detection
+        self._last_params_hash = None
         self._image = None
 
         return Ok(None)
 
-    def _create_demo_figure(self):
-        """Create demo figure based on current settings."""
+    def _create_demo_figure(self, plot_type, num_points, amplitude, frequency, noise_level):
+        """Create demo figure based on parameters."""
         import matplotlib.pyplot as plt
 
         dpi = 100
         figsize = (self._size.x / dpi, self._size.y / dpi)
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
 
-        x = np.linspace(0, 4 * np.pi, self._num_points)
-        noise = np.random.randn(self._num_points) * self._noise
+        x = np.linspace(0, 4 * np.pi, num_points)
+        noise = np.random.randn(num_points) * noise_level
 
-        if self._plot_type == 0:  # Line
-            y = self._amplitude * np.sin(self._frequency * x) + noise
+        if plot_type == "line":
+            y = amplitude * np.sin(frequency * x) + noise
             ax.plot(x, y, 'b-', linewidth=2)
             ax.set_title("Line Plot")
-        elif self._plot_type == 1:  # Scatter
-            y = self._amplitude * np.sin(self._frequency * x) + noise
+        elif plot_type == "scatter":
+            y = amplitude * np.sin(frequency * x) + noise
             ax.scatter(x, y, c=y, cmap='viridis', s=20)
             ax.set_title("Scatter Plot")
-        elif self._plot_type == 2:  # Bar
-            x_bar = np.arange(min(10, self._num_points))
-            y_bar = self._amplitude * np.sin(self._frequency * x_bar * 0.5) + noise[:len(x_bar)]
+        elif plot_type == "bar":
+            x_bar = np.arange(min(10, num_points))
+            y_bar = amplitude * np.sin(frequency * x_bar * 0.5) + noise[:len(x_bar)]
             ax.bar(x_bar, y_bar, color='steelblue')
             ax.set_title("Bar Chart")
-        elif self._plot_type == 3:  # Multiple sin
+        elif plot_type == "multi":
             for i in range(1, 4):
-                y = self._amplitude * np.sin(self._frequency * i * x) / i
+                y = amplitude * np.sin(frequency * i * x) / i
                 ax.plot(x, y, label=f'sin({i}x)/{i}')
             ax.legend()
             ax.set_title("Multiple Sine Waves")
@@ -344,57 +344,39 @@ class MatplotlibDemo(Widget):
         return fig
 
     def _pre_render_head(self) -> Result[None]:
-        """Render demo with controls"""
-        imgui.text("Matplotlib Demo")
-        imgui.separator()
+        """Render plot based on data_bag parameters"""
+        # Read parameters from data_bag
+        plot_type = "line"
+        res = self._handle_error(self._data_bag.get("plot_type", plot_type))
+        if res:
+            plot_type = res.unwrapped
 
-        # Plot type selection
-        imgui.text("Plot Type:")
-        imgui.same_line()
-        if imgui.radio_button("Line", self._plot_type == 0):
-            self._plot_type = 0
-            self._refresh = True
-        imgui.same_line()
-        if imgui.radio_button("Scatter", self._plot_type == 1):
-            self._plot_type = 1
-            self._refresh = True
-        imgui.same_line()
-        if imgui.radio_button("Bar", self._plot_type == 2):
-            self._plot_type = 2
-            self._refresh = True
-        imgui.same_line()
-        if imgui.radio_button("Multi-sin", self._plot_type == 3):
-            self._plot_type = 3
-            self._refresh = True
+        num_points = 50
+        res = self._handle_error(self._data_bag.get("points", num_points))
+        if res:
+            num_points = int(res.unwrapped)
 
-        # Parameters
-        changed, self._num_points = imgui.slider_int("Points", self._num_points, 10, 200)
-        if changed:
-            self._refresh = True
+        amplitude = 1.0
+        res = self._handle_error(self._data_bag.get("amplitude", amplitude))
+        if res:
+            amplitude = float(res.unwrapped)
 
-        changed, self._amplitude = imgui.slider_float("Amplitude", self._amplitude, 0.1, 3.0)
-        if changed:
-            self._refresh = True
+        frequency = 1.0
+        res = self._handle_error(self._data_bag.get("frequency", frequency))
+        if res:
+            frequency = float(res.unwrapped)
 
-        changed, self._frequency = imgui.slider_float("Frequency", self._frequency, 0.1, 5.0)
-        if changed:
-            self._refresh = True
+        noise_level = 0.1
+        res = self._handle_error(self._data_bag.get("noise", noise_level))
+        if res:
+            noise_level = float(res.unwrapped)
 
-        changed, self._noise = imgui.slider_float("Noise", self._noise, 0.0, 1.0)
-        if changed:
-            self._refresh = True
-
-        # Refresh button
-        if imgui.button("Regenerate"):
-            self._refresh = True
-
-        imgui.separator()
-
-        # Create figure if needed
-        if self._refresh or self._image is None:
-            fig = self._create_demo_figure()
+        # Check if parameters changed
+        params_hash = hash((plot_type, num_points, amplitude, frequency, noise_level))
+        if params_hash != self._last_params_hash or self._image is None:
+            fig = self._create_demo_figure(plot_type, num_points, amplitude, frequency, noise_level)
             self._image = _fig_to_image("matplotlib_demo", fig, refresh=True)
-            self._refresh = False
+            self._last_params_hash = params_hash
 
         # Display
         if self._image is not None:

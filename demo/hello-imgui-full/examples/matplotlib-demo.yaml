@@ -8,48 +8,59 @@ widgets:
           Interactive matplotlib plots embedded in ImGui.
           - Uses **Agg backend** for headless rendering
           - Displays via **immvision** image viewer
-          - Supports zoom, pan, and inspection
-
-      - matplotlib-demo:
-
-      - separator-text: "Line Plot from Data"
-
-      - matplotlib-line-plot:
-          label: "Quadratic Function"
-          title: "y = x^2"
-          xlabel: "x"
-          ylabel: "y"
-          size: [400, 250]
-          data:
-            x: [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]
-            y: [25, 16, 9, 4, 1, 0, 1, 4, 9, 16, 25]
-
-      - separator-text: "Multiple Plots"
 
       - columns:
           count: 2
 
       - next-column:
-      - matplotlib-line-plot:
-          label: "Sin Wave"
-          title: "sin(x)"
-          xlabel: "x"
-          ylabel: "sin(x)"
-          size: [350, 200]
-          data:
-            x: [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.14, 3.5, 4, 4.5, 5, 5.5, 6, 6.28]
-            y: [0, 0.48, 0.84, 1.0, 0.91, 0.6, 0.14, 0, -0.35, -0.76, -0.98, -0.96, -0.71, -0.28, 0]
+
+      # Controls column
+      - text: "Points"
+      - data-id: points
+        slider-int:
+          min: 10
+          max: 200
+
+      - text: "Amplitude"
+      - data-id: amplitude
+        slider-float:
+          min: 0.1
+          max: 3.0
+
+      - text: "Frequency"
+      - data-id: frequency
+        slider-float:
+          min: 0.1
+          max: 5.0
+
+      - text: "Noise"
+      - data-id: noise
+        slider-float:
+          min: 0.0
+          max: 1.0
 
       - next-column:
-      - matplotlib-line-plot:
-          label: "Cos Wave"
-          title: "cos(x)"
-          xlabel: "x"
-          ylabel: "cos(x)"
-          size: [350, 200]
-          data:
-            x: [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.14, 3.5, 4, 4.5, 5, 5.5, 6, 6.28]
-            y: [1, 0.88, 0.54, 0.07, -0.42, -0.8, -0.99, -1, -0.94, -0.65, -0.21, 0.28, 0.71, 0.96, 1]
+
+      # Plot column
+      - matplotlib:
+          size: [450, 400]
 
       - columns:
           count: 1
+
+data:
+  points:
+    metadata:
+      label: 50
+  amplitude:
+    metadata:
+      label: 1.0
+  frequency:
+    metadata:
+      label: 1.0
+  noise:
+    metadata:
+      label: 0.1
+  plot_type:
+    metadata:
+      label: "line"

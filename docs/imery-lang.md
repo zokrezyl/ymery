@@ -220,7 +220,7 @@ data-path: my-node
 text:                             # label comes from my-node/label
 ```
 
-### data-id
+### data-path
 
 Links a widget to a data path:
 
@@ -244,9 +244,9 @@ label: "@/root/selection"
 # Parent-relative path
 label: "@../sibling/label"
 
-# Named tree reference with $tree@path
+# Named tree reference with $tree-id@path
 label: "$kernel@/audio/sample-rate"
-selection: "$local@current-selection"
+selection: "$form-state@current-selection"
 ```
 
 **Reference Syntax:**
@@ -256,37 +256,39 @@ selection: "$local@current-selection"
 | `"@path"` | Relative path in main data tree |
 | `"@/abs/path"` | Absolute path in main tree |
 | `"@../path"` | Parent-relative path |
-| `"$tree@path"` | Path in named tree (e.g., `$kernel`, `$local`) |
+| `"$tree-id@path"` | Path in named tree (e.g., `$kernel`, `$form-state`) |
 
 **Note:** Values containing `@` must be quoted in YAML.
 
-### Local Data Tree
+### Widget-Level Data
 
-Define widget-local data using `local`. This creates a DataTree scoped to the widget:
+Define widget-level data using `data`. This creates DataTree(s) scoped to the widget, with the same semantics as the global `data:` section:
 
 ```yaml
 my-popup:
   type: popup
-  local:
-    metadata:
-      label: "New Item"
-      count: 0
-    children:
-      options:
-        metadata:
-          selected: false
+  data:
+    form-state:                   # Tree ID (first one becomes main tree)
+      metadata:
+        label: "New Item"
+        count: 0
+      children:
+        options:
+          metadata:
+            selected: false
   body:
     - input-text:
-        label: "$local@label"
-    - text: "$local@count"
+        label: "$form-state@label"
+    - text: "$form-state@count"
 ```
 
-**Local tree features:**
+**Widget data features:**
+- Each top-level key under `data:` becomes a tree ID
+- First tree ID becomes the main tree for that widget
 - Follows standard DataTree structure (`metadata`/`children`)
-- Accessed via `$local@path`
+- Accessed via `$tree-id@path` (e.g., `$form-state@label`)
 - Inherited by child widgets
 - Read-write (widgets can modify local state)
-- Context is root, so `$local@label` equals `$local@/label`
 
 ## Iteration
 
@@ -576,7 +578,7 @@ DataBag combines multiple data sources with a priority order:
 2. **Main Data Tree** (medium priority)
    - The application's primary data structure
    - Read-write, persists across widget renders
-   - Accessed via `data-id` and `@` paths
+   - Accessed via `data-path` and `@` paths
    ```yaml
    data:
      app-data:
@@ -584,16 +586,17 @@ DataBag combines multiple data sources with a priority order:
          label: "Dynamic Value"
    ```
 
-3. **Local Data Tree** (high priority)
-   - Widget-scoped temporary data
+3. **Widget-Level Data Trees** (high priority)
+   - Widget-scoped data defined with `data:` in widget definition
    - Read-write, exists only while widget is active
-   - Accessed via `$local@path`
+   - Accessed via `$tree-id@path`
    ```yaml
    my-popup:
      type: popup
-     local:
-       metadata:
-         temp-value: "Editing..."
+     data:
+       form-state:
+         metadata:
+           temp-value: "Editing..."
    ```
 
 4. **Named Trees** (accessed explicitly)
@@ -627,7 +630,7 @@ The kernel allows:
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │                    DataBag                           │    │
 │  │  ┌─────────────┬─────────────┬─────────────────┐    │    │
-│  │  │ Static YAML │  Data Tree  │   Local Tree    │    │    │
+│  │  │ Static YAML │  Data Tree  │  Widget Data    │    │    │
 │  │  │  (layout)   │   (main)    │   (widget)      │    │    │
 │  │  └─────────────┴──────┬──────┴─────────────────┘    │    │
 │  └───────────────────────│─────────────────────────────┘    │
@@ -638,7 +641,7 @@ The kernel allows:
               │    Named Trees         │
               │  ┌──────────────────┐  │
               │  │  kernel (Python) │  │
-              │  │  local (widget)  │  │
+              │  │  $tree-id@path   │  │
               │  └──────────────────┘  │
               └────────────────────────┘
 ```
@@ -649,16 +652,17 @@ The kernel allows:
 # Widget definition with all data sources
 my-form:
   type: popup
-  local:                              # Local tree (widget-scoped)
-    metadata:
-      editing-name: ""
+  data:
+    form-state:                       # Widget-scoped data tree
+      metadata:
+        editing-name: ""
   body:
     - text:
         head:
           label: "Enter name:"        # Static (from YAML)
     - input-text:
         head:
-          label: "$local@editing-name"  # Local tree (read-write)
+          label: "$form-state@editing-name"  # Widget data (read-write)
     - text:
         head:
           label: "@/user/name"        # Main data tree
@@ -668,17 +672,17 @@ my-form:
 ```
 
 When the `input-text` widget calls `self._data_bag.get("label")`:
-1. DataBag checks local tree for `$local@editing-name`
+1. DataBag checks widget data for `$form-state@editing-name`
 2. Resolves the path and returns the value
 3. Widget renders with that value
 4. User edits → widget calls `set("label", new_value)`
-5. DataBag writes back to local tree
+5. DataBag writes back to widget data tree
 
 ## Tips
 
 1. **Use namespaces** - Organize widgets into modules for maintainability
-2. **Prefer data binding** - Use `data-id` and `@` references over hardcoded values
-3. **Use local state** - Use `local` for popup/form temporary state
+2. **Prefer data binding** - Use `data-path` and `@` references over hardcoded values
+3. **Use widget data** - Use `data:` for popup/form temporary state
 4. **Leverage foreach** - Use `foreach-child` for dynamic lists
 5. **Style sparingly** - Apply styles at the container level when possible
 6. **Test incrementally** - Build UI piece by piece, testing each addition

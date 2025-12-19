@@ -1,0 +1,59 @@
+widgets:
+  main-window:
+    type: hello-imgui-main-window
+    runner-params:
+      app-window-params:
+        window-geometry:
+          size: [1200, 800]
+      imgui-window-params:
+        default-imgui-window-type: provide-full-screen-dock-space
+    fps-idle: 0
+    body:
+      # Docking splits
+      - docking-split:
+          initial-dock: "MainDockSpace"
+          new-dock: "BottomPanel"
+          direction: "down"
+          ratio: 0.3
+
+      - docking-split:
+          initial-dock: "MainDockSpace"
+          new-dock: "LeftPanel"
+          direction: "left"
+          ratio: 0.25
+
+      # Dockable windows
+      - dockable-window:
+          label: "Left Window"
+          dock-space-name: "LeftPanel"
+          body:
+            - text: "This is the Left Panel"
+
+      - dockable-window:
+          label: "Main Window"
+          dock-space-name: "MainDockSpace"
+          body:
+            - text: "This is the Main Dock Space"
+
+      - dockable-window:
+          label: "Bottom Window 1"
+          dock-space-name: "BottomPanel"
+          body:
+            - text: "This is Bottom Panel - Window 1"
+
+      - dockable-window:
+          label: "Bottom Window 2"
+          dock-space-name: "BottomPanel"
+          body:
+            - text: "This is Bottom Panel - Window 2"
+
+
+data:
+  demo-data:
+    metadata:
+      label: "Simple Docking Demo"
+
+
+app:
+  widget: app.main-window
+  data: demo-data

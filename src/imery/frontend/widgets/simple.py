@@ -16,7 +16,19 @@ class Text(Widget):
         res = self._data_bag.get("label")
         if not res:
             return Result.error("Text: failed to get label", res)
-        imgui.text(res.unwrapped)
+        label = str(res.unwrapped)
+
+        width = 0.0
+        res_w = self._handle_error(self._data_bag.get("width", width))
+        if res_w:
+            width = float(res_w.unwrapped)
+
+        if width > 0:
+            imgui.begin_child(f"##{self.uid}", (width, imgui.get_text_line_height()))
+            imgui.text(label)
+            imgui.end_child()
+        else:
+            imgui.text(label)
         return Ok(None)  # Text widget never opens
 
 

@@ -1,8 +1,15 @@
 """Hatch build hook to aggregate demo YAML files before building wheel."""
+import json
 import yaml
 from pathlib import Path
 from typing import Any
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
+
+
+def dir_name_to_label(name: str) -> str:
+    """Convert directory name to human-readable label."""
+    return ' '.join(word.capitalize() if word != 'imgui' else 'ImGui'
+                    for word in name.replace('-', ' ').split())
 
 
 class YAMLAggregator:
@@ -187,22 +194,16 @@ class CustomBuildHook(BuildHookInterface):
             return
 
         aggregated_count = 0
+        examples = []
+
+        # Find all demo directories (sorted for consistent ordering)
+        demo_dirs = sorted([
+            d for d in demo_base.iterdir()
+            if d.is_dir() and not d.name.startswith('.') and d.name != "old-and-obsolete" and (d / "app.yaml").exists()
+        ])
 
         # Aggregate each demo subdirectory
-        for demo_dir in demo_base.iterdir():
-            if not demo_dir.is_dir() or demo_dir.name.startswith('.'):
-                continue
-
-            # Skip old-and-obsolete directory
-            if demo_dir.name == "old-and-obsolete":
-                continue
-
-            # Check if app.yaml exists
-            app_yaml = demo_dir / "app.yaml"
-            if not app_yaml.exists():
-                print(f"  Skipping {demo_dir.name} (no app.yaml)")
-                continue
-
+        for demo_dir in demo_dirs:
             output_file = aggregated_dir / f"{demo_dir.name}.yaml"
             print(f"  Aggregating {demo_dir.name} -> {output_file.name}")
 
@@ -211,8 +212,22 @@ class CustomBuildHook(BuildHookInterface):
                 aggregated = aggregator.aggregate("app")
                 aggregator.save(output_file, aggregated)
                 aggregated_count += 1
+
+                # Add to examples list
+                examples.append({
+                    "label": dir_name_to_label(demo_dir.name),
+                    "aggregated_file": f"{demo_dir.name}.yaml",
+                    "description": f"{dir_name_to_label(demo_dir.name)} demo"
+                })
             except Exception as e:
                 print(f"  Error aggregating {demo_dir.name}: {e}")
                 # Continue with other demos even if one fails
 
+        # Write examples.json
+        examples_json_path = aggregated_dir / "examples.json"
+        with open(examples_json_path, 'w') as f:
+            json.dump({"examples": examples}, f, indent=2)
+            f.write('\n')
+
         print(f"Successfully aggregated {aggregated_count} demo files")
+        print(f"Generated {examples_json_path} with {len(examples)} examples")

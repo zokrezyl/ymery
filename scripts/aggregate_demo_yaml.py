@@ -11,6 +11,8 @@ This script:
 
 Usage:
     python scripts/aggregate_demo_yaml.py demo/hello-imgui-full -o docs/examples/hello-imgui-full.yaml
+
+Note: For full build (all demos + examples.json), use `uv build` which runs hatch_build.py
 """
 
 import argparse
@@ -206,7 +208,7 @@ def main():
     # Default output path if not specified
     if not args.output:
         demo_name = args.demo_dir.name
-        args.output = Path('docs/examples') / f"{demo_name}.yaml"
+        args.output = Path('docs/demo/examples') / f"{demo_name}.yaml"
 
     # Aggregate
     aggregator = YAMLAggregator(args.demo_dir, search_paths)

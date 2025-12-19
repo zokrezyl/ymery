@@ -1,19 +1,24 @@
 {
   "examples": [
     {
-      "label": "Classic Demo",
+      "label": "Classic",
       "aggregated_file": "classic.yaml",
-      "description": "Classic ImGui demo"
+      "description": "Classic demo"
     },
     {
       "label": "Hello ImGui",
       "aggregated_file": "hello-imgui.yaml",
-      "description": "Basic Hello ImGui demo"
+      "description": "Hello ImGui demo"
+    },
+    {
+      "label": "Hello ImGui Dockable Windows Simple",
+      "aggregated_file": "hello-imgui-dockable-windows-simple.yaml",
+      "description": "Hello ImGui Dockable Windows Simple demo"
     },
     {
       "label": "Hello ImGui Full",
       "aggregated_file": "hello-imgui-full.yaml",
-      "description": "Full Hello ImGui demo with all features"
+      "description": "Hello ImGui Full demo"
     }
   ]
 }

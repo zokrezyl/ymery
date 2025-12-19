@@ -1,7 +1,7 @@
 // js/pyodide.js
 
 // Ymery version - updated by build process
-const YMERY_VERSION = "0.0.63";
+const YMERY_VERSION = "0.0.64";
 
 async function load_pyodide_imgui_render() {
     console.log('Loading load_pyodide_imgui_render.py');
@@ -171,6 +171,11 @@ async function runEditorPythonCode() {
         });
         pyodide.setStderr({
             batched: (s) => {
+                // Filter out Python DEBUG log messages (e.g., from PIL)
+                if (s.startsWith('DEBUG:')) {
+                    console.log('[DEBUG]', s);
+                    return;
+                }
                 console.error(s);
                 displayError(s);
             },

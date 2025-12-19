@@ -6,15 +6,21 @@ widgets:
 
       - data-id: color-rgb
         color-edit:
+          head:
+            tooltip: "Click to edit RGB color"
           format: rgb
 
       - separator-text: "Color Edit with Alpha"
 
       - data-id: color-rgba
         color-edit:
+          head:
+            tooltip: "Click to edit RGBA color with alpha"
           format: rgba
 
       - separator-text: "Color Button"
 
       - data-id: color-button
         color-button:
+          head:
+            tooltip: "Click to pick a color"

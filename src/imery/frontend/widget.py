@@ -976,6 +976,14 @@ widgets:
             if not res:
                 return Result.error("Failed to execute 'on-hover' commands", res)
 
+        # automatic tooltip from head param
+        if imgui.is_item_hovered():
+            tooltip_res = self._data_bag.get("tooltip")
+            if tooltip_res and tooltip_res.unwrapped:
+                imgui.begin_tooltip()
+                imgui.text(str(tooltip_res.unwrapped))
+                imgui.end_tooltip()
+
         # hovered event
         if not self._last_error is None and "on-error" in self._event_handlers:
             res = self._execute_event_commands("on-error")

@@ -6,20 +6,32 @@ widgets:
 
       - data-id: selectable-1
         selectable:
+          head:
+            tooltip: "Click to select item 1"
 
       - data-id: selectable-2
         selectable:
+          head:
+            tooltip: "Click to select item 2"
 
       - data-id: selectable-3
         selectable:
+          head:
+            tooltip: "Click to select item 3"
 
       - data-id: selectable-4
         selectable:
+          head:
+            tooltip: "Click to select item 4"
 
       - separator-text: "Multiple Selection"
 
       - data-id: selectable-5
         selectable:
+          head:
+            tooltip: "Click to toggle selection"
 
       - data-id: selectable-6
         selectable:
+          head:
+            tooltip: "Click to toggle selection"

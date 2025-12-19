@@ -13,17 +13,20 @@ widgets:
                 shortcut: ""
                 selection: false
                 enabled: true
+                tooltip: "Open an existing layout file"
             - menu-item:
                 label: "Save"
                 shortcut: ""
                 selection: false
                 enabled: true
+                tooltip: "Save the current layout"
             - separator
             - menu-item:
                 label: "Exit"
                 shortcut: ""
                 selection: false
                 enabled: true
+                tooltip: "Close the editor"
       - menu:
           label: "Edit"
           body:
@@ -32,6 +35,7 @@ widgets:
                 shortcut: ""
                 selection: false
                 enabled: true
+                tooltip: "Configure editor settings"
       - menu:
           label: "View"
           body:
@@ -40,3 +44,4 @@ widgets:
                 shortcut: ""
                 selection: false
                 enabled: true
+                tooltip: "Refresh the current view"

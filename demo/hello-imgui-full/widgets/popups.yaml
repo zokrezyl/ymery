@@ -5,7 +5,9 @@ widgets:
       - separator-text: "Modal Popup"
 
       - button:
-          label: "Open Modal"
+          head:
+            label: "Open Modal"
+            tooltip: "Click to open a modal dialog"
           body:
             - open-popup:
                 id: "modal-popup"
@@ -17,6 +19,8 @@ widgets:
             - text: "This is a modal popup!"
             - separator:
             - button:
-                label: "Close"
+                head:
+                  label: "Close"
+                  tooltip: "Close the modal dialog"
                 body:
                   - close-current-popup:

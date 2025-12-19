@@ -6,6 +6,8 @@ widgets:
 
       - data-id: combo-selection
         combo:
+          head:
+            tooltip: "Click to select from available options"
           items: ["Option 1", "Option 2", "Option 3", "Option 4"]
 
       - separator-text: "Current Selection"

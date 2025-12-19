@@ -5,29 +5,41 @@ widgets:
       - separator-text: "General"
 
       - button:
-          label: "Button"
+          head:
+            label: "Button"
+            tooltip: "Click to trigger an action"
       - text: "Click the button!"
 
       - separator-text: "Inputs"
 
       - data-id: input-text
         input-text:
+          head:
+            tooltip: "Enter text value"
 
       - data-id: input-int
         input-int:
+          head:
+            tooltip: "Enter integer value"
 
       - data-id: input-float
         input-float:
+          head:
+            tooltip: "Enter floating point value"
 
       - separator-text: "Sliders"
 
       - data-id: slider-int
         slider-int:
+          head:
+            tooltip: "Drag to adjust integer value (0-100)"
           min: 0
           max: 100
 
       - data-id: slider-float
         slider-float:
+          head:
+            tooltip: "Drag to adjust float value (0.0-1.0)"
           min: 0.0
           max: 1.0
 
@@ -35,18 +47,26 @@ widgets:
 
       - data-id: checkbox
         checkbox:
+          head:
+            tooltip: "Toggle this option on or off"
 
       - data-id: radio
         radio-button:
+          head:
+            tooltip: "Select option A"
           value: 0
           label: "Radio A"
 
       - data-id: radio
         radio-button:
+          head:
+            tooltip: "Select option B"
           value: 1
           label: "Radio B"
 
       - data-id: radio
         radio-button:
+          head:
+            tooltip: "Select option C"
           value: 2
           label: "Radio C"

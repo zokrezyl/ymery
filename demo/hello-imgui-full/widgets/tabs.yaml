@@ -8,19 +8,27 @@ widgets:
           id: "main-tabs"
           body:
             - tab-item:
-                label: "Tab 1"
+                head:
+                  label: "Tab 1"
+                  tooltip: "View tab 1 content"
                 body:
                   - text: "This is tab 1 content"
                   - button:
-                      label: "Button in tab 1"
+                      head:
+                        label: "Button in tab 1"
+                        tooltip: "Click to trigger action"
 
             - tab-item:
-                label: "Tab 2"
+                head:
+                  label: "Tab 2"
+                  tooltip: "View tab 2 content"
                 body:
                   - text: "This is tab 2 content"
                   - text: "More content here"
 
             - tab-item:
-                label: "Tab 3"
+                head:
+                  label: "Tab 3"
+                  tooltip: "View tab 3 content"
                 body:
                   - text: "This is tab 3 content"

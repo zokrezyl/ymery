@@ -6,5 +6,7 @@ widgets:
 
       - data-id: listbox-selection
         listbox:
+          head:
+            tooltip: "Select an item from the list"
           items: ["Apple", "Banana", "Cherry", "Date", "Fig", "Grape"]
           height: 4

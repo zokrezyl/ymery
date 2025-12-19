@@ -1,32 +1,42 @@
 widgets:
-  imguizmo-demo:
+  imguizmo-demo-page:
     type: composite
     body:
-      - separator-text: "Gizmo Controls"
+      - separator-text: "ImGuizmo - 3D Manipulation Gizmo"
 
-      - data-id: gizmo-translate
-        imguizmo:
+      - markdown-unindented: |
+          Interactive 3D gizmo for translate, rotate, and scale operations.
+          - **Drag** the gizmo axes to transform
+          - **T/E/S keys** to switch operation
+          - Uses numpy for matrix math (Pyodide compatible)
+
+      - imguizmo-demo:
+
+      - separator-text: "Basic Gizmos"
+
+      - columns:
+          count: 3
+
+      - next-column:
+      - text: "Translate"
+      - imguizmo:
           operation: "translate"
           mode: "local"
+          size: [250, 200]
 
-      - separator:
-
-      - data-id: gizmo-rotate
-        imguizmo:
+      - next-column:
+      - text: "Rotate"
+      - imguizmo:
           operation: "rotate"
           mode: "local"
+          size: [250, 200]
 
-      - separator:
-
-      - data-id: gizmo-scale
-        imguizmo:
+      - next-column:
+      - text: "Scale"
+      - imguizmo:
           operation: "scale"
           mode: "local"
+          size: [250, 200]
 
-      - separator-text: "Features"
-
-      - bullet-text: "Translate gizmo"
-      - bullet-text: "Rotate gizmo"
-      - bullet-text: "Scale gizmo"
-      - bullet-text: "Matrix manipulation"
-      - bullet-text: "Local/World space"
+      - columns:
+          count: 1

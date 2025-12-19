@@ -10,17 +10,40 @@ import numpy as np
 from pathlib import Path
 
 
+def _resolve_image_path(image_path: str) -> str:
+    """Resolve image path - check relative to package if not found directly."""
+    path = Path(image_path)
+
+    # Try direct path first
+    if path.exists():
+        return image_path
+
+    # Try relative to imery package
+    import imery
+    package_dir = Path(imery.__file__).parent
+    package_path = package_dir / image_path
+    if package_path.exists():
+        return str(package_path)
+
+    return image_path  # Return original, let caller handle error
+
+
 def _load_image(image_path: str, load_alpha: bool = False) -> np.ndarray:
     """Load image using PIL"""
+    resolved_path = _resolve_image_path(image_path)
     try:
         from PIL import Image
-        img = Image.open(image_path)
+        img = Image.open(resolved_path)
         mode = "RGBA" if load_alpha else "RGB"
         return np.array(img.convert(mode))
     except ImportError:
-        # Fallback to dummy pattern if PIL not available
+        print(f"Warning: PIL not available, using dummy image for {image_path}")
         return _dummy_image(load_alpha)
-    except Exception:
+    except FileNotFoundError:
+        print(f"Warning: Image not found: {image_path} (resolved: {resolved_path})")
+        return _dummy_image(load_alpha)
+    except Exception as e:
+        print(f"Warning: Failed to load image {image_path}: {e}")
         return _dummy_image(load_alpha)
 
 

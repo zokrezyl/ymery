@@ -9,6 +9,7 @@ from imgui_bundle import imgui
 from imery.lang import Lang
 from imery.frontend.widget_factory import WidgetFactory
 from imery.backend.kernel import Kernel
+from imery.plugin_manager import PluginManager
 from imery.backend.data_tree import DataTree
 from imery.dispatcher import Dispatcher
 from imery.types import DataPath
@@ -43,8 +44,8 @@ def handle_error(err):
               type=str,
               multiple=True,
               help='URL to download layouts from (can be specified multiple times, e.g., GitHub raw URLs)')
-@click.option('--providers-path',
-              envvar='IMERY_PROVIDERS_PATH',
+@click.option('--plugins-path',
+              envvar='IMERY_PLUGINS_PATH',
               type=str,
               help='Colon-separated list of directories to search for provider modules')
 @click.option('--widgets-path',
@@ -56,7 +57,7 @@ def handle_error(err):
               type=str,
               help='Name of the main module to load')
 
-def main(layouts_path, layouts_url, providers_path, widgets_path, main):
+def main(layouts_path, layouts_url, plugins_path, widgets_path, main):
     """Imery application runner"""
     global main_widget, factory, dispatcher, kernel, data_tree
 
@@ -97,8 +98,15 @@ def main(layouts_path, layouts_url, providers_path, widgets_path, main):
         return 1
     dispatcher = dispatcher_res.unwrapped
 
+    # Create PluginManager
+    plugin_manager_res = PluginManager.create(label="devices", plugins_path=plugins_path)
+    if not plugin_manager_res:
+        click.echo(f"Error creating PluginManager: {plugin_manager_res}", err=True)
+        return 1
+    plugin_manager = plugin_manager_res.unwrapped
+
     # Create Kernel
-    kernel_res = Kernel.create(dispatcher=dispatcher, providers_path=providers_path)
+    kernel_res = Kernel.create(dispatcher=dispatcher, plugin_manager=plugin_manager)
     if not kernel_res:
         click.echo(f"Error creating Kernel: {kernel_res}", err=True)
         return 1

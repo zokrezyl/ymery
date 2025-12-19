@@ -23,17 +23,17 @@ import:
   - examples.long-text
   - examples.command-palette
   - examples.drag-and-drop
-  - examples.matplotlib-demo
+  # - examples.matplotlib-demo
   - examples.custom-background
   - examples.docking-demo
   - examples.implot-demo
   - examples.implot3d-demo
   - examples.markdown-demo
-  - examples.node-editor-demo
+  # - examples.node-editor-demo
   - examples.text-editor-demo
-  - examples.immvision-demo
-  - examples.nanovg-demo
-  - examples.imguizmo-demo
+  # - examples.immvision-demo
+  # - examples.nanovg-demo
+  # - examples.imguizmo-demo
   - examples.tex-inspect-demo
   - examples.widgets-demo
 
@@ -268,10 +268,10 @@ widgets:
               body:
                 - examples.docking-demo.docking-demo:
 
-          - collapsing-header:
-              label: "Matplotlib"
-              body:
-                - examples.matplotlib-demo.matplotlib-demo:
+#          - collapsing-header:
+#              label: "Matplotlib"
+#              body:
+#                - examples.matplotlib-demo.matplotlib-demo:
 
     # 4. Implot [3D]
     - dockable-window:
@@ -290,11 +290,11 @@ widgets:
                 - examples.implot3d-demo.implot3d-demo:
 
     # 5. Node Editor
-    - dockable-window:
-        label: "Node Editor"
-        dock-space-name: "MainDockSpace"
-        body:
-          - examples.node-editor-demo.node-editor-demo:
+#    - dockable-window:
+#        label: "Node Editor"
+#        dock-space-name: "MainDockSpace"
+#        body:
+#          - examples.node-editor-demo.node-editor-demo:
 
     # 6. Markdown
     - dockable-window:
@@ -317,26 +317,26 @@ widgets:
         body:
           - examples.widgets-demo.widgets-demo:
 
-    # 9. ImmVision
-    - dockable-window:
-        label: "ImmVision"
-        dock-space-name: "MainDockSpace"
-        body:
-          - examples.immvision-demo.immvision-demo:
+#    # 9. ImmVision
+#    - dockable-window:
+#        label: "ImmVision"
+#        dock-space-name: "MainDockSpace"
+#        body:
+#          - examples.immvision-demo.immvision-demo:
 
-    # 10. NanoVG
-    - dockable-window:
-        label: "NanoVG"
-        dock-space-name: "MainDockSpace"
-        body:
-          - examples.nanovg-demo.nanovg-demo:
+#    # 10. NanoVG
+#    - dockable-window:
+#        label: "NanoVG"
+#        dock-space-name: "MainDockSpace"
+#        body:
+#          - examples.nanovg-demo.nanovg-demo:
 
-    # 11. ImGuizmo
-    - dockable-window:
-        label: "ImGuizmo"
-        dock-space-name: "MainDockSpace"
-        body:
-          - examples.imguizmo-demo.imguizmo-demo:
+#    # 11. ImGuizmo
+#    - dockable-window:
+#        label: "ImGuizmo"
+#        dock-space-name: "MainDockSpace"
+#        body:
+#          - examples.imguizmo-demo.imguizmo-demo:
 
     # 12. Themes
     - dockable-window:

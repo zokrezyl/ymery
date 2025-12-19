@@ -53,12 +53,15 @@ widgets:
       - text: "Draggable Button Demo:"
       - data-id: # we leave it empty (python: None) so that the widget does not inherit any data
         draggable:
-          size: [40, 40]
-          position: [50, 50]
+          head:
+            size: [40, 40]
+            position: [50, 50]
+            bounds: window
           body:
             - button:
-                # label: "☰"
-                label: "this is a button label"
+                head:
+                  label: "this is a button label"
+                  tooltip: "Drag me anywhere in the window"
                 body: widgets.draggable-demo-popup
       - separator
       - text: "Live Data (updates as you edit):"

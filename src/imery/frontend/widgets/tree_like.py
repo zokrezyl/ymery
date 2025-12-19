@@ -474,7 +474,8 @@ class Draggable(Widget):
         size: Size of draggable area [width, height] (default: [30, 30])
         position: Initial position offset [x, y] from parent widget (default: [5, -35])
         bounds: Movement bounds. Options:
-            - omitted: constrain to available content region (default)
+            - omitted or "auto": constrain to available content region (default)
+            - "window": constrain to full window/viewport
             - [min_x, min_y, max_x, max_y]: relative to cursor position
             - {absolute: [min_x, min_y, max_x, max_y]}: screen coordinates
     """
@@ -527,6 +528,15 @@ class Draggable(Widget):
                 window_pos.y + cursor_start.y,
                 window_pos.x + window_size.x - self._size.x,
                 cursor_screen_pos.y - self._size.y
+            )
+        elif bounds_param == "window":
+            # Full viewport/display bounds
+            viewport = imgui.get_main_viewport()
+            self._bounds = (
+                viewport.pos.x,
+                viewport.pos.y,
+                viewport.pos.x + viewport.size.x - self._size.x,
+                viewport.pos.y + viewport.size.y - self._size.y
             )
         elif isinstance(bounds_param, dict) and "absolute" in bounds_param:
             # Absolute screen coordinates

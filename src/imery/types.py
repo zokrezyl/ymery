@@ -36,7 +36,7 @@ class Object(ABC):
     def __init__(self):
         """Set unique ID for this object"""
         self._uid = f"{spinalcase(self.__class__.__name__)}-{gen_uid()}"
-        print(f"Object: __init__:", self.__class__.__name__, self._uid)
+        # print(f"Object: __init__:", self.__class__.__name__, self._uid)
 
     @abstractmethod
     def init(self) -> Result[None]:

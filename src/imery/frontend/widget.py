@@ -872,7 +872,6 @@ widgets:
         return Ok(None)
 
     def _handle_error(self, error) -> Result[Any]:
-        print("Widget: _handle_error", error)
         if not error:
             self._errors.append(error)
         return error

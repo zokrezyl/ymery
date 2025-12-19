@@ -387,52 +387,6 @@ wheels = [
 ]
 
 [[package]]
-name = "ymery"
-version = "0.0.61"
-source = { editable = "." }
-dependencies = [
-    { name = "click" },
-    { name = "httpx" },
-    { name = "imgui-bundle" },
-    { name = "matplotlib" },
-    { name = "munch" },
-    { name = "pillow" },
-    { name = "pyyaml" },
-]
-
-[package.optional-dependencies]
-audio = [
-    { name = "soundfile" },
-]
-dev = [
-    { name = "pytest" },
-    { name = "twine" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "twine" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "click", specifier = ">=8.3.0" },
-    { name = "httpx", specifier = ">=0.28.1" },
-    { name = "imgui-bundle", specifier = ">=1.92.4" },
-    { name = "matplotlib", specifier = ">=3.8.0" },
-    { name = "munch", specifier = ">=4.0.0" },
-    { name = "pillow", specifier = ">=11.3.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.2" },
-    { name = "pyyaml", specifier = ">=6.0.2" },
-    { name = "soundfile", marker = "extra == 'audio'", specifier = ">=0.13.1" },
-    { name = "twine", marker = "extra == 'dev'", specifier = ">=6.2.0" },
-]
-provides-extras = ["audio", "dev"]
-
-[package.metadata.requires-dev]
-dev = [{ name = "twine", specifier = ">=6.2.0" }]
-
-[[package]]
 name = "imgui-bundle"
 version = "1.92.5"
 source = { registry = "https://pypi.org/simple" }
@@ -1125,3 +1079,49 @@ sdist = { url = "https://files.pythonhosted.org/packages/1e/24/a2a2ed9addd907787
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6d/b9/4095b668ea3678bf6a0af005527f39de12fb026516fb3df17495a733b7f8/urllib3-2.6.2-py3-none-any.whl", hash = "sha256:ec21cddfe7724fc7cb4ba4bea7aa8e2ef36f607a4bab81aa6ce42a13dc3f03dd", size = 131182, upload-time = "2025-12-11T15:56:38.584Z" },
 ]
+
+[[package]]
+name = "ymery"
+version = "0.0.62"
+source = { editable = "." }
+dependencies = [
+    { name = "click" },
+    { name = "httpx" },
+    { name = "imgui-bundle" },
+    { name = "matplotlib" },
+    { name = "munch" },
+    { name = "pillow" },
+    { name = "pyyaml" },
+]
+
+[package.optional-dependencies]
+audio = [
+    { name = "soundfile" },
+]
+dev = [
+    { name = "pytest" },
+    { name = "twine" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "twine" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.3.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "imgui-bundle", specifier = ">=1.92.4" },
+    { name = "matplotlib", specifier = ">=3.8.0" },
+    { name = "munch", specifier = ">=4.0.0" },
+    { name = "pillow", specifier = ">=11.3.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.2" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "soundfile", marker = "extra == 'audio'", specifier = ">=0.13.1" },
+    { name = "twine", marker = "extra == 'dev'", specifier = ">=6.2.0" },
+]
+provides-extras = ["audio", "dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "twine", specifier = ">=6.2.0" }]

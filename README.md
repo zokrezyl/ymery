@@ -1,5 +1,9 @@
 # Ymery
 
+<p align="center">
+  <img src="docs/logo.jpeg" alt="Ymery Logo" width="200">
+</p>
+
 **Build interactive GUI applications with YAML instead of code.**
 
 Ymery lets you create [Dear ImGui](https://github.com/ocornut/imgui) applications using declarative YAML files, powered by [Dear ImGui Bundle](https://github.com/pthom/imgui_bundle) for Python.

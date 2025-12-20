@@ -72,12 +72,8 @@ widgets:
           style:
             text: [0.9, 0.9, 0.7, 1.0]
       - separator
-      - bullet-text: "Application started"
-      - bullet-text: "Loaded docking layout"
-      - bullet-text: "Initialized kernel"
-      - bullet-text: "Ready for operations"
-      - separator
-      - text: "Log level: INFO"
+      - data-path: $log-tree
+        builtin.tree-view:
 
   # ============================================================================
   # CONTROLS VIEW for dockable window

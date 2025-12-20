@@ -1,4 +1,7 @@
 data:
+  log-tree:
+    type: log-tree
+
   demo-data:
     type: data-tree
     arg:

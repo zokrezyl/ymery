@@ -1,3 +1,4 @@
+# plugins/backend/data_tree/main.py
 """
 DataTree - Wrapper around dict with explicit children/metadata structure
 Implements TreeLike interface for unified access to hierarchical data
@@ -16,22 +17,26 @@ from typing import Union, List, Dict
 from ymery.result import Result, Ok
 from ymery.backend.types import TreeLike
 from ymery.types import DataPath, Object
+from ymery.decorators import tree_like
 
 
+@tree_like
 class DataTree(Object, TreeLike):
     """Wrapper around dict with explicit children/metadata structure"""
 
-    def __init__(self, data):
-        """
-        Args:
-            data: The wrapped data dict with "children" and/or "metadata" keys
-        """
+    name = "data-tree"
+
+    def __init__(self, dispatcher, plugin_manager, raw_arg=None):
         super().__init__()
-        if not isinstance(data, dict):
-            raise ValueError("DataTree requires dict with 'children' and/or 'metadata' keys")
-        self._data = data
+        self._dispatcher = dispatcher
+        self._plugin_manager = plugin_manager
+        self._data = raw_arg
 
     def init(self) -> Result[None]:
+        if self._data is None:
+            return Result.error("DataTree: raw_arg is required")
+        if not isinstance(self._data, dict):
+            return Result.error(f"DataTree: raw_arg must be dict, got {type(self._data).__name__}")
         return Ok(None)
 
     def dispose(self) -> Result[None]:
@@ -60,7 +65,7 @@ class DataTree(Object, TreeLike):
         for i, part in enumerate(parts):
             # Check if current node is a dict
             if not isinstance(current, dict):
-                current_path = DataPath.from_list(parts[:i])
+                current_path = DataPath(parts[:i])
                 return Result.error(f"node at path '{current_path}' is not a dict (got {type(current).__name__}), cannot navigate to '{part}'")
 
             # Get children dict
@@ -391,4 +396,3 @@ class DataTree(Object, TreeLike):
         # Set key in metadata
         metadata[metadata_key] = value
         return Ok(None)
-

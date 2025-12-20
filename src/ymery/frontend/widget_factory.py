@@ -3,6 +3,7 @@ from ymery.types import TreeLike, DataPath, Object
 from ymery.data_bag import DataBag
 from ymery.dispatcher import Dispatcher
 from ymery.result import Result, Ok
+from ymery.plugin_manager import PluginManager
 import importlib.util
 import sys
 
@@ -30,7 +31,7 @@ class WidgetFactory(Object):
     Uses DataBag for data access and creates appropriate Widget subclasses
     """
 
-    def __init__(self, dispatcher: Dispatcher, widget_definitions: Dict[str, dict], data_trees: Dict = None, widgets_path: Optional[str] = None):
+    def __init__(self, dispatcher: Dispatcher, plugin_manager: PluginManager, widget_definitions: Dict[str, dict], data_trees: Dict = None, widgets_path: Optional[str] = None):
         """
         Args:
             dispatcher: Event dispatcher
@@ -40,6 +41,7 @@ class WidgetFactory(Object):
         """
         super().__init__()
         self._dispatcher = dispatcher
+        self._plugin_manager = plugin_manager
         self._widget_cache = {}  # Cache of primitive + YAML widget definitions
         self._widgets_path = widgets_path
         self._data_trees = data_trees or {}
@@ -48,69 +50,21 @@ class WidgetFactory(Object):
         self._widget_definitions = widget_definitions
 
     def init(self) -> Result[None]:
-        """Load widget classes dynamically from widgets_path"""
-        from ymery.decorators import _pending_widgets
+        # Populate widget_cache from plugin_manager
+        res = self._plugin_manager.get_children_names(DataPath("/widget"))
+        if not res:
+            return Result.error("WidgetFactory: failed to get widget names from plugin_manager", res)
 
-        # Build list of widget directories from colon-separated path
-        widget_dirs = []
-        if self._widgets_path:
-            # Parse colon-separated paths
-            for path_str in self._widgets_path.split(':'):
-                path_str = path_str.strip()
-                if path_str:
-                    widget_dirs.append(Path(path_str))
-        else:
-            # Default: Get directory relative to this file (ymery/frontend/widgets)
-            frontend_dir = Path(__file__).parent
-            widget_dirs.append(frontend_dir / "widgets")
+        for registered_name in res.unwrapped:
+            res = self._plugin_manager.get_metadata(DataPath(f"/widget/{registered_name}"))
+            if not res:
+                return Result.error(f"WidgetFactory: failed to get metadata for widget '{registered_name}'", res)
+            metadata = res.unwrapped
+            self._widget_cache[registered_name] = metadata["class"]
 
-        # Scan each widget directory and load modules
-        for widgets_dir in widget_dirs:
-            if not widgets_dir.exists():
-                continue
-
-            # Add parent directory to sys.path for proper imports
-            parent_dir = str(widgets_dir.parent.absolute())
-            if parent_dir not in sys.path:
-                sys.path.insert(0, parent_dir)
-
-            # Scan all .py files in the widgets directory
-            for widget_file in widgets_dir.iterdir():
-                if not widget_file.is_file():
-                    continue
-                if not widget_file.name.endswith('.py'):
-                    continue
-                if widget_file.name.startswith('_'):
-                    continue
-
-                widget_module_name = widget_file.stem
-
-                try:
-                    # Load the module dynamically
-
-                    # Use widgets directory name + module name for package
-                    package_name = f"{widgets_dir.name}.{widget_module_name}"
-
-                    spec = importlib.util.spec_from_file_location(
-                        package_name,
-                        widget_file
-                    )
-                    module = importlib.util.module_from_spec(spec)
-                    sys.modules[spec.name] = module
-                    spec.loader.exec_module(module)
-
-                except Exception as e:
-                    return Result.error(f"WidgetFactory: init: Could not load {widget_file}", e)
-
-        # Now collect all registered widgets from _pending_widgets
-        for widget_class in _pending_widgets:
-            # Convert class name to kebab-case for cache key
-            class_name = widget_class.__name__
-            widget_name = to_kebab_case(class_name)
-            self._widget_cache[widget_name] = widget_class
-
-        # Add YAML widgets to cache
-        self._widget_cache.update(self._widget_definitions)
+        # Populate widget_cache from widget_definitions (YAML definitions)
+        for widget_name, widget_def in self._widget_definitions.items():
+            self._widget_cache[widget_name] = widget_def
 
         return Ok(None)
 
@@ -206,7 +160,7 @@ class WidgetFactory(Object):
         main_data_key = "main" if tree_like else None
 
         static = params if params is not None else {}
-        data_bag = DataBag(data_trees, main_data_key, data_path, static)
+        data_bag = DataBag(self._dispatcher, self._plugin_manager, data_trees, main_data_key, data_path, static)
 
         return self.create_widget_from_bag(widget_name, data_bag)
 

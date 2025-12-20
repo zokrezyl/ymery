@@ -1,35 +1,79 @@
+# plugins/backend/kernel/main.py
 from typing import List, Dict, Any, Optional, Union
 
 from ymery.backend.types import TreeLike, DeviceManager
 from ymery.types import DataPath, Object, ActionHandler
 from ymery.result import Result, Ok
 from ymery.plugin_manager import call_by_path
+from ymery.decorators import tree_like
 
 from ymery.logging import log
 
 from pprint import pp
 
-# objects in WaeW app are organised in a VFS like structure. Objects are called assets, not files as 
-# for some users naming file an abstraction that is not really a file may be confusing
-# Thus instead of VFS we will use VAS, virtual asset structure
-# The kernel is the interface to access those objects/assets
-# the rooot contains two main entries
-# -> available assets
-# -> maounted assets
-# available assets are those assets that can be mounted thus used in the application
-# the available assets are grouped into their providers
-# -> alsa
-# -> filesystem
-# -> jack
-# -> LDSPA
-#
-# each provider may provide further structures, for instance LDSPA may have entries per plugin
-
-
-
 
 class PathTransformer:
     pass
+
+
+class ProvidersProxy:
+    """Proxy that delegates to device-manager providers lazily."""
+
+    def __init__(self, kernel):
+        self._kernel = kernel
+
+    def _get_provider_and_path(self, path: DataPath):
+        """Get provider and remaining path from path like /waveform-st/..."""
+        parts = path.as_list
+        if len(parts) == 0:
+            return None, None, path
+        provider_name = parts[0]
+        res = self._kernel._get_provider(provider_name)
+        if not res:
+            return None, res, path
+        remaining = DataPath(parts[1:]) if len(parts) > 1 else DataPath("/")
+        return res.unwrapped, None, remaining
+
+    def get_children_names(self, path: DataPath) -> Result[List[str]]:
+        if len(path) == 0 or str(path) == "/":
+            res = self._kernel._plugin_manager.get_children_names(DataPath("/device-manager"))
+            if not res:
+                return Result.error("ProvidersProxy: failed to get device-manager list", res)
+            return res
+        provider, err, remaining = self._get_provider_and_path(path)
+        if err:
+            return err
+        return provider.get_children_names(remaining)
+
+    def get_metadata(self, path: DataPath) -> Result[Dict[str, Any]]:
+        if len(path) == 0 or str(path) == "/":
+            return Ok({"name": "providers", "label": "Providers"})
+        provider, err, remaining = self._get_provider_and_path(path)
+        if err:
+            return err
+        return provider.get_metadata(remaining)
+
+    def get_metadata_keys(self, path: DataPath) -> Result[list]:
+        res = self.get_metadata(path)
+        if not res:
+            return Result.error(f"ProvidersProxy: failed to get metadata for {path}", res)
+        metadata = res.unwrapped
+        if isinstance(metadata, dict):
+            return Ok(list(metadata.keys()))
+        return Result.error(f"ProvidersProxy: metadata is not a dict at {path}")
+
+    def get(self, path: DataPath) -> Result:
+        provider, err, remaining = self._get_provider_and_path(path)
+        if err:
+            return err
+        return provider.get(remaining)
+
+    def open(self, path: DataPath, params: Dict) -> Result:
+        provider, err, remaining = self._get_provider_and_path(path)
+        if err:
+            return Result.error(f"ProvidersProxy: could not open at path {path}", err)
+        return provider.open(remaining, params)
+
 
 class SettingsManager(Object, TreeLike):
     def dispose(self) -> Result[None]:
@@ -78,6 +122,7 @@ class SettingsManager(Object, TreeLike):
 
     def as_tree(self, data_path: DataPath = None, depth: int = 0) -> Result[Union[dict]]:
         pass
+
 
 class RegisteredObjectsManager(Object, TreeLike):
     def dispose(self) -> Result[None]:
@@ -128,24 +173,29 @@ class RegisteredObjectsManager(Object, TreeLike):
         pass
 
 
-
+@tree_like
 class Kernel(DeviceManager, ActionHandler):
     """
-    Backend that manages all assets: plugins, opened providers, settings, and windows.
+    Backend that manages all assets: plugins, opened plugins, settings, and windows.
 
     Asset tree structure:
     /
     ├─ /available (all available assets)
-    ├──── /available/providers (provider plugins)
-    │   ├──── /available/providers/alsa
-    │   └──── /avaialble/providers/Soundfile
+    ├──── /available/plugins (plugin plugins)
+    │   ├──── /available/plugins/alsa
+    │   └──── /avaialble/plugins/Soundfile
     ├── /available/settings (configuration)
     """
 
+    name = "kernel"
 
-    def __init__(self, dispatcher, plugin_manager):
+    def __init__(self, dispatcher, plugin_manager, raw_arg=None):
         super().__init__()
         self._dispatcher = dispatcher
+        self._plugin_manager = plugin_manager
+        self._raw_arg = raw_arg
+
+        self._providers = {}
 
         self._tree = {
             "metadata": {
@@ -154,7 +204,7 @@ class Kernel(DeviceManager, ActionHandler):
             },
             "children": {
                 "providers": {
-                    "seed-instance": plugin_manager
+                    "seed-instance": ProvidersProxy(self)
                 },
                 "settings": {
                     "seed-class": SettingsManager,
@@ -169,22 +219,15 @@ class Kernel(DeviceManager, ActionHandler):
             }
         }
 
-
     # ========== AssetProvider Interface ==========
     def get_children_names(self, path: DataPath) -> Result[List[str]]:
-        """Get children names for a given path in the asset tree.
-
-        Returns list of child names (not full paths).
-        Names are used to compose the next level path.
-        """
+        """Get children names for a given path in the asset tree."""
         res = call_by_path(self._tree, path, "children-names")
         if not res:
             return Result.error(f"Kernel: could not retrieve children names for path {path}", res)
-
         return res
 
-
-    def get_metadata(self, path: DataPath) -> Dict[str, Any]:
+    def get_metadata(self, path: DataPath) -> Result[Dict[str, Any]]:
         res = call_by_path(self._tree, path, "metadata")
         if not res:
             return Result.error(f"Kernel: could not retrieve metadata for path: {path}", res)
@@ -232,7 +275,6 @@ class Kernel(DeviceManager, ActionHandler):
 
     def open(self, path: DataPath, params: Dict) -> Result:
         """Create/open an asset at the given path."""
-        # Create asset - PluginManager handles both /available and /opened branches
         res = call_by_path(self._tree, path, "open", params)
 
         # Post event to dispatcher
@@ -278,7 +320,7 @@ class Kernel(DeviceManager, ActionHandler):
 
         if action_type == "open-asset":
             data = action.get("data", {})
-            provider_class = data.get("provider-class")
+            plugin_class = data.get("plugin-class")
             constructor_args = data.get("constructor-args", {})
             path = data.get("path")
 
@@ -291,145 +333,32 @@ class Kernel(DeviceManager, ActionHandler):
         """
         pass
 
+    def _get_provider(self, provider_name: str) -> Result:
+        """Lazily get or create a provider instance."""
+        if provider_name in self._providers:
+            return Ok(self._providers[provider_name])
+
+        res = self._plugin_manager.get_metadata(DataPath(f"/device-manager/{provider_name}"))
+        if not res:
+            return Result.error(f"Kernel: failed to get metadata for device-manager '{provider_name}'", res)
+
+        provider_class = res.unwrapped.get("class")
+        if not provider_class:
+            return Result.error(f"Kernel: no class found for device-manager '{provider_name}'")
+
+        res = provider_class.create(self._dispatcher, self._plugin_manager)
+        if not res:
+            return Result.error(f"Kernel: failed to create device-manager '{provider_name}'", res)
+
+        self._providers[provider_name] = res.unwrapped
+        return Ok(res.unwrapped)
+
     def init(self) -> Result[None]:
         return Ok(None)
 
     def dispose(self) -> Result[None]:
-        #TODO dispose all providers, opened assets etc
+        #TODO dispose all plugins, opened assets etc
         return Ok(None)
-    
+
     def as_tree(self, data_path: Optional[DataPath] = None, depth: int = 0) -> Result[None]:
         pass
-
-
-def test():
-    from pprint import pprint
-    res = Kernel.create()
-
-    if not res:
-        print("could not create backend", res) 
-    backend = res.unwrapped
-
-    alsa_root = DataPath("/available/providers/alsa/cards/10/0/0")
-
-    res = backend.get_children_names(alsa_root)
-    if not res:
-        print("error retrieving children names", res)
-
-    children = res.unwrapped
-
-    print(children)
-
-    res = backend.get_metadata(alsa_root)
-    if not res:
-        print("error retrieving metadata", res)
-
-    children = res.unwrapped
-
-    return
-
-    children = res.unwrapped
-    for child in children:
-        print(f"{child}:")
-        child_root = alsa_root / child
-        res = backend.get_children_names(child_root)
-        if not res:
-            print("error")
-        child_children = res.unwrapped
-        for child_child in child_children:
-            print(f"  {child_child}:")
-
-
-
-    print("done")
-    return
-    if False:
-        metadata = backend.get_metadata(DataPath("/available/providers/filesystem/tmp"))
-        if not metadata:
-            print("error retrieving ")
-
-    res = backend.get_children_names(DataPath("/available/providers/filesystem/mounts"))
-    if not res:
-        print("error retrieving children names")
-
-    names = res.unwrapped
-    print(names)
-
-
-    # metadata = backend.get_metadata("/available/providers/filesystem/mounts/tmp")
-    # print(metadata)
-
-    return
-
-    if False:
-        # Get root
-        print("\n\n\nRoot:")
-        print("  Children:", backend.get_children_names("/").unwrapped)
-        print("  Metadata:", backend.get_metadata("/"))
-        print()
-
-        # Get providers
-        #print("nonexistent:", backend.get_children_names("/nonexistent").as_tree)
-        print("\navailable:", backend.get_children_names("/available").unwrapped)
-    print("\n")
-    print("\n")
-    print("\n")
-    print("\n/available/providers:\n")
-    print(backend.get_children_names("/available/providers").unwrapped)
-
-
-    pcms_root = DataPath("/available/providers/alsa/pcms")
-    res = backend.get_children_names(pcms_root)
-    if not res:
-        print(f"could not retrieve pcms")
-    pcms = res.unwrapped
-    print("pcms:")
-    pp(pcms)
-
-    for pcm in pcms:
-        pcm_path = pcms_root / pcm
-        print(f"pcm_root: {pcms_root}, pcm_path: {pcm_path}")
-        res = backend.get_metadata(pcms_root / pcm)
-        if not res:
-            # print("error", res)
-            continue
-        pcm = res.unwrapped
-
-    jack_readable_clients_root = DataPath("/available/providers/jack/readable-clients")
-    res = backend.get_children_names(jack_readable_clients_root)
-    if not res:
-        print(f"could not retrieve jacks")
-        return
-    jack_readable_clients = res.unwrapped
-    print("pcms:")
-    pp(jack_readable_clients)
-
-    for jack in jack_readable_clients:
-        jack_path = jack_readable_clients_root / jack
-        print(f"YYYYY jack_root: {jack_readable_clients_root}, pcm_path: {jack_path}")
-        res = backend.get_metadata(jack_path)
-        if not res:
-            print("error", res)
-            continue
-        jack = res.unwrapped
-
-    #print(backend.get_children_names("/available/providers/jack/readable-clients").unwrapped)
-    return
-    print(backend.get_children_names("/available/providers/alsa").unwrapped)
-    print("/available/providers/settings:", backend.get_children_names("/available/providers/settings").unwrapped)
-    print("  Children:", plugins)
-    print()
-
-    # Test each plugin
-    for plugin_path in plugins[:2]:  # First 2 plugins
-        print(f"Testing: {plugin_path}")
-        metadata = backend.get_metadata(plugin_path)
-        pprint(metadata)
-
-        children = backend.get_children(plugin_path)
-        print(f"  Children ({len(children)}): {children[:3]}...")  # First 3
-        print()
-
-
-if __name__ == "__main__":
-    test()

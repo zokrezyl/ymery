@@ -1,3 +1,4 @@
+# plugins/backend/simple_data_tree/main.py
 """
 SimpleDataTree - Wrapper/Mapper around any Python data structure
 Implements TreeLike interface for unified access to hierarchical data
@@ -98,18 +99,30 @@ from ymery.result import Result, Ok
 from ymery.backend.types import TreeLike
 from ymery.types import DataPath
 from ymery.types import Object
+from ymery.decorators import tree_like
 
 
+@tree_like
 class SimpleDataTree(Object, TreeLike):
     """Maps any Python data structure to TreeLike interface"""
 
-    def __init__(self, data):
+    name = "simple_data_tree"
+
+    def __init__(self, dispatcher, plugin_manager=None, raw_arg=None):
         """
         Args:
-            data: Any Python data - primitives, dict, list, or TreeLike
+            dispatcher: Event dispatcher (or data if called with single arg)
+            plugin_manager: Plugin manager (optional)
+            raw_arg: Any Python data - primitives, dict, list, or TreeLike
         """
         super().__init__()
-        self._data = data
+        # Support both (data) and (dispatcher, plugin_manager, raw_arg) patterns
+        if plugin_manager is None and raw_arg is None:
+            self._data = dispatcher  # Called with just (data)
+        else:
+            self._data = raw_arg
+        self._dispatcher = dispatcher if plugin_manager is not None else None
+        self._plugin_manager = plugin_manager
 
     def init(self) -> Result[None]:
         return Ok(None)
@@ -309,29 +322,3 @@ class SimpleDataTree(Object, TreeLike):
             Error - modification not supported
         """
         return Result.error("SimpleDataTree.add_child: modification not implemented (read-only)")
-
-
-def test():
-    print("test...")
-    prev_error1 = Result.error("child error 1")
-    prev_error2 = Result.error("child error 2")
-    error = Result.error("error", [prev_error1, prev_error2])
-
-    sdt = SimpleDataTree(error.as_tree)
-    import pprint
-    pprint.pp(error.as_tree)
-    res = sdt.get_children_names(DataPath("/error"))
-    if not res:
-        print("error")
-
-    children = res.unwrapped
-    print("children: ", children)
-    res = sdt.get_metadata(DataPath("/error/prev_error"))
-    if not res:
-        print("error")
-    metadata = res.unwrapped
-    print(metadata)
-
-
-if __name__  == "__main__":
-    test()

@@ -1,381 +1,383 @@
 data:
   demo-data:
-    metadata:
-      label: "Ymery Docking Demo"
-      node-selection: None
-    children:
-      kernel: $kernel
-      basic-demo-data:
-        metadata:
-          label: "Basic Widgets Demo"
-        children:
-          input-text:
-            metadata:
-              label: "Hello, world!"
-          input-int:
-            metadata:
-              label: 123
-          input-float:
-            metadata:
-              label: 0.001
-          slider-int:
-            metadata:
-              label: 50
-          slider-float:
-            metadata:
-              label: 0.5
-          checkbox:
-            metadata:
-              label: true
-          radio:
-            metadata:
-              label: 0
-      color-rgb:
-        metadata:
-          label: [1.0, 0.0, 0.0]
-      color-rgba:
-        metadata:
-          label: [1.0, 0.5, 0.0, 1.0]
-      color-button:
-        metadata:
-          label: [0.0, 0.5, 1.0, 1.0]
-      combo-selection:
-        metadata:
-          label: "Option 1"
-      selectable-1:
-        metadata:
-          label: "Item 1"
-      selectable-2:
-        metadata:
-          label: "Item 2"
-      selectable-3:
-        metadata:
-          label: "Item 3"
-      selectable-4:
-        metadata:
-          label: "Item 4"
-      selectable-5:
-        metadata:
-          label: "Item 5"
-      selectable-6:
-        metadata:
-          label: "Item 6"
-      drag-int:
-        metadata:
-          label: 50
-      drag-float:
-        metadata:
-          label: 0.5
-      drag-int-min:
-        metadata:
-          label: 20
-      drag-int-max:
-        metadata:
-          label: 80
-      listbox-selection:
-        metadata:
-          label: "Apple"
-      test-image:
-        metadata:
-          label: null
-      gizmo-translate:
-        metadata:
-          label: null
-      gizmo-rotate:
-        metadata:
-          label: null
-      gizmo-scale:
-        metadata:
-          label: null
-      python-code:
-        metadata:
-          label: |
-            def hello_world():
-                print("Hello from ImGui!")
-                return True
+    type: data-tree
+    arg:
+      metadata:
+        label: "Ymery Docking Demo"
+        node-selection: None
+      children:
+        kernel: $kernel
+        basic-demo-data:
+          metadata:
+            label: "Basic Widgets Demo"
+          children:
+            input-text:
+              metadata:
+                label: "Hello, world!"
+            input-int:
+              metadata:
+                label: 123
+            input-float:
+              metadata:
+                label: 0.001
+            slider-int:
+              metadata:
+                label: 50
+            slider-float:
+              metadata:
+                label: 0.5
+            checkbox:
+              metadata:
+                label: true
+            radio:
+              metadata:
+                label: 0
+        color-rgb:
+          metadata:
+            label: [1.0, 0.0, 0.0]
+        color-rgba:
+          metadata:
+            label: [1.0, 0.5, 0.0, 1.0]
+        color-button:
+          metadata:
+            label: [0.0, 0.5, 1.0, 1.0]
+        combo-selection:
+          metadata:
+            label: "Option 1"
+        selectable-1:
+          metadata:
+            label: "Item 1"
+        selectable-2:
+          metadata:
+            label: "Item 2"
+        selectable-3:
+          metadata:
+            label: "Item 3"
+        selectable-4:
+          metadata:
+            label: "Item 4"
+        selectable-5:
+          metadata:
+            label: "Item 5"
+        selectable-6:
+          metadata:
+            label: "Item 6"
+        drag-int:
+          metadata:
+            label: 50
+        drag-float:
+          metadata:
+            label: 0.5
+        drag-int-min:
+          metadata:
+            label: 20
+        drag-int-max:
+          metadata:
+            label: 80
+        listbox-selection:
+          metadata:
+            label: "Apple"
+        test-image:
+          metadata:
+            label: null
+        gizmo-translate:
+          metadata:
+            label: null
+        gizmo-rotate:
+          metadata:
+            label: null
+        gizmo-scale:
+          metadata:
+            label: null
+        python-code:
+          metadata:
+            label: |
+              def hello_world():
+                  print("Hello from ImGui!")
+                  return True
 
-            # Edit this code
-            hello_world()
-      cpp-code:
-        metadata:
-          label: |
-            #include <iostream>
+              # Edit this code
+              hello_world()
+        cpp-code:
+          metadata:
+            label: |
+              #include <iostream>
 
-            void hello_world() {
-                std::cout << "Hello from ImGui!" << std::endl;
-            }
+              void hello_world() {
+                  std::cout << "Hello from ImGui!" << std::endl;
+              }
 
-            // Edit this code
-            int main() {
-                hello_world();
-                return 0;
-            }
-      prop-name:
-        metadata:
-          label: "Object1"
-      prop-x:
-        metadata:
-          label: 10.0
-      prop-y:
-        metadata:
-          label: 20.0
-      prop-enabled:
-        metadata:
-          label: true
-      sine:
-        metadata:
-          label: "Sine Wave"
-          layer-type: "line"
-          buffer-path: "/demo/sine"
-      square:
-        metadata:
-          label: "Square Wave"
-          layer-type: "line"
-          buffer-path: "/demo/square"
-      triangle:
-        metadata:
-          label: "Triangle Wave"
-          layer-type: "line"
-          buffer-path: "/demo/triangle"
-      toggle-flag:
-        metadata:
-          label: "Toggle"
-          value: true
-      markdown-basic:
-        metadata:
-          label: |
-            # Markdown Demo (H1)
+              // Edit this code
+              int main() {
+                  hello_world();
+                  return 0;
+              }
+        prop-name:
+          metadata:
+            label: "Object1"
+        prop-x:
+          metadata:
+            label: 10.0
+        prop-y:
+          metadata:
+            label: 20.0
+        prop-enabled:
+          metadata:
+            label: true
+        sine:
+          metadata:
+            label: "Sine Wave"
+            layer-type: "line"
+            buffer-path: "/demo/sine"
+        square:
+          metadata:
+            label: "Square Wave"
+            layer-type: "line"
+            buffer-path: "/demo/square"
+        triangle:
+          metadata:
+            label: "Triangle Wave"
+            layer-type: "line"
+            buffer-path: "/demo/triangle"
+        toggle-flag:
+          metadata:
+            label: "Toggle"
+            value: true
+        markdown-basic:
+          metadata:
+            label: |
+              # Markdown Demo (H1)
 
-            Welcome to **imgui_md** - a markdown renderer for ImGui!
+              Welcome to **imgui_md** - a markdown renderer for ImGui!
 
-            ## Text Formatting (H2)
+              ## Text Formatting (H2)
 
-            You can use *italic* text with single asterisks.
-            You can use **bold** text with double asterisks.
-            You can use ***bold italic*** with triple asterisks.
-            You can use ~~strikethrough~~ text.
-            You can use <u>underline</u> with HTML tags.
+              You can use *italic* text with single asterisks.
+              You can use **bold** text with double asterisks.
+              You can use ***bold italic*** with triple asterisks.
+              You can use ~~strikethrough~~ text.
+              You can use <u>underline</u> with HTML tags.
 
-            ### Lists (H3)
+              ### Lists (H3)
 
-            Unordered list:
-            * Item 1
-            * Item 2
-              * Sub-item 2.1
-              * Sub-item 2.2
-            * Item 3
+              Unordered list:
+              * Item 1
+              * Item 2
+                * Sub-item 2.1
+                * Sub-item 2.2
+              * Item 3
 
-            Ordered list:
-            1. First item
-            2. Second item
-            3. Third item
+              Ordered list:
+              1. First item
+              2. Second item
+              3. Third item
 
-            #### Code (H4)
+              #### Code (H4)
 
-            Inline `code` can be wrapped in backticks.
+              Inline `code` can be wrapped in backticks.
 
-            Block code:
-            ```
-            def hello_world():
-                print("Hello from Markdown!")
-                return True
-            ```
+              Block code:
+              ```
+              def hello_world():
+                  print("Hello from Markdown!")
+                  return True
+              ```
 
-            ```cpp
-            int main() {
-                std::cout << "C++ code block" << std::endl;
-                return 0;
-            }
-            ```
-      markdown-tables:
-        metadata:
-          label: |
-            ## Tables Example
+              ```cpp
+              int main() {
+                  std::cout << "C++ code block" << std::endl;
+                  return 0;
+              }
+              ```
+        markdown-tables:
+          metadata:
+            label: |
+              ## Tables Example
 
-            Here's a table with different column alignments:
+              Here's a table with different column alignments:
 
-            | Language&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Year Created |
-            |----------|------|--------------|
-            | Python   | Interpreted | 1991 |
-            | C++      | Compiled | 1985 |
-            | Rust     | Compiled | 2010 |
-            | JavaScript | Interpreted | 1995 |
-            | Go       | Compiled | 2009 |
+              | Language&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Year Created |
+              |----------|------|--------------|
+              | Python   | Interpreted | 1991 |
+              | C++      | Compiled | 1985 |
+              | Rust     | Compiled | 2010 |
+              | JavaScript | Interpreted | 1995 |
+              | Go       | Compiled | 2009 |
 
-            **Note:** Use `&nbsp;` to control column widths in the header row.
-      markdown-links:
-        metadata:
-          label: |
-            ## Links and Images
+              **Note:** Use `&nbsp;` to control column widths in the header row.
+        markdown-links:
+          metadata:
+            label: |
+              ## Links and Images
 
-            ### External Links
+              ### External Links
 
-            Check out these resources:
-            * [ImGui Bundle](https://github.com/pthom/imgui_bundle)
-            * [imgui_md](https://github.com/mekhontsev/imgui_md)
-            * [Dear ImGui](https://github.com/ocornut/imgui)
+              Check out these resources:
+              * [ImGui Bundle](https://github.com/pthom/imgui_bundle)
+              * [imgui_md](https://github.com/mekhontsev/imgui_md)
+              * [Dear ImGui](https://github.com/ocornut/imgui)
 
-            ### Horizontal Rules
+              ### Horizontal Rules
 
-            You can separate sections with horizontal rules:
+              You can separate sections with horizontal rules:
 
-            ---
+              ---
 
-            Above and below this text are horizontal rules.
+              Above and below this text are horizontal rules.
 
-            ---
-      markdown-advanced:
-        metadata:
-          label: |
-            ## Advanced Markdown Features
+              ---
+        markdown-advanced:
+          metadata:
+            label: |
+              ## Advanced Markdown Features
 
-            ### HTML Elements
+              ### HTML Elements
 
-            Markdown supports some HTML:
-            * Line breaks: text before<br>text after
-            * Horizontal rule: <hr>
-            * Non-breaking spaces: word&nbsp;&nbsp;&nbsp;word
+              Markdown supports some HTML:
+              * Line breaks: text before<br>text after
+              * Horizontal rule: <hr>
+              * Non-breaking spaces: word&nbsp;&nbsp;&nbsp;word
 
-            ### Backslash Escapes
+              ### Backslash Escapes
 
-            Use backslash to escape special characters:
-            * \*Not italic\*
-            * \*\*Not bold\*\*
-            * \`Not code\`
-            * \[Not a link\](url)
+              Use backslash to escape special characters:
+              * \*Not italic\*
+              * \*\*Not bold\*\*
+              * \`Not code\`
+              * \[Not a link\](url)
 
-            ### Mixed Content
+              ### Mixed Content
 
-            You can **mix _formatting_ styles** together:
-            1. **Bold** and *italic* in the same line
-            2. `Code` with **bold** text
-            3. ~~Strikethrough~~ with <u>underline</u>
+              You can **mix _formatting_ styles** together:
+              1. **Bold** and *italic* in the same line
+              2. `Code` with **bold** text
+              3. ~~Strikethrough~~ with <u>underline</u>
 
-            ```python
-            # Code block with syntax highlighting
-            class Demo:
-                def __init__(self, name):
-                    self.name = name
+              ```python
+              # Code block with syntax highlighting
+              class Demo:
+                  def __init__(self, name):
+                      self.name = name
 
-                def greet(self):
-                    return f"Hello, {self.name}!"
+                  def greet(self):
+                      return f"Hello, {self.name}!"
 
-            demo = Demo("ImGui")
-            print(demo.greet())
-            ```
-      markdown-comprehensive:
-        metadata:
-          label: |
-            # ImGui Markdown Complete Reference
+              demo = Demo("ImGui")
+              print(demo.greet())
+              ```
+        markdown-comprehensive:
+          metadata:
+            label: |
+              # ImGui Markdown Complete Reference
 
-            ## Headers
+              ## Headers
 
-            # H1 - Largest Header
-            ## H2 - Second Level
-            ### H3 - Third Level
-            #### H4 - Fourth Level
-            ##### H5 - Fifth Level
-            ###### H6 - Smallest Header
+              # H1 - Largest Header
+              ## H2 - Second Level
+              ### H3 - Third Level
+              #### H4 - Fourth Level
+              ##### H5 - Fifth Level
+              ###### H6 - Smallest Header
 
-            ---
+              ---
 
-            ## Text Styles
+              ## Text Styles
 
-            * *Italic* - `*Italic*`
-            * **Bold** - `**Bold**`
-            * ***Bold Italic*** - `***Bold Italic***`
-            * ~~Strikethrough~~ - `~~Strikethrough~~`
-            * <u>Underline</u> - `<u>Underline</u>`
-            * `Inline Code` - `` `Inline Code` ``
+              * *Italic* - `*Italic*`
+              * **Bold** - `**Bold**`
+              * ***Bold Italic*** - `***Bold Italic***`
+              * ~~Strikethrough~~ - `~~Strikethrough~~`
+              * <u>Underline</u> - `<u>Underline</u>`
+              * `Inline Code` - `` `Inline Code` ``
 
-            ---
+              ---
 
-            ## Lists
+              ## Lists
 
-            ### Unordered Lists
+              ### Unordered Lists
 
-            * Level 1
-              * Level 2
-                * Level 3
-            * Back to Level 1
+              * Level 1
+                * Level 2
+                  * Level 3
+              * Back to Level 1
 
-            ### Ordered Lists
+              ### Ordered Lists
 
-            1. First
-            2. Second
-            3. Third
-               1. Nested 1
-               2. Nested 2
+              1. First
+              2. Second
+              3. Third
+                 1. Nested 1
+                 2. Nested 2
 
-            ---
+              ---
 
-            ## Code Blocks
+              ## Code Blocks
 
-            ### Python
-            ```python
-            def factorial(n):
-                if n <= 1:
-                    return 1
-                return n * factorial(n - 1)
+              ### Python
+              ```python
+              def factorial(n):
+                  if n <= 1:
+                      return 1
+                  return n * factorial(n - 1)
 
-            print(factorial(5))  # Output: 120
-            ```
+              print(factorial(5))  # Output: 120
+              ```
 
-            ### C++
-            ```cpp
-            #include <iostream>
+              ### C++
+              ```cpp
+              #include <iostream>
 
-            template<typename T>
-            T max(T a, T b) {
-                return (a > b) ? a : b;
-            }
+              template<typename T>
+              T max(T a, T b) {
+                  return (a > b) ? a : b;
+              }
 
-            int main() {
-                std::cout << max(10, 20) << std::endl;
-                return 0;
-            }
-            ```
+              int main() {
+                  std::cout << max(10, 20) << std::endl;
+                  return 0;
+              }
+              ```
 
-            ### JavaScript
-            ```javascript
-            const fibonacci = (n) => {
-                if (n <= 1) return n;
-                return fibonacci(n - 1) + fibonacci(n - 2);
-            };
+              ### JavaScript
+              ```javascript
+              const fibonacci = (n) => {
+                  if (n <= 1) return n;
+                  return fibonacci(n - 1) + fibonacci(n - 2);
+              };
 
-            console.log(fibonacci(10));  // Output: 55
-            ```
+              console.log(fibonacci(10));  // Output: 55
+              ```
 
-            ---
+              ---
 
-            ## Tables
+              ## Tables
 
-            | Feature&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Supported&nbsp;&nbsp; | Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
-            |---------|-----------|-------|
-            | Headers | ✓ | H1-H6 |
-            | **Bold** | ✓ | Use `**` |
-            | *Italic* | ✓ | Use `*` |
-            | `Code` | ✓ | Inline & block |
-            | Tables | ✓ | With alignment |
-            | Links | ✓ | External URLs |
-            | Images | ✓ | Local & remote |
+              | Feature&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Supported&nbsp;&nbsp; | Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+              |---------|-----------|-------|
+              | Headers | ✓ | H1-H6 |
+              | **Bold** | ✓ | Use `**` |
+              | *Italic* | ✓ | Use `*` |
+              | `Code` | ✓ | Inline & block |
+              | Tables | ✓ | With alignment |
+              | Links | ✓ | External URLs |
+              | Images | ✓ | Local & remote |
 
-            ---
+              ---
 
-            ## Special Features
+              ## Special Features
 
-            ### Line Breaks
-            Line 1<br>Line 2<br>Line 3
+              ### Line Breaks
+              Line 1<br>Line 2<br>Line 3
 
-            ### Non-Breaking Spaces
-            Word&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Word
+              ### Non-Breaking Spaces
+              Word&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Word
 
-            ### Escaped Characters
-            \*Not italic\* \*\*Not bold\*\* \`Not code\`
+              ### Escaped Characters
+              \*Not italic\* \*\*Not bold\*\* \`Not code\`
 
-            ---
+              ---
 
-            ## Acknowledgments
+              ## Acknowledgments
 
-            This markdown renderer is based on [imgui_md](https://github.com/mekhontsev/imgui_md) by Dmitry Mekhontsev,
-            integrated into [ImGui Bundle](https://github.com/pthom/imgui_bundle) by Pascal Thomet.
+              This markdown renderer is based on [imgui_md](https://github.com/mekhontsev/imgui_md) by Dmitry Mekhontsev,
+              integrated into [ImGui Bundle](https://github.com/pthom/imgui_bundle) by Pascal Thomet.

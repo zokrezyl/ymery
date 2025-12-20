@@ -2,17 +2,12 @@
 Main window widgets for running applications
 """
 
-from imgui_bundle import imgui, implot, immapp, hello_imgui
+from imgui_bundle import imgui, implot, immapp
 from ymery.frontend.widget import Widget
 from ymery.decorators import widget
-from ymery.types import DataPath
-from ymery.backend.types import TreeLike
 from ymery.result import Result, Ok
-from ymery.frontend.widgets.docking import DockableWindow, DockingSplit
 
-from typing import Optional, Dict, List
 import sys
-import pprint
 import yaml
 
 @widget

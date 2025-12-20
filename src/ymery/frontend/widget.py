@@ -18,9 +18,8 @@ from typing import Optional, Dict, Any, Union
 
 EVENT_COMMAND_NAMES = {"show", "add-data-child", "dispatch-event", "default", "close", "set-data-value"}
 
-def _render_error_simple(error) -> Result[None]:
+def render_error(error) -> Result[None]:
     """Display errors using bullet points recursively - fallback method"""
-    print("_render_error_simple", error)
     def render_tree(obj, depth=0):
         """Recursively render tree structure with bullets"""
         if isinstance(obj, dict):
@@ -47,7 +46,6 @@ def _render_error_simple(error) -> Result[None]:
     imgui.text_colored(imgui.ImVec4(1.0, 0.0, 0.0, 1.0), "Errors:")
     imgui.separator()
     render_tree(error)
-    print("_render_error_simple")
     return Ok(None)
 
 class Widget(Visual, EventHandler):
@@ -838,28 +836,33 @@ widgets:
             return Ok(None)
 
         errors_tree = Result.error("Error:", self._errors).as_tree
-        import pprint
-        pprint.pp(errors_tree)
+        import logging
+        logging.error(errors_tree)
         # Create error widget only once (persist across render cycles)
         if self._error_widget is None:
             print("Widget: _render_errors: creating error widget")
             errors_tree = Result.error("Error:", self._errors).as_tree
 
 
-            from ymery.backend.simple_data_tree import SimpleDataTree
+            # Get SimpleDataTree class from plugin_manager
+            res = self._factory._plugin_manager.get_metadata(DataPath("/tree-like/simple-data-tree"))
+            if not res:
+                return render_error(Result.error("Widget: _render_errors: failed to get SimpleDataTree class", res).as_tree)
+            SimpleDataTree = res.unwrapped.get("class")
+            if not SimpleDataTree:
+                return render_error(Result.error("Widget: _render_errors: SimpleDataTree class not found").as_tree)
+
             # Convert errors list to tree structure
             res = SimpleDataTree.create(errors_tree)
             if not res:
-                errors = self._errors.copy()
-                errors.append(res)
-                return _render_error_simple(Result.error("Widget: _render_errors: failed to create SimpleDataTree from errors", errors).as_tree)
+                return render_error(Result.error("Widget: _render_errors: failed to create SimpleDataTree", res).as_tree)
 
             error_tree = res.unwrapped
             res = self._factory.create_widget("builtin.error-tree-view", error_tree, DataPath("/"))
             if not res:
                 errors = self._errors.copy()
                 errors.append(res)
-                return _render_error_simple(Result.error("Widget: _render_errors: failed to create 'tree-view' for errors", errors).as_tree)
+                return render_error(Result.error("Widget: _render_errors: failed to create 'tree-view' for errors", errors).as_tree)
 
             self._error_widget = res.unwrapped
 
@@ -868,7 +871,7 @@ widgets:
         if not res:
             errors = self._errors.copy()
             errors.append(res)
-            return _render_error_simple(Result.error("Widget: _render_errors: failed to render 'tree-view' for errors", errors).as_tree)
+            return render_error(Result.error("Widget: _render_errors: failed to render 'tree-view' for errors", errors).as_tree)
 
         return Ok(None)
 

@@ -104,7 +104,6 @@ class DeviceManager(Object, TreeLike, DeviceManagerLike):
     For a specific asset it returns the arguments that can be fed to the "create" method of the provider itself
     """
     def __init__(self):
-        print("DeviceManager: __init__")
         super().__init__()
 
 
@@ -115,8 +114,6 @@ class AudioDeviceManager(DeviceManager):
     For a specific asset it returns the arguments that can be fed to the "create" method of the provider itself
     """
     def __init__(self):
-        print("AudioDeviceManager: __init__")
-        super().__init__()
         super().__init__()
 
 

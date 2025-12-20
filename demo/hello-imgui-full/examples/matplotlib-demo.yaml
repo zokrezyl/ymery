@@ -3,22 +3,24 @@ widgets:
     type: composite
     data:
       plot-data:
-        children:
-          points:
-            metadata:
-              label: 50
-          amplitude:
-            metadata:
-              label: 1.0
-          frequency:
-            metadata:
-              label: 1.0
-          noise:
-            metadata:
-              label: 0.1
-          plot_type:
-            metadata:
-              label: "line"
+        type: data-tree
+        arg:
+          children:
+            points:
+              metadata:
+                label: 50
+            amplitude:
+              metadata:
+                label: 1.0
+            frequency:
+              metadata:
+                label: 1.0
+            noise:
+              metadata:
+                label: 0.1
+            plot_type:
+              metadata:
+                label: "line"
     body:
       - separator-text: "Matplotlib Integration"
 

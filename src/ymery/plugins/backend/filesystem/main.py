@@ -47,7 +47,7 @@ def _get_soundfile_info(file_path: str):
         return None
 
 
-@device_manager
+@device_manager("filesystem")
 class FilesystemManager(TreeLikeCache, AudioDeviceManager):
     # Virtual shortcuts mapping for /available branch
     _VIRTUAL_SHORTCUTS = {
@@ -55,9 +55,12 @@ class FilesystemManager(TreeLikeCache, AudioDeviceManager):
         "/home": str(Path.home())
     }
 
-    def __init__(self):
+    def __init__(self, dispatcher, plugin_manager, raw_arg=None):
         TreeLikeCache.__init__(self)
         AudioDeviceManager.__init__(self)
+        self._dispatcher = dispatcher
+        self._plugin_manager = plugin_manager
+        self._raw_arg = raw_arg
         self._soundfile_devices = {}  # Track opened SoundFileDevice instances by ID
         self._next_device_id = 0
 

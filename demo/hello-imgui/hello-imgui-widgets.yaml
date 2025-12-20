@@ -22,7 +22,7 @@ widgets:
           style:
             text: [0.2, 1.0, 0.2, 1.0]
       - separator
-      - data-path: kernel
+      - data-path: $kernel
         widgets.kernel-recursive:
 
   # ============================================================================
@@ -47,19 +47,19 @@ widgets:
                 body:
                   - implot-layer:
                       label: "Sine"
-                    data-path: /kernel/providers/waveform-st/available/sine/0
+                    data-path: $kernel@/providers/waveform-st/available/sine/0
             - implot:
                 label: "Square Wave"
                 body:
                   - implot-layer:
                       label: "Square"
-                    data-path: /kernel/providers/waveform-st/available/square/0
+                    data-path: $kernel@/providers/waveform-st/available/square/0
             - implot:
                 label: "Triangle Wave"
                 body:
                   - implot-layer:
                       label: "Triangle"
-                    data-path: /kernel/providers/waveform-st/available/triangle/0
+                    data-path: $kernel@/providers/waveform-st/available/triangle/0
 
   # ============================================================================
   # LOGS VIEW for dockable window
@@ -72,12 +72,8 @@ widgets:
           style:
             text: [0.9, 0.9, 0.7, 1.0]
       - separator
-      - bullet-text: "Application started"
-      - bullet-text: "Loaded docking layout"
-      - bullet-text: "Initialized kernel"
-      - bullet-text: "Ready for operations"
-      - separator
-      - text: "Log level: INFO"
+      - data-path: $log-tree
+        builtin.tree-view:
 
   # ============================================================================
   # CONTROLS VIEW for dockable window

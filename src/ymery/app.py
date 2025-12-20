@@ -3,34 +3,43 @@ Generic application runner for ymery
 """
 
 import sys
+import logging
 import click
 from pathlib import Path
-from imgui_bundle import imgui
+from imgui_bundle import imgui, immapp
 from ymery.lang import Lang
 from ymery.frontend.widget_factory import WidgetFactory
-from ymery.backend.kernel import Kernel
 from ymery.plugin_manager import PluginManager
-from ymery.backend.data_tree import DataTree
 from ymery.dispatcher import Dispatcher
 from ymery.types import DataPath
-from ymery.result import Result
+from ymery.result import Result, Ok
+from ymery.frontend.widget import render_error
+from ymery.logging import setup_logging, get_ring_buffer
 
 import time
 
 init_time = time.time()
 
-# Global state
-factory = None
-dispatcher = None
-kernel = None
-data_tree = None
 
+def show_if_error(err) -> Result[None]:
+    """Run a simple imgui loop to display an error"""
+    if err:
+        return err
+    error_tree = err.as_tree if hasattr(err, 'as_tree') else {"error": str(err)}
+    logging.error(error_tree)
 
-def handle_error(err):
-    import yaml
-    print(yaml.dump(err.as_tree))
-    if sys.platform != 'emscripten':
-        sys.exit(-1)
+    def gui_loop():
+        imgui.text("The app could not be initialized due to the errors below. Click 'exit' to terminate the app")
+        if imgui.button("exit"):
+            sys.exit(-1)
+        render_error(error_tree)
+
+    immapp.run(
+        gui_function=gui_loop,
+        window_title="Ymery - Error",
+        window_size=(800, 600)
+    )
+    return Ok(None)
 
 
 @click.command()
@@ -56,10 +65,24 @@ def handle_error(err):
               required=True,
               type=str,
               help='Name of the main module to load')
+@click.option('--log-level', '-l',
+              envvar='YMERY_LOG_LEVEL',
+              type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', '10', '20', '30', '40', '50']),
+              default='INFO',
+              help='Log level (DEBUG=10, INFO=20, WARNING=30, ERROR=40, CRITICAL=50)')
+@click.option('--log-file', '-f',
+              envvar='YMERY_LOG_FILE',
+              type=str,
+              default=None,
+              help='Log file path (default: stdout)')
 
-def main(layouts_path, layouts_url, plugins_path, widgets_path, main):
+def main(layouts_path, layouts_url, plugins_path, widgets_path, main, log_level, log_file):
     """Ymery application runner"""
-    global main_widget, factory, dispatcher, kernel, data_tree
+    global dispatcher, kernel, data_tree
+
+    # Setup logging first
+    level = getattr(logging, log_level) if log_level.isalpha() else int(log_level)
+    setup_logging(level=level, log_file=log_file)
 
     # Combine layouts_path and layouts_url in order of specification
     # Both can be specified multiple times, precedence is order of appearance
@@ -79,95 +102,95 @@ def main(layouts_path, layouts_url, plugins_path, widgets_path, main):
         layouts_paths = ['.']
 
     # Create Lang and load modules
-    lang_res = Lang.create(layouts_paths=layouts_paths)
-    if not lang_res:
-        click.echo(f"Error creating Lang: {lang_res}", err=True)
-        return 1
-
-    lang = lang_res.unwrapped
-
-    load_res = lang.load_main_module(main)
-    if not load_res:
-        click.echo(f"Error loading main module '{main}': {load_res}", err=True)
-        return 1
+    lang = show_if_error(Lang.create(layouts_paths=layouts_paths, main=main)).unwrapped
 
     # Create Dispatcher
-    dispatcher_res = Dispatcher.create()
-    if not dispatcher_res:
-        click.echo(f"Error creating Dispatcher: {dispatcher_res}", err=True)
-        return 1
-    dispatcher = dispatcher_res.unwrapped
+    dispatcher = show_if_error(Dispatcher.create()).unwrapped
+
+    # Build default plugin paths
+    ymery_dir = Path(__file__).parent
+    default_plugins_path = str(ymery_dir / "plugins" / "frontend") + ":" + str(ymery_dir / "plugins" / "backend")
+    if plugins_path:
+        plugins_path = default_plugins_path + ":" + plugins_path
+    else:
+        plugins_path = default_plugins_path
 
     # Create PluginManager
-    plugin_manager_res = PluginManager.create(label="devices", plugins_path=plugins_path)
-    if not plugin_manager_res:
-        click.echo(f"Error creating PluginManager: {plugin_manager_res}", err=True)
-        return 1
-    plugin_manager = plugin_manager_res.unwrapped
+    plugin_manager = show_if_error(PluginManager.create(plugins_path=plugins_path)).unwrapped
 
-    # Create Kernel
-    kernel_res = Kernel.create(dispatcher=dispatcher, plugin_manager=plugin_manager)
-    if not kernel_res:
-        click.echo(f"Error creating Kernel: {kernel_res}", err=True)
-        return 1
-    kernel = kernel_res.unwrapped
+    # Instantiate all data trees from lang.data_definitions
+    data_trees = {}
+    data_definitions = lang.data_definitions
 
-    # Create WidgetFactory with kernel as a named tree
-    data_trees = {"kernel": kernel}
-    res = WidgetFactory.create(dispatcher, widget_definitions=lang.widget_definitions, data_trees=data_trees, widgets_path=widgets_path)
-    if not res:
-        handle_error(res)
-        click.echo(f"Error creating WidgetFactory: {factory_res}", err=True)
-        return 1
-    factory = res.unwrapped
+    for data_name, data_def in data_definitions.items():
+        # Get the type (tree-like class name)
+        type_name = data_def.get('type')
+        if not type_name:
+            show_if_error(Result.error(f"Data '{data_name}' missing 'type' field"))
+            return 1
+
+        # Get the class from plugin_manager
+        res = plugin_manager.get_metadata(DataPath(f"/tree-like/{type_name}"))
+        if not res:
+            show_if_error(Result.error(f"TreeLike type '{type_name}' not found for data '{data_name}'", res))
+            return 1
+
+        tree_like_class = res.unwrapped.get("class")
+        if not tree_like_class:
+            show_if_error(Result.error(f"No class found for TreeLike type '{type_name}'"))
+            return 1
+
+        # Get raw_arg if present
+        raw_arg = data_def.get('arg')
+
+        # Instantiate with standard args
+        try:
+            instance = tree_like_class(dispatcher, plugin_manager, raw_arg)
+        except Exception as e:
+            show_if_error(Result.error(f"Failed to instantiate '{type_name}' for data '{data_name}'", e))
+            return 1
+
+        # Initialize the instance
+        res = instance.init()
+        if not res:
+            show_if_error(Result.error(f"Failed to init '{type_name}' for data '{data_name}'", res))
+            return 1
+
+        data_trees[data_name] = instance
+
+    # Create WidgetFactory with all data trees
+    widget_factory = show_if_error(WidgetFactory.create(dispatcher, plugin_manager, widget_definitions=lang.widget_definitions, data_trees=data_trees)).unwrapped
 
     # Get app config
     app_config = lang.app_config
     if not app_config:
-        click.echo("Error: No app configuration found", err=True)
+        show_if_error(Result.error("No app configuration found"))
         return 1
 
     widget_name = app_config.get('widget')
     data_name = app_config.get('data')
 
     if not widget_name:
-        click.echo("Error: app.widget not specified", err=True)
+        show_if_error(Result.error("app.widget not specified"))
         return 1
 
     if not data_name:
-        click.echo("Error: app.data not specified", err=True)
+        show_if_error(Result.error("app.data not specified"))
         return 1
 
     # Prepend main module namespace if widget_name doesn't have one
-    # (composite widgets do this automatically, but app entry point needs it too)
     if '.' not in widget_name:
         widget_name = f"{main}.{widget_name}"
 
-    # Get data definition
-    data_definitions = lang.data_definitions
-    if data_name not in data_definitions:
-        click.echo(f"Error: data '{data_name}' not found", err=True)
+    # Get the main data tree
+    if data_name not in data_trees:
+        show_if_error(Result.error(f"Data '{data_name}' not found in data definitions"))
         return 1
 
-    data_def = data_definitions[data_name]
-
-    # Substitute builtins in children
-    if 'children' in data_def:
-        children = data_def['children']
-        for key, value in children.items():
-            if isinstance(value, str) and value == '$kernel':
-                children[key] = kernel
-
-    # Create DataTree
-    data_tree = DataTree(data_def)
+    data_tree = data_trees[data_name]
 
     # Create main widget
-    widget_res = factory.create_widget(widget_name, data_tree, DataPath("/"))
-    if not widget_res:
-        click.echo(f"Error creating widget '{widget_name}': {widget_res}", err=True)
-        return 1
-
-    main_widget = widget_res.unwrapped
+    main_widget = show_if_error(widget_factory.create_widget(widget_name, data_tree, DataPath("/"))).unwrapped
 
     # Run application - the main widget handles everything
     return main_widget.run()

@@ -77,10 +77,20 @@ widgets:
               label: "About"
 
     # ============================================================================
-    # DOCKABLE WINDOWS - EXACTLY AS IN demo_imgui_bundle.py
+    # DOCKING LAYOUT
     # ============================================================================
 
-    # 1. Intro
+    # Bottom panel for logs
+    - docking-split:
+        initial-dock: "MainDockSpace"
+        new-dock: "BottomPanel"
+        direction: "down"
+        ratio: 0.2
+
+    # ============================================================================
+    # MAIN PANEL - All demos tabbed
+    # ============================================================================
+
     - dockable-window:
         label: "Intro"
         dock-space-name: "MainDockSpace"
@@ -89,151 +99,109 @@ widgets:
           - separator:
           - text: "This is a comprehensive demo of all ImGui Bundle features"
 
-    # 2. Dear ImGui - Main Dear ImGui Demo Window with its OWN menu bar
     - dockable-window:
         label: "Dear ImGui"
         dock-space-name: "MainDockSpace"
         body:
-          # Menu bar INSIDE Dear ImGui dockable window
           - menu-bar:
               body:
-                # Menu: Examples
                 - menu:
                     label: "Examples"
                     body:
                       - separator-text: "Mini apps"
-
                       - menu-item:
                           label: "Console"
-
                       - menu-item:
                           label: "Log"
-
                       - menu-item:
                           label: "Simple layout"
-
                       - menu-item:
                           label: "Property editor"
-
                       - separator-text: "Concepts"
-
                       - menu-item:
                           label: "Long text display"
-
-                # Menu: Tools
                 - menu:
                     label: "Tools"
                     body:
                       - menu-item:
                           label: "Metrics/Debugger"
-
                       - menu-item:
                           label: "Debug Log"
-
                       - menu-item:
                           label: "Style Editor"
-
                       - menu-item:
                           label: "About Dear ImGui"
 
-          # Collapsing Header: Widgets (contains tree nodes for widget types)
           - collapsing-header:
               label: "Widgets"
               flags: [default-open]
               body:
-                # Tree Node: Basic
                 - tree-node:
                     label: "Basic"
                     flags: [default-open]
                     body:
                       - data-path: basic-demo-data
                         widgets.basic.basic-demo:
-
-                # Tree Node: Tooltips
                 - tree-node:
                     label: "Tooltips"
                     body:
                       - widgets.tooltips.tooltips-demo:
-
-                # Tree Node: Tree Nodes
                 - tree-node:
                     label: "Tree Nodes"
                     body:
                       - widgets.trees.trees-demo:
-
-                # Tree Node: Bullets
                 - tree-node:
                     label: "Bullets"
                     body:
                       - widgets.bullets.bullets-demo:
-
-                # Tree Node: Text
                 - tree-node:
                     label: "Text"
                     body:
                       - widgets.text.text-demo:
-
-                # Tree Node: Images
                 - tree-node:
                     label: "Images"
                     body:
                       - widgets.images.images-demo:
-
-                # Tree Node: Combo
                 - tree-node:
                     label: "Combo"
                     body:
                       - widgets.combos.combos-demo:
-
-                # Tree Node: List Boxes
                 - tree-node:
                     label: "List Boxes"
                     body:
                       - widgets.listboxes.listboxes-demo:
-
-                # Tree Node: Selectables
                 - tree-node:
                     label: "Selectables"
                     body:
                       - widgets.selectables.selectables-demo:
-
-                # Tree Node: Drags
                 - tree-node:
                     label: "Drags"
                     body:
                       - widgets.drags.drags-demo:
-
-                # Tree Node: Tabs
                 - tree-node:
                     label: "Tabs"
                     body:
                       - widgets.tabs.tabs-demo:
-
-                # Tree Node: Colors
                 - tree-node:
                     label: "Colors"
                     body:
                       - widgets.colors.colors-demo:
 
-          # Collapsing Header: Layout & Scrolling
           - collapsing-header:
               label: "Layout & Scrolling"
               body:
                 - widgets.layout.layout-demo:
 
-          # Collapsing Header: Popups & Modal windows
           - collapsing-header:
               label: "Popups & Modal windows"
               body:
                 - widgets.popups.popups-demo:
 
-          # Collapsing Header: Tables & Columns
           - collapsing-header:
               label: "Tables & Columns"
               body:
                 - widgets.tables.tables-demo:
 
-    # 3. Demo Apps - ImmApp demo applications table
     - dockable-window:
         label: "Demo Apps"
         dock-space-name: "MainDockSpace"
@@ -273,7 +241,6 @@ widgets:
               body:
                 - examples.matplotlib-demo.matplotlib-demo:
 
-    # 4. Implot [3D]
     - dockable-window:
         label: "Implot [3D]"
         dock-space-name: "MainDockSpace"
@@ -289,75 +256,62 @@ widgets:
               body:
                 - examples.implot3d-demo.implot3d-demo:
 
-    # 5. Node Editor
     - dockable-window:
         label: "Node Editor"
         dock-space-name: "MainDockSpace"
         body:
           - examples.node-editor-demo.node-editor-demo:
 
-    # 6. Markdown
     - dockable-window:
         label: "Markdown"
         dock-space-name: "MainDockSpace"
         body:
           - examples.markdown-demo.markdown-demo:
 
-    # 7. Text Editor
     - dockable-window:
         label: "Text Editor"
         dock-space-name: "MainDockSpace"
         body:
           - examples.text-editor-demo.text-editor-demo:
 
-    # 8. Widgets (this is demo_widgets from imgui_bundle, NOT Dear ImGui widgets)
     - dockable-window:
         label: "Widgets"
         dock-space-name: "MainDockSpace"
         body:
           - examples.widgets-demo.widgets-demo:
 
-    # 9. ImmVision
     - dockable-window:
         label: "ImmVision"
         dock-space-name: "MainDockSpace"
         body:
           - examples.immvision-demo.immvision-demo:
 
-#    # 10. NanoVG
-#    - dockable-window:
-#        label: "NanoVG"
-#        dock-space-name: "MainDockSpace"
-#        body:
-#          - examples.nanovg-demo.nanovg-demo:
-
-    # 11. ImGuizmo
     - dockable-window:
         label: "ImGuizmo"
         dock-space-name: "MainDockSpace"
         body:
           - examples.imguizmo-demo.imguizmo-demo:
 
-    # 12. Themes
     - dockable-window:
         label: "Themes"
         dock-space-name: "MainDockSpace"
         body:
           - text: "Theme selector will go here"
 
-    # 13. Logger
-    - dockable-window:
-        label: "Logger"
-        dock-space-name: "MainDockSpace"
-        body:
-          - hello-imgui-widgets.logs-view:
-
-    # 14. tex_inspect
     - dockable-window:
         label: "tex_inspect"
         dock-space-name: "MainDockSpace"
         body:
           - examples.tex-inspect-demo.tex-inspect-demo:
+
+    # ============================================================================
+    # BOTTOM PANEL - Logs
+    # ============================================================================
+    - dockable-window:
+        label: "Logs"
+        dock-space-name: "BottomPanel"
+        body:
+          - hello-imgui-widgets.logs-view:
 
 
 app:

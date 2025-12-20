@@ -263,6 +263,7 @@ class Composite(Widget):
     def render(self) -> Result[None]:
         """Render all children - Composite doesn't use head/body pattern"""
         # Check if data children changed (for foreach-child refresh)
+        self._errors.clear()
         self._ensure_children()
 
         # Push styles before rendering children

@@ -1,121 +1,78 @@
 from ymery.backend.types import TreeLike
 from ymery.types import DataPath, Object
-from ymery.decorators import _pending_device_managers, _pending_devices
+from ymery.decorators import _pending_device_managers, _pending_devices, _pending_tree_likes, _pending_widgets
 
 from typing import Optional, Dict, Any, Union
 from ymery.result import Result, Ok
 from pathlib import Path
 
+from ymery.stringcase import spinalcase
+from ymery.utils import call_by_path
+
+
 import importlib.util
 import sys
 
-def call_by_path(obj, path: DataPath, what, params: Dict = None) -> Result[Object]:
-
-    if what == "children-names":
-        method_name = "get_children_names"
-        attribute_name = "children"
-    elif what == "metadata":
-        method_name = "get_metadata"
-        attribute_name = "metadata"
-    elif what == "open":
-        method_name = "open"
-        attribute_name = "open"
-    elif what == "configure":
-        method_name = "configure"
-        attribute_name = "configure"
-    elif what == "close":
-        method_name = "close"
-        attribute_name = "close"
-    elif what in ["register_opened_asset", "unregister_opened_asset"]:
-        method_name = what
-        attribute_name = what
-    else:
-        return Result.error(f"cannot handle {what}")
-
-    # Check if obj is a dict (tree node) - if not, must have seed
-    if not isinstance(obj, dict):
-        return Result.error("call_by_path: object is not a dictionary and has no seed")
-
-    seed_instance = obj.get("seed-instance")
-    if seed_instance:
-        # we do not cache, providers cache
-        method = getattr(seed_instance, method_name)
-        if what in ["open", "configure", "close"] and params is not None:
-            return method(path, params)
-        elif what in ["register_opened_asset", "unregister_opened_asset"] and params is not None:
-            # register_opened_asset(relative_path, asset, metadata)
-            # path here is /opened/providers, but we need to pass the relative path from params
-            return method(params.get("path"), params.get("asset"), params.get("metadata"))
-        else:
-            return method(path)
-
-    seed_class = obj.get("seed-class")
-    if seed_class:
-        constructor_args = obj.get("seed-constructor-args")
-        if constructor_args:
-            # Convert hyphenated keys to underscores for Python kwargs
-            python_args = {k.replace('-', '_'): v for k, v in constructor_args.items()}
-            res = seed_class.create(**python_args)
-        else:
-            res = seed_class.create()
-        if not res:
-            return Result.error("call_by_path: could not create seed instance", res)
-        seed_instance = res.unwrapped
-        obj["seed-instance"] = seed_instance
-        method = getattr(seed_instance, method_name)
-        if what in ["open", "configure", "close"] and params is not None:
-            return method(path, params)
-        elif what in ["register_opened_asset", "unregister_opened_asset"] and params is not None:
-            # register_opened_asset(relative_path, asset, metadata)
-            # path here is /opened/providers, but we need to pass the relative path from params
-            return method(params.get("path"), params.get("asset"), params.get("metadata"))
-        else:
-            return method(path)
-
-    # log(f"call_by_path: len path {len(path)}")
-    if len(path) == 0:
-        res = obj.get(attribute_name)
-        if res is None:
-            return Result.error(f"call_by_path: attribute '{attribute_name}' not found in path '{path}'")
-
-        if what == "children-names":
-            return Ok(list(res.keys()))
-        else:
-            return Ok(res)
-
-    children = obj.get("children")
-    if not children:
-        return Result.error(f"call_by_path: attribute {attribute_name} not found in path '{path}'")
-
-    child = children.get(path[0])
-    if not child:
-        return Result.error(f"call_by_path: child '{path[0]}' not found")
-
-    return call_by_path(child, path[1:], what, params)
 
 class PluginManager(TreeLike, Object):
-
-    def __init__(self, label, plugins_path: Optional[str] = None):
+    def __init__(self, plugins_path: Optional[str] = None):
         super().__init__()
-        self._tree = None
-        self._label = label
         self._plugins_path = plugins_path
+        self._plugins = None
 
-    def get_children_names(self, path: DataPath) -> Result[None]:
-        res = self._ensure_providers_loaded()
+    def init(self) -> Result[None]:
+        # TODO: validate _plugin_path
+        print("PluginManager: init")
+        # return self._ensure_plugins_loaded()
+        return Ok(None)
+
+    def get_children_names(self, path: DataPath) -> Result[list]:
+        print(f"PluginManager: get_children_names: {path}, {len(path)}")
+        res = self._ensure_plugins_loaded()
         if not res:
-            return Result.error("PluginManager: error loading providers", res)
-        return call_by_path(self._tree, path, "children-names")
+            return Result.error("PluginManager: error loading plugins", res)
+
+        if path == "/":
+            return Ok(list(self._plugins.keys()))
+
+        if len(path) == 1:
+            category = path[0]
+            if category not in self._plugins:
+                return Result.error(f"PluginManager: get_children_names: category '{category}' not found")
+            return Ok(list(self._plugins[category].keys()))
+
+        return Result.error(f"PluginManager: get_children_names: path too deep: {path}")
 
 
-    def get_metadata(self, path: DataPath) -> Dict[str, Any]:
-        res = self._ensure_providers_loaded()
+    def get_metadata(self, path: DataPath) -> Result[Dict[str, Any]]:
+        res = self._ensure_plugins_loaded()
         if not res:
-            return Result.error("PluginManager: error loading providers", res)
-        res = call_by_path(self._tree, path, "metadata")
-        if not res:
-            return Result.error(f"PluginManager: could not retrieve metadata for path: {path}", res)
-        return res
+            return Result.error("PluginManager: error loading plugins", res)
+
+        if path == "/":
+            return Ok({"name": "plugins"})
+
+        if len(path) == 1:
+            category = path[0]
+            if category not in self._plugins:
+                return Result.error(f"PluginManager: get_metadata: category '{category}' not found")
+            return Ok({"name": category})
+
+        if len(path) == 2:
+            category = path[0]
+            registered_name = path[1]
+            if category not in self._plugins:
+                return Result.error(f"PluginManager: get_metadata: category '{category}' not found")
+            if registered_name not in self._plugins[category]:
+                return Result.error(f"PluginManager: get_metadata: '{registered_name}' not found in '{category}'")
+            cls = self._plugins[category][registered_name]
+            return Ok({
+                "class-name": cls.__name__,
+                "registered-name": registered_name,
+                "class": cls
+            })
+
+        return Result.error(f"PluginManager: get_metadata: path too deep: {path}")
 
     def get_metadata_keys(self, path: DataPath) -> Result[list]:
         """Get metadata keys using existing get_metadata"""
@@ -149,39 +106,33 @@ class PluginManager(TreeLike, Object):
     def add_child(self, path: DataPath, value0) -> Result[None]:
         return Result.error("PluginManager: add-child: not implemented")
 
-
     def open(self, path: DataPath, *args, **kwargs) -> Result:
         """Delegate open to the appropriate provider manager"""
-        res = self._ensure_providers_loaded()
+        res = self._ensure_plugins_loaded()
         if not res:
-            return Result.error("PluginManager: error loading providers", res)
-        return call_by_path(self._tree, path, "open", *args, *kwargs)
+            return Result.error("PluginManager: error loading plugins", res)
+        return call_by_path(self._plugins, path, "open", *args, *kwargs)
 
     def configure(self, path: DataPath, params: Dict) -> Result[None]:
         """Delegate reconfig_asset to the appropriate provider manager"""
-        res = self._ensure_providers_loaded()
+        res = self._ensure_plugins_loaded()
         if not res:
-            return Result.error("PluginManager: error loading providers", res)
-        return call_by_path(self._tree, path, "configure", params)
+            return Result.error("PluginManager: error loading plugins", res)
+        return call_by_path(self._plugins, path, "configure", params)
 
     def close(self, path: DataPath) -> Result[None]:
         """Delegate close to the appropriate provider manager"""
-        res = self._ensure_providers_loaded()
+        res = self._ensure_plugins_loaded()
         if not res:
-            return Result.error("PluginManager: error loading providers", res)
-        return call_by_path(self._tree, path, "close", {})
+            return Result.error("PluginManager: error loading plugins", res)
+        return call_by_path(self._plugins, path, "close", {})
 
-    def _ensure_providers_loaded(self) -> Result[None]:
+    def _ensure_plugins_loaded(self) -> Result[None]:
         """Lazy load all provider plugins."""
-        # log("XXXXXXXXX ensure providers loaded")
-        if self._tree:
+        # log("XXXXXXXXX ensure plugins loaded")
+        if self._plugins:
             return Ok(None)
-        tree = {
-            "metadata": {
-                "label": self._label
-            },
-            "children": {}
-        }
+        self._plugins = {}
 
         # Build list of provider directories from colon-separated path
         plugin_dirs = []
@@ -192,27 +143,29 @@ class PluginManager(TreeLike, Object):
                 if path_str:
                     plugin_dirs.append(Path(path_str))
         else:
-            # Default: plugins directory is alongside this file in src/ymery/
-            src_root = Path(__file__).parent
-            plugin_dirs.append(src_root / "plugins")
+            return Result.error("plugin path not available")
 
         # Scan each provider directory
         for plugins_dir in plugin_dirs:
             if not plugins_dir.exists():
+                print(f"{plugins_dir} does not exist")
                 continue
 
             # Scan each subdirectory in plugins_dir
             for plugin_dir in plugins_dir.iterdir():
                 if not plugin_dir.is_dir():
+                    print(f"{plugin_dir} not directory")
                     continue
 
                 main_py = plugin_dir / "main.py"
                 if not main_py.exists():
+                    print(f"{main_py} does not exist")
                     continue
 
                 plugin_name = plugin_dir.name
 
                 try:
+                    print(f"loading.. {main_py}")
                     # Load the module dynamically
                     spec = importlib.util.spec_from_file_location(
                         f"ymery.plugins.{plugin_name}.main",
@@ -222,36 +175,30 @@ class PluginManager(TreeLike, Object):
                     sys.modules[spec.name] = module
                     spec.loader.exec_module(module)
 
-                except Exception as e:
-                    return Result.error(f"PluginManager: _ensure_providers_loaded: Could not load {main_py}", e)
+                except ModuleNotFoundError as e:
+                    return Result.error(f"PluginManager: _ensure_plugins_loaded: Could not load {main_py}", e)
 
-        for device_manager in _pending_device_managers:
-            instance = device_manager()
+        print("all plugin files loaded successfully")
+        print("processing widget classes...")
+        self._plugins["widget"] = dict(_pending_widgets)
+        for name, cls in _pending_widgets.items():
+            print(f"registering widget class: {cls.__name__} as {name}")
 
-            # Call init() as per Object pattern
-            res = instance.init()
-            if not res:
-                # Continue with other providers
-                continue
+        print("processing device manager classes...")
+        self._plugins["device-manager"] = dict(_pending_device_managers)
+        for name, cls in _pending_device_managers.items():
+            print(f"registering device manager class: {cls.__name__} as {name}")
 
-            res = instance.get_metadata(DataPath("/"))
-            if not res:
-                return Result.error(f"could not retrieve metadata for '/', from {device_manager}")
-            instance_metadata = res.unwrapped
-            name = instance_metadata.get("name")
-            if not name:
-                return Result.error(f"'name' not found in metadata for '/', from {device_manager}")
+        print("processing device classes...")
+        self._plugins["device"] = dict(_pending_devices)
+        for name, cls in _pending_devices.items():
+            print(f"registering device class: {cls.__name__} as {name}")
 
-            # Add provider directly to tree
-            tree["children"][name] = {
-                "seed-instance": instance
-            }
+        print("processing tree-like classes...")
+        self._plugins["tree-like"] = dict(_pending_tree_likes)
+        for name, cls in _pending_tree_likes.items():
+            print(f"registering tree-like class: {cls.__name__} as {name}")
 
-        self._tree = tree
-        return Ok(None)
-
-
-    def init(self) -> Result[None]:
         return Ok(None)
 
     def dispose(self) -> Result[None]:
@@ -260,3 +207,8 @@ class PluginManager(TreeLike, Object):
     def as_tree(self, data_path: DataPath = None, depth: int = 0) -> Result[Union[dict]]:
         pass
 
+    def get_registered(self, whatever):
+        print("get_registered")
+        return self._ensure_plugins_loaded()
+        pass
+    

@@ -23,12 +23,16 @@ class Lang(Object):
     - Merging data and app sections
     """
 
-    def __init__(self, layouts_paths: List[Union[str, Path]]):
+    def __init__(self, layouts_paths: List[Union[str, Path]], main: str = "app"):
         """
         Args:
             layouts_paths: List of directories or URLs to search for YAML modules
         """
         super().__init__()
+        self._layouts_paths = layouts_paths
+        self._main = main
+
+    def init(self) -> Result[None]:
         # Add builtin layouts directory
         builtin_layouts_dir = Path(__file__).parent / "frontend" / "layouts"
 
@@ -36,7 +40,7 @@ class Lang(Object):
         self._local_paths = [builtin_layouts_dir]
         self._url_bases = []
 
-        for item in layouts_paths:
+        for item in self._layouts_paths:
             if isinstance(item, str) and (item.startswith('http://') or item.startswith('https://')):
                 self._url_bases.append(item.rstrip('/'))
             else:
@@ -50,14 +54,13 @@ class Lang(Object):
         self._app_config = None  # app configuration
         self._http_client = httpx.Client(timeout=30.0)
 
-    def init(self) -> Result[None]:
         """Initialize Lang - verify local search paths exist"""
         for path in self._local_paths:
             if not path.exists():
                 return Result.error(f"Search path does not exist: {path}")
             if not path.is_dir():
                 return Result.error(f"Search path is not a directory: {path}")
-        return Ok(None)
+        return self._load_main_module()
 
     def dispose(self) -> Result[None]:
         """Clean up resources"""
@@ -68,7 +71,7 @@ class Lang(Object):
             shutil.rmtree(self._temp_dir)
         return Ok(None)
 
-    def load_main_module(self, module_name: str) -> Result[None]:
+    def _load_main_module(self) -> Result[None]:
         """
         Load the main module and all its dependencies (breadth-first)
 
@@ -78,6 +81,7 @@ class Lang(Object):
         Returns:
             Result[None]: Ok on success, Error on failure
         """
+        module_name = self._main
         queue = deque([module_name, "builtin"])
         visited = set()
 

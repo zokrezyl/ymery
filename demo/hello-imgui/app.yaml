@@ -30,20 +30,33 @@ widgets:
           - menu-item:
               label: "A Custom app menu item"
 
-    # Docking layout
+    # Docking layout - main splits
     - docking-split:
         initial-dock: "MainDockSpace"
         new-dock: "BottomPanel"
         direction: "down"
         ratio: 0.25
 
-    # Second split: TopPanel horizontally into left (LeftPanel) and right (stays in MainDockSpace)
     - docking-split:
         initial-dock: "MainDockSpace"
         new-dock: "LeftPanel"
         direction: "left"
         ratio: 0.25
 
+    # Sub-splits for data views
+    - docking-split:
+        initial-dock: "LeftPanel"
+        new-dock: "LeftPanelData"
+        direction: "down"
+        ratio: 0.3
+
+    - docking-split:
+        initial-dock: "MainDockSpace"
+        new-dock: "MainData"
+        direction: "down"
+        ratio: 0.3
+
+    # Left Panel - Kernel Browser + Data
     - dockable-window:
         label: "Kernel Browser"
         dock-space-name: "LeftPanel"
@@ -51,11 +64,27 @@ widgets:
           - hello-imgui-widgets.kernel-tree-view:
 
     - dockable-window:
+        label: "Kernel Data"
+        dock-space-name: "LeftPanelData"
+        body:
+          - data-path: $demo-data
+            builtin.tree-view:
+
+    # Main Panel - Plots + Data
+    - dockable-window:
         label: "Plots"
         dock-space-name: "MainDockSpace"
         body:
           - hello-imgui-widgets.implot-wrapper:
 
+    - dockable-window:
+        label: "Plots Data"
+        dock-space-name: "MainData"
+        body:
+          - data-path: $demo-data
+            builtin.tree-view:
+
+    # Bottom Panel - Logs
     - dockable-window:
         label: "Logs"
         dock-space-name: "BottomPanel"

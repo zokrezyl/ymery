@@ -1,8 +1,8 @@
 import re
 from ymery.types import DataPath, Object, EventHandler, TreeLike
 from ymery.result import Result, Ok
-from ymery.backend.data_tree import DataTree
 from typing import Optional, Dict, Any, Union, List
+from ymery.plugin_manager import PluginManager
 
 # Pattern for @ references: @path or $tree@path
 # Reference chars: alphanumeric, hyphen, underscore, slash, dot (for ..)
@@ -21,7 +21,9 @@ class DataBag(Object):
     - $tree@path - path in named tree
     - $tree@/abs - absolute path in named tree
     """
-    def __init__(self, data_trees: Dict, main_data_key: str, main_data_path: DataPath, static: Optional[Dict]):
+    def __init__(self, dispatcher, plugin_manager: PluginManager, data_trees: Dict, main_data_key: str, main_data_path: DataPath, static: Optional[Dict]):
+        self._dispatcher = dispatcher
+        self._plugin_manager = plugin_manager
         self._data_trees = data_trees if data_trees else {}
         self._main_data_key = main_data_key
         self._main_data_path = main_data_path
@@ -52,12 +54,26 @@ class DataBag(Object):
                     if tree_id in self._data_trees:
                         return Result.error(f"DataBag.init: data key '{tree_id}' already exists")
 
-                    tree = DataTree(tree_content)
-                    res = tree.init()
-                    if not res:
-                        return Result.error(f"DataBag.init: failed to init DataTree '{tree_id}'", res)
+                    # Get type from tree_content, default to simple-data-tree
+                    type_name = tree_content.get('type', 'simple-data-tree') if isinstance(tree_content, dict) else 'simple-data-tree'
+                    raw_arg = tree_content.get('arg', tree_content) if isinstance(tree_content, dict) else tree_content
 
-                    self._data_trees[tree_id] = tree
+                    # Get tree-like class from plugin_manager
+                    res = self._plugin_manager.get_metadata(DataPath(f"/tree-like/{type_name}"))
+                    if not res:
+                        return Result.error(f"DataBag.init: tree-like type '{type_name}' not found", res)
+
+                    tree_class = res.unwrapped.get("class")
+                    if not tree_class:
+                        return Result.error(f"DataBag.init: no class found for tree-like type '{type_name}'")
+
+                    # Instantiate with standard args (same as app.py)
+                    instance = tree_class(self._dispatcher, self._plugin_manager, raw_arg)
+                    res = instance.init()
+                    if not res:
+                        return Result.error(f"DataBag.init: failed to init '{type_name}' for '{tree_id}'", res)
+
+                    self._data_trees[tree_id] = instance
                     if first_tree_id is None:
                         first_tree_id = tree_id
 
@@ -442,25 +458,31 @@ class DataBag(Object):
         new_path = self._main_data_path
 
         if data_path:
-            # Check for named tree reference: $tree@path
+            # Check for named tree reference: $tree or $tree@path
             if data_path.startswith('$'):
-                match = REF_PATTERN.match(data_path)
-                if match:
-                    tree_name = match.group(1)  # $tree
-                    path_str = match.group(2)   # path after @
-
-                    tree_key = tree_name[1:]  # Remove $ prefix
-                    if tree_key not in self._data_trees:
-                        return Result.error(f"DataBag.inherit: unknown tree '{tree_key}'")
-
-                    new_key = tree_key
-                    # Named trees use root-relative paths
-                    if path_str.startswith('/'):
-                        new_path = DataPath(path_str)
+                # Check if it has @path or just $tree
+                if '@' in data_path:
+                    match = REF_PATTERN.match(data_path)
+                    if match:
+                        tree_name = match.group(1)  # $tree
+                        path_str = match.group(2)   # path after @
                     else:
-                        new_path = DataPath('/') / path_str
+                        return Result.error(f"DataBag.inherit: invalid tree reference '{data_path}'")
                 else:
-                    return Result.error(f"DataBag.inherit: invalid tree reference '{data_path}'")
+                    # Just $tree - default to root path
+                    tree_name = data_path
+                    path_str = "/"
+
+                tree_key = tree_name[1:]  # Remove $ prefix
+                if tree_key not in self._data_trees:
+                    return Result.error(f"DataBag.inherit: unknown tree '{tree_key}'")
+
+                new_key = tree_key
+                # Named trees use root-relative paths
+                if path_str.startswith('/'):
+                    new_path = DataPath(path_str)
+                else:
+                    new_path = DataPath('/') / path_str
             elif data_path.startswith('/'):
                 # Absolute path
                 new_path = DataPath(data_path)
@@ -468,4 +490,4 @@ class DataBag(Object):
                 # Relative path - DataPath handles ..
                 new_path = self._main_data_path / data_path
 
-        return DataBag.create(self._data_trees, new_key, new_path, static)
+        return DataBag.create(self._dispatcher, self._plugin_manager, self._data_trees, new_key, new_path, static)

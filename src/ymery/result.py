@@ -4,6 +4,26 @@ from dataclasses import dataclass
 from typing import Callable, Generic, Optional, TypeVar, Union
 from typing import Any
 
+
+def _make_hashable(obj: Any) -> int:
+    """Convert any object to a hash value, handling unhashable types."""
+    if obj is None:
+        return hash(None)
+    if isinstance(obj, (str, int, float, bool, tuple)):
+        return hash(obj)
+    if isinstance(obj, dict):
+        # Sort keys for consistent hashing
+        return hash(tuple(sorted((k, _make_hashable(v)) for k, v in obj.items())))
+    if isinstance(obj, list):
+        return hash(tuple(_make_hashable(item) for item in obj))
+    if hasattr(obj, '__hash__') and obj.__hash__ is not None:
+        try:
+            return hash(obj)
+        except TypeError:
+            pass
+    # Fallback: hash the string representation
+    return hash(str(obj))
+
 def as_tree(obj: Any) -> dict | list:
     """
     Convert an object to a tree structure.
@@ -58,7 +78,7 @@ def _adapt_error(value: Optional[Union[str, dict, list, Exception, "Error", "Err
         case Exception():
             # Extract relevant information from the exception
             stack = traceback.format_tb(value.__traceback__) if value.__traceback__ else None
-            if False:
+            if True:
                 return {
                     "type": type(value).__name__,
                     "message": str(value),
@@ -135,6 +155,16 @@ class Error:
 
     def __str__(self):
         return f"Error: {self._error}, Previous: {self._prev_error}, Stack: {self._stack}"
+
+    def __hash__(self) -> int:
+        """Hash based on error content, not stack trace (for deduplication)."""
+        return hash((_make_hashable(self._error), _make_hashable(self._prev_error)))
+
+    def __eq__(self, other) -> bool:
+        """Equality based on error content, not stack trace."""
+        if not isinstance(other, Error):
+            return False
+        return self._error == other._error and self._prev_error == other._prev_error
 
     @classmethod
     def create(cls, value: Union[str, dict, list, Exception, "Error", "Err"], prev_error: Optional[Union[str, dict, list, Exception, "Error", "Err"]] = None) -> "Error":
@@ -299,7 +329,7 @@ class Ok(Result[T]):
     def is_ok(self) -> bool:
         """Check if this Result is Ok."""
         return True
-    
+
     @property
     def is_err(self) -> bool:
         """Check if this Result is Err."""
@@ -318,6 +348,9 @@ class Ok(Result[T]):
     def unwrapped(self) -> T:
         """Alias for unwrap, for consistency with Rust's Result."""
         return self._value
+
+    def __hash__(self) -> int:
+        return hash(("Ok", _make_hashable(self._value)))
 
 
 @dataclass(frozen=True)
@@ -345,6 +378,9 @@ class Err(Result[T]):
 
     def __repr__(self) -> str:
         return f"Err({self._error!r})"
+
+    def __hash__(self) -> int:
+        return hash(("Err", hash(self._error)))
 
     @property
     def as_tree(self) -> dict:

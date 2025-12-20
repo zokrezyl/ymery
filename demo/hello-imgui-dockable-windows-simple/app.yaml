@@ -50,8 +50,10 @@ widgets:
 
 data:
   demo-data:
-    metadata:
-      label: "Simple Docking Demo"
+    type: data-tree
+    arg:
+      metadata:
+        label: "Simple Docking Demo"
 
 
 app:

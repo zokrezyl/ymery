@@ -320,7 +320,7 @@ class MenuItem(Widget):
         """Render menu item - returns True if clicked"""
 
         #pprint.pp(self._data_bag.as_tree)
-        pprint.pp(self._data_bag.get_metadata())
+        #pprint.pp(self._data_bag.get_metadata())
 
         res = self._data_bag.get("label")
         if not res:

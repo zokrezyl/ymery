@@ -37,19 +37,18 @@ class Object(ABC):
         """Set unique ID for this object"""
         self._uid = f"{spinalcase(self.__class__.__name__)}-{gen_uid()}"
         # print(f"Object: __init__:", self.__class__.__name__, self._uid)
+        
+    @property
+    def uid(self):
+        return self._uid
 
     @abstractmethod
     def init(self) -> Result[None]:
         """Initialize the object - called after __init__ by create()"""
         pass
 
-    @property
-    def uid(self):
-        return self._uid
-
-
     @abstractmethod
-    def dispose() -> Result[None]:
+    def dispose(self) -> Result[None]:
         pass
 
     @classmethod

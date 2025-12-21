@@ -1,5 +1,5 @@
 widgets:
-  # Popup for Foreach-Key demo
+  # Popup for Foreach-Key demo (used from Popups tab)
   foreach-key-demo-popup:
     type: popup
     data:
@@ -13,6 +13,12 @@ widgets:
             count: 42
     main-data: local
     body:
+      - foreach-key-demo-content:
+
+  # Reusable content for both tab and popup (inherits data from parent)
+  foreach-key-demo-content:
+    type: composite
+    body:
       - text: "foreach-key Demo - Displays metadata keys and values"
       - separator
       - text: "Simple form (shows values only):"
@@ -24,7 +30,7 @@ widgets:
           - text: "$value"
           - separator
 
-  # Tab content for Foreach-Key Demo
+  # Tab content - shows demo content directly
   foreach-key-demo-tab:
     type: composite
     data:
@@ -38,15 +44,19 @@ widgets:
             count: 42
     main-data: local
     body:
-      # Upper part: Button to open popup
-      - button:
-          label: "Open Foreach-Key Demo Popup"
-          body: foreach-key-demo-popup
+      - foreach-key-demo-content:
       - separator
       - text: "Local Data Tree:"
-      # Lower part: Tree view of local data
       - child:
           size: [0, 300]
           border: true
           body:
             - builtin.tree-view:
+
+  # Button for Popups tab
+  foreach-key-demo-button:
+    type: composite
+    body:
+      - button:
+          label: "Open Foreach-Key Demo Popup"
+          body: foreach-key-demo-popup

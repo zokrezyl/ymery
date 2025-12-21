@@ -6,6 +6,7 @@ import:
   - foreach-key-demo
   - table-demo
   - widgets-demo
+  - popups-demo
 
 widgets:
   main-window:
@@ -47,6 +48,10 @@ widgets:
                       label: "Widgets"
                       body:
                         - widgets-demo.widgets-demo-tab:
+                  - tab-item:
+                      label: "Popups"
+                      body:
+                        - popups-demo.popups-demo-tab:
       - separator
       # Lower part: Application Logs
       - text: "Application Logs:"

@@ -68,7 +68,7 @@ e
 
         return Ok(None)
 
-    def create_widget(self, parent_data_bag: DataBag, statics, namespace: str = "") -> Result["Widget"]:
+    def create_widget(self, parent_data_bag: Optional[DataBag], statics, namespace: str = "") -> Result["Widget"]:
         """
         Create a widget by REFERENCE to a named widget.
 
@@ -78,7 +78,9 @@ e
         definitions under the 'widgets:' section of YAML files.
 
         Args:
-            parent_data_bag: Parent's DataBag to inherit from
+            parent_data_bag: Parent's DataBag to inherit from, or None to create
+                            a fresh DataBag with just the statics (useful for
+                            isolated widgets like error displays)
             statics: Widget reference specification in one of these forms:
 
                 BY REFERENCE (named widget):
@@ -177,11 +179,26 @@ e
         # Extract data-path from widget_statics if present
         data_path = widget_statics.get("data-path") if widget_statics else None
 
-        # Create child DataBag via inherit (handles data:, main-data:, copies _data_trees)
-        res = parent_data_bag.inherit(data_path, widget_statics)
-        if not res:
-            return Result.error(f"create_widget: failed to inherit DataBag for '{widget_name}'", res)
-        data_bag = res.unwrapped
+        # Create DataBag: either inherit from parent or create fresh
+        if parent_data_bag is not None:
+            # Normal case: inherit from parent (handles data:, main-data:, copies _data_trees)
+            res = parent_data_bag.inherit(data_path, widget_statics)
+            if not res:
+                return Result.error(f"create_widget: failed to inherit DataBag for '{widget_name}'", res)
+            data_bag = res.unwrapped
+        else:
+            # Isolated widget: create fresh DataBag with just the statics
+            res = DataBag.create(
+                dispatcher=self._dispatcher,
+                plugin_manager=self._plugin_manager,
+                data_trees={},
+                main_data_key=None,
+                main_data_path=DataPath("/"),
+                static=widget_statics
+            )
+            if not res:
+                return Result.error(f"create_widget: failed to create fresh DataBag for '{widget_name}'", res)
+            data_bag = res.unwrapped
 
         # Extract namespace from widget_name if present
         if '.' in widget_name:

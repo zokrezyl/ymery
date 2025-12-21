@@ -819,7 +819,7 @@ widgets:
                 }
             }
 
-            res = self._widget_factory.create_widget(self._data_bag, error_statics, self._namespace)
+            res = self._widget_factory.create_widget(None, error_statics, self._namespace)
             if not res:
                 return render_error(Result.error("Widget: _render_errors: failed to create error widget", res).as_tree)
 

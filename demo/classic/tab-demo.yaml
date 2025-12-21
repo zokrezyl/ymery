@@ -1,5 +1,5 @@
 widgets:
-  # Popup for Tab demo
+  # Popup for Tab demo (used from Popups tab)
   tab-demo-popup:
     type: popup
     data:
@@ -20,6 +20,12 @@ widgets:
               metadata:
                 label: [0.2, 0.7, 1.0, 1.0]
     main-data: local
+    body:
+      - tab-demo-content:
+
+  # Reusable content for both tab and popup (inherits data from parent)
+  tab-demo-content:
+    type: composite
     body:
       - text: "Tab Widget Demo"
       - separator
@@ -76,7 +82,7 @@ widgets:
                   - same-line
                   - text: "Click to see color"
 
-  # Tab content for Tab Demo
+  # Tab content - shows demo content directly
   tab-demo-tab:
     type: composite
     data:
@@ -98,15 +104,19 @@ widgets:
                 label: [0.2, 0.7, 1.0, 1.0]
     main-data: local
     body:
-      # Upper part: Button to open popup
-      - button:
-          label: "Open Tab Demo Popup"
-          body: tab-demo-popup
+      - tab-demo-content:
       - separator
       - text: "Local Data Tree:"
-      # Lower part: Tree view of local data
       - child:
           size: [0, 300]
           border: true
           body:
             - builtin.tree-view:
+
+  # Button for Popups tab
+  tab-demo-button:
+    type: composite
+    body:
+      - button:
+          label: "Open Tab Demo Popup"
+          body: tab-demo-popup

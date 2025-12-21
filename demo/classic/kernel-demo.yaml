@@ -8,7 +8,7 @@ widgets:
       - foreach-key:
           - text: "$key: $value"
 
-  # Popup for kernel demo
+  # Popup for kernel demo (used from Popups tab)
   kernel-demo-popup:
     type: popup
     data:
@@ -20,6 +20,12 @@ widgets:
           metadata:
             selection: ""
     main-data: kernel
+    body:
+      - kernel-demo-content:
+
+  # Reusable content for both tab and popup (inherits data from parent)
+  kernel-demo-content:
+    type: composite
     body:
       - text: "Kernel TreeLike Demo - Click nodes to select, hover to see metadata"
       - separator
@@ -50,24 +56,33 @@ widgets:
                 opened:
                   text: [0.8, 0.8, 0.2, 1.0]
 
-  # Tab content for Kernel Demo
+  # Tab content - shows demo content directly
   kernel-demo-tab:
     type: composite
     data:
       kernel:
         type: kernel
+      selection:
+        type: data-tree
+        arg:
+          metadata:
+            selection: ""
     main-data: kernel
     body:
-      # Upper part: Button to open popup
-      - button:
-          label: "Open Kernel Demo Popup"
-          body: kernel-demo-popup
+      - kernel-demo-content:
       - separator
       - text: "Local Data Tree:"
-      # Lower part: Tree view of local data
       - child:
           size: [0, 300]
           border: true
           body:
             - data-path: $kernel
               builtin.tree-view:
+
+  # Button for Popups tab
+  kernel-demo-button:
+    type: composite
+    body:
+      - button:
+          label: "Open Kernel Demo Popup"
+          body: kernel-demo-popup

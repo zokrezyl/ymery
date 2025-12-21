@@ -23,7 +23,7 @@ widgets:
           - menu:
               body: menu-recursive
 
-  # Popup for Widgets demo
+  # Popup for Widgets demo (used from Popups tab)
   widgets-demo-popup:
     type: popup
     data:
@@ -69,6 +69,12 @@ widgets:
               metadata:
                 label: "True"
     main-data: local
+    body:
+      - widgets-demo-content:
+
+  # Reusable content for both tab and popup (inherits data from parent)
+  widgets-demo-content:
+    type: composite
     body:
       - text: "WIDGET SYSTEM COMPREHENSIVE DEMO"
       - separator
@@ -175,7 +181,7 @@ widgets:
                   - data-path: checkbox
                     checkbox:
 
-  # Tab content for Widgets Demo
+  # Tab content - shows demo content directly
   widgets-demo-tab:
     type: composite
     data:
@@ -199,118 +205,9 @@ widgets:
                 third:
                   metadata:
                     label: "Third text"
-            bullet-single:
-              metadata:
-                label: "Single bullet point"
-            bullet-dict:
-              metadata:
-                label: "Bullet Dict"
-              children:
-                feature1:
-                  metadata:
-                    label: "Feature One"
-                feature2:
-                  metadata:
-                    label: "Feature Two"
-                feature3:
-                  metadata:
-                    label: "Feature Three"
-            separator-single:
-              metadata:
-                label: "Single Section Title"
-            separator-dict:
-              metadata:
-                label: "Separator Dict"
-              children:
-                intro:
-                  metadata:
-                    label: "Introduction"
-                main:
-                  metadata:
-                    label: "Main Content"
-                conclusion:
-                  metadata:
-                    label: "Conclusion"
-            button-single:
-              metadata:
-                label: "Click Me"
-            button-dict:
-              metadata:
-                label: "Button Dict"
-              children:
-                save:
-                  metadata:
-                    label: "Save"
-                load:
-                  metadata:
-                    label: "Load"
-                delete:
-                  metadata:
-                    label: "Delete"
             tree-single:
               metadata:
                 label: "Single Tree Node"
-            tree-dict:
-              metadata:
-                label: "Tree Dict"
-              children:
-                node1:
-                  metadata:
-                    label: "First Node"
-                node2:
-                  metadata:
-                    label: "Second Node"
-                node3:
-                  metadata:
-                    label: "Third Node"
-            collapse-single:
-              metadata:
-                label: "Single Collapsing Section"
-            collapse-dict:
-              metadata:
-                label: "Collapse Dict"
-              children:
-                settings:
-                  metadata:
-                    label: "Settings"
-                advanced:
-                  metadata:
-                    label: "Advanced"
-                debug:
-                  metadata:
-                    label: "Debug"
-            menu-single:
-              metadata:
-                label: "Main Menu"
-            menu-dict:
-              metadata:
-                label: "Menu Dict"
-              children:
-                file:
-                  metadata:
-                    label: "File"
-                edit:
-                  metadata:
-                    label: "Edit"
-                view:
-                  metadata:
-                    label: "View"
-            menuitem-single:
-              metadata:
-                label: "Menu Action"
-            menuitem-dict:
-              metadata:
-                label: "MenuItem Dict"
-              children:
-                new:
-                  metadata:
-                    label: "New"
-                open:
-                  metadata:
-                    label: "Open"
-                close:
-                  metadata:
-                    label: "Close"
             input-text:
               metadata:
                 label: "Editable text"
@@ -331,15 +228,19 @@ widgets:
                 label: "True"
     main-data: local
     body:
-      # Upper part: Button to open popup
-      - button:
-          label: "Open Widgets Demo Popup"
-          body: widgets-demo-popup
+      - widgets-demo-content:
       - separator
       - text: "Local Data Tree:"
-      # Lower part: Tree view of local data
       - child:
           size: [0, 300]
           border: true
           body:
             - builtin.tree-view:
+
+  # Button for Popups tab
+  widgets-demo-button:
+    type: composite
+    body:
+      - button:
+          label: "Open Widgets Demo Popup"
+          body: widgets-demo-popup

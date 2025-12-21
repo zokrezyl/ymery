@@ -1,0 +1,81 @@
+widgets:
+  # Popup for Table demo
+  table-demo-popup:
+    type: popup
+    body:
+      - text: "Table Widget Demo"
+      - separator
+      - table:
+          label: "Demo Table"
+          columns: 3
+          flags: [borders, row-bg, sizing-stretch-prop]
+          body:
+            - row:
+                flags: [headers]
+                body:
+                  - column:
+                      body:
+                        - text: "Column 1"
+                  - column:
+                      body:
+                        - text: "Column 2"
+                  - column:
+                      body:
+                        - text: "Column 3"
+            - row:
+                body:
+                  - column:
+                      body:
+                        - text: "Row 1, Col 1"
+                  - column:
+                      body:
+                        - text: "Row 1, Col 2"
+                  - column:
+                      body:
+                        - text: "Row 1, Col 3"
+            - row:
+                body:
+                  - column:
+                      body:
+                        - text: "Row 2, Col 1"
+                  - column:
+                      body:
+                        - text: "Row 2, Col 2"
+                  - column:
+                      body:
+                        - text: "Row 2, Col 3"
+            - row:
+                body:
+                  - column:
+                      body:
+                        - text: "Row 3, Col 1"
+                  - column:
+                      body:
+                        - text: "Row 3, Col 2"
+                  - column:
+                      body:
+                        - text: "Row 3, Col 3"
+
+  # Tab content for Table Demo
+  table-demo-tab:
+    type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          metadata:
+            label: "Table Demo Data"
+    main-data: local
+    body:
+      # Upper part: Button to open popup
+      - button:
+          label: "Open Table Demo Popup"
+          body: table-demo-popup
+      - separator
+      - text: "Local Data Tree:"
+      # Lower part: Tree view of local data
+      - child:
+          size: [0, 300]
+          border: true
+          body:
+            - builtin.tree-view:

@@ -1,0 +1,345 @@
+widgets:
+  # Helper for recursive tree display
+  tree-recursive:
+    type: composite
+    body:
+      - foreach-child:
+          - tree-node:
+              body: tree-recursive
+
+  # Helper for recursive collapsing header
+  collapsing-header-recursive:
+    type: composite
+    body:
+      - foreach-child:
+          - collapsing-header:
+              body: collapsing-header-recursive
+
+  # Helper for recursive menu
+  menu-recursive:
+    type: composite
+    body:
+      - foreach-child:
+          - menu:
+              body: menu-recursive
+
+  # Popup for Widgets demo
+  widgets-demo-popup:
+    type: popup
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            text-single:
+              metadata:
+                label: "Single dynamic text value"
+            text-dict:
+              metadata:
+                label: "Text Dict"
+              children:
+                first:
+                  metadata:
+                    label: "First text"
+                second:
+                  metadata:
+                    label: "Second text"
+                third:
+                  metadata:
+                    label: "Third text"
+            tree-single:
+              metadata:
+                label: "Single Tree Node"
+            input-text:
+              metadata:
+                label: "Editable text"
+            input-int:
+              metadata:
+                label: "42"
+            slider-int:
+              metadata:
+                label: "50"
+            slider-float:
+              metadata:
+                label: "0.5"
+            combo:
+              metadata:
+                label: "Option A"
+            checkbox:
+              metadata:
+                label: "True"
+    main-data: local
+    body:
+      - text: "WIDGET SYSTEM COMPREHENSIVE DEMO"
+      - separator
+      - text: "Each section shows: Static, Dynamic Single, Dynamic Dict"
+      - separator
+      # Text Demos
+      - collapsing-header:
+          label: "Text Widgets"
+          body:
+            - separator-text: "TEXT WIDGET DEMOS"
+            - collapsing-header:
+                label: "Text - Static"
+                flags: [default-open]
+                body:
+                  - text: "This is static text"
+            - collapsing-header:
+                label: "Text - Dynamic Single Value"
+                body:
+                  - data-path: text-single
+                    text:
+            - data-path: text-dict
+              collapsing-header:
+                label: "Text - Dynamic Dict (renders keys)"
+                body:
+                  foreach-child:
+                    - text
+      # Button Demos
+      - collapsing-header:
+          label: "Button Widgets"
+          body:
+            - separator-text: "BUTTON WIDGET DEMOS"
+            - collapsing-header:
+                label: "Button - Static"
+                flags: [default-open]
+                body:
+                  - button:
+                      label: "Static Button"
+            - collapsing-header:
+                label: "Button - With Red Style"
+                body:
+                  - button:
+                      label: "Red Button"
+                      style:
+                        button: [0.8, 0.1, 0.1, 1.0]
+                        button-hovered: [1.0, 0.2, 0.2, 1.0]
+                        button-active: [0.6, 0.05, 0.05, 1.0]
+      # Tree Node Demos
+      - collapsing-header:
+          label: "Tree Node Widgets"
+          body:
+            - separator-text: "TREE NODE WIDGET DEMOS"
+            - collapsing-header:
+                label: "TreeNode - Static"
+                flags: [default-open]
+                body:
+                  - tree-node:
+                      label: "Static Tree Node"
+                      body:
+                        - text: "Content inside static tree node"
+            - collapsing-header:
+                label: "TreeNode - Dynamic Single Value"
+                body:
+                  - tree-node:
+                      body: tree-recursive
+                    data-path: tree-single
+      # Input Demos
+      - collapsing-header:
+          label: "Input Widgets"
+          body:
+            - separator-text: "INPUT WIDGETS DEMOS"
+            - collapsing-header:
+                label: "Input Widgets (single values only)"
+                flags: [default-open]
+                body:
+                  - text: "Text Input:"
+                  - data-path: input-text
+                    input-text:
+                  - separator
+                  - text: "Integer Input:"
+                  - data-path: input-int
+                    input-int:
+                  - separator
+                  - text: "Integer Slider:"
+                  - data-path: slider-int
+                    slider-int:
+                      min: 0
+                      max: 100
+                  - separator
+                  - text: "Float Slider:"
+                  - data-path: slider-float
+                    slider-float:
+                      min: 0.0
+                      max: 1.0
+                  - separator
+                  - text: "Combo:"
+                  - data-path: combo
+                    combo:
+                      items:
+                        - Option A
+                        - Option B
+                        - Option C
+                  - separator
+                  - text: "Checkbox:"
+                  - data-path: checkbox
+                    checkbox:
+
+  # Tab content for Widgets Demo
+  widgets-demo-tab:
+    type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            text-single:
+              metadata:
+                label: "Single dynamic text value"
+            text-dict:
+              metadata:
+                label: "Text Dict"
+              children:
+                first:
+                  metadata:
+                    label: "First text"
+                second:
+                  metadata:
+                    label: "Second text"
+                third:
+                  metadata:
+                    label: "Third text"
+            bullet-single:
+              metadata:
+                label: "Single bullet point"
+            bullet-dict:
+              metadata:
+                label: "Bullet Dict"
+              children:
+                feature1:
+                  metadata:
+                    label: "Feature One"
+                feature2:
+                  metadata:
+                    label: "Feature Two"
+                feature3:
+                  metadata:
+                    label: "Feature Three"
+            separator-single:
+              metadata:
+                label: "Single Section Title"
+            separator-dict:
+              metadata:
+                label: "Separator Dict"
+              children:
+                intro:
+                  metadata:
+                    label: "Introduction"
+                main:
+                  metadata:
+                    label: "Main Content"
+                conclusion:
+                  metadata:
+                    label: "Conclusion"
+            button-single:
+              metadata:
+                label: "Click Me"
+            button-dict:
+              metadata:
+                label: "Button Dict"
+              children:
+                save:
+                  metadata:
+                    label: "Save"
+                load:
+                  metadata:
+                    label: "Load"
+                delete:
+                  metadata:
+                    label: "Delete"
+            tree-single:
+              metadata:
+                label: "Single Tree Node"
+            tree-dict:
+              metadata:
+                label: "Tree Dict"
+              children:
+                node1:
+                  metadata:
+                    label: "First Node"
+                node2:
+                  metadata:
+                    label: "Second Node"
+                node3:
+                  metadata:
+                    label: "Third Node"
+            collapse-single:
+              metadata:
+                label: "Single Collapsing Section"
+            collapse-dict:
+              metadata:
+                label: "Collapse Dict"
+              children:
+                settings:
+                  metadata:
+                    label: "Settings"
+                advanced:
+                  metadata:
+                    label: "Advanced"
+                debug:
+                  metadata:
+                    label: "Debug"
+            menu-single:
+              metadata:
+                label: "Main Menu"
+            menu-dict:
+              metadata:
+                label: "Menu Dict"
+              children:
+                file:
+                  metadata:
+                    label: "File"
+                edit:
+                  metadata:
+                    label: "Edit"
+                view:
+                  metadata:
+                    label: "View"
+            menuitem-single:
+              metadata:
+                label: "Menu Action"
+            menuitem-dict:
+              metadata:
+                label: "MenuItem Dict"
+              children:
+                new:
+                  metadata:
+                    label: "New"
+                open:
+                  metadata:
+                    label: "Open"
+                close:
+                  metadata:
+                    label: "Close"
+            input-text:
+              metadata:
+                label: "Editable text"
+            input-int:
+              metadata:
+                label: "42"
+            slider-int:
+              metadata:
+                label: "50"
+            slider-float:
+              metadata:
+                label: "0.5"
+            combo:
+              metadata:
+                label: "Option A"
+            checkbox:
+              metadata:
+                label: "True"
+    main-data: local
+    body:
+      # Upper part: Button to open popup
+      - button:
+          label: "Open Widgets Demo Popup"
+          body: widgets-demo-popup
+      - separator
+      - text: "Local Data Tree:"
+      # Lower part: Tree view of local data
+      - child:
+          size: [0, 300]
+          border: true
+          body:
+            - builtin.tree-view:

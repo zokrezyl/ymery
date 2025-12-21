@@ -28,6 +28,7 @@ class DataBag(Object):
         self._main_data_key = main_data_key
         self._main_data_path = main_data_path
         self._static = static
+        self._initialized = False
 
     @property
     def as_tree(self):
@@ -39,6 +40,11 @@ class DataBag(Object):
         }
 
     def init(self) -> Result[None]:
+        # Idempotent - if already initialized, return immediately
+        if self._initialized:
+            return Ok(None)
+        self._initialized = True
+
         # Validate static type
         if self._static is not None and not isinstance(self._static, (str, dict)):
             return Result.error(f"DataBag.init: static must be None, str, or dict, got {type(self._static)}")

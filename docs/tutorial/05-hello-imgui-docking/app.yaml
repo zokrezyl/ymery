@@ -1,0 +1,181 @@
+# Step 5: Hello ImGui Docking
+# An IDE-like layout with dockable windows
+
+widgets:
+  main-window:
+    type: hello-imgui-main-window
+    runner-params:
+      app-window-params:
+        window-geometry:
+          size: [1400, 900]
+      imgui-window-params:
+        default-imgui-window-type: provide-full-screen-dock-space
+    fps-idle: 0
+    body:
+      # ===========================================
+      # Application Menu Bar
+      # ===========================================
+      - hello-imgui-menu:
+          body:
+            - menu:
+                label: "File"
+                body:
+                  - menu-item:
+                      label: "New File"
+                  - menu-item:
+                      label: "Open..."
+                  - separator:
+                  - menu-item:
+                      label: "Save"
+                  - separator:
+                  - menu-item:
+                      label: "Exit"
+
+            - menu:
+                label: "Edit"
+                body:
+                  - menu-item:
+                      label: "Undo"
+                  - menu-item:
+                      label: "Redo"
+                  - separator:
+                  - menu-item:
+                      label: "Cut"
+                  - menu-item:
+                      label: "Copy"
+                  - menu-item:
+                      label: "Paste"
+
+            - menu:
+                label: "Help"
+                body:
+                  - menu-item:
+                      label: "Documentation"
+                  - menu-item:
+                      label: "About"
+
+      # ===========================================
+      # Docking Layout
+      # ===========================================
+
+      # Left panel (Explorer)
+      - docking-split:
+          initial-dock: "MainDockSpace"
+          new-dock: "LeftPanel"
+          direction: "left"
+          ratio: 0.2
+
+      # Right panel (Properties)
+      - docking-split:
+          initial-dock: "MainDockSpace"
+          new-dock: "RightPanel"
+          direction: "right"
+          ratio: 0.25
+
+      # Bottom panel (Console/Output)
+      - docking-split:
+          initial-dock: "MainDockSpace"
+          new-dock: "BottomPanel"
+          direction: "down"
+          ratio: 0.25
+
+      # ===========================================
+      # Dockable Windows
+      # ===========================================
+
+      # Explorer (Left)
+      - dockable-window:
+          label: "Explorer"
+          dock-space-name: "LeftPanel"
+          tooltip: "Browse and manage files"
+          body:
+            - text:
+                label: "File Explorer"
+            - separator:
+            - text:
+                label: "src/"
+            - text:
+                label: "  main.py"
+            - text:
+                label: "  utils.py"
+            - text:
+                label: "tests/"
+            - text:
+                label: "  test_main.py"
+
+      # Main Editor (Center)
+      - dockable-window:
+          label: "Editor"
+          dock-space-name: "MainDockSpace"
+          tooltip: "Main code editing area"
+          body:
+            - text:
+                label: "Welcome to the Editor!"
+            - separator:
+            - text:
+                label: "This is the main editing area."
+            - text:
+                label: "Select a file from the Explorer to edit."
+            - separator:
+            - text:
+                label: "Try dragging the window tabs to rearrange!"
+                tooltip: "You can dock, undock, and reorder windows freely"
+
+      # Preview (Center - tabbed with Editor)
+      - dockable-window:
+          label: "Preview"
+          dock-space-name: "MainDockSpace"
+          tooltip: "Preview your work"
+          body:
+            - text:
+                label: "Preview Panel"
+            - separator:
+            - text:
+                label: "This window shares the main dock space."
+            - text:
+                label: "Notice how it appears as a tab next to Editor!"
+
+      # Properties (Right)
+      - dockable-window:
+          label: "Properties"
+          dock-space-name: "RightPanel"
+          tooltip: "View and edit properties"
+          body:
+            - text:
+                label: "Properties"
+            - separator:
+            - text:
+                label: "Theme: dark"
+            - text:
+                label: "Font Size: 14"
+            - text:
+                label: "Auto Save: enabled"
+
+      # Console (Bottom)
+      - dockable-window:
+          label: "Console"
+          dock-space-name: "BottomPanel"
+          tooltip: "View application output and logs"
+          body:
+            - text:
+                label: "Console Output"
+            - separator:
+            - text:
+                label: "> Application started"
+            - text:
+                label: "> Ready"
+
+      # Problems (Bottom - tabbed with Console)
+      - dockable-window:
+          label: "Problems"
+          dock-space-name: "BottomPanel"
+          tooltip: "View errors and warnings"
+          body:
+            - text:
+                label: "Problems"
+            - separator:
+            - text:
+                label: "No problems detected!"
+
+app:
+  widget: app.main-window

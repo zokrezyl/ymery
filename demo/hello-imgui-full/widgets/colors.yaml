@@ -1,6 +1,21 @@
 widgets:
   colors-demo:
     type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            color-rgb:
+              metadata:
+                label: [1.0, 0.0, 0.0]
+            color-rgba:
+              metadata:
+                label: [1.0, 0.5, 0.0, 1.0]
+            color-button:
+              metadata:
+                label: [0.0, 0.5, 1.0, 1.0]
+    main-data: local
     body:
       - separator-text: "Color Edit"
 

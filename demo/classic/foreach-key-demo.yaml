@@ -1,0 +1,74 @@
+widgets:
+  # Popup for Foreach-Key demo (used from Popups tab)
+  foreach-key-demo-popup:
+    type: popup
+    data:
+      local:
+        type: data-tree
+        arg:
+          metadata:
+            name: "Sample Node"
+            type: "demo"
+            status: "active"
+            count: 42
+    main-data: local
+    body:
+      - foreach-key-demo-content:
+
+  # Reusable content for both tab and popup (inherits data from parent)
+  foreach-key-demo-content:
+    type: composite
+    body:
+      - text:
+          label: "foreach-key Demo - Displays metadata keys and values"
+          tooltip: "Demonstrates 'foreach-key' widget which iterates over metadata keys. Data: 'local' (type: data-tree) with metadata: {name, type, status, count}."
+      - separator
+      - text:
+          label: "Simple form (shows values only):"
+          tooltip: "Using $value placeholder to show only the value of each metadata key."
+      - foreach-key:
+          - text:
+              label: "$value"
+              tooltip: "The '$value' placeholder is replaced with each metadata value. Iterates: 'Sample Node', 'demo', 'active', '42'."
+      - separator
+      - text:
+          label: "Complex form (shows keys and values):"
+          tooltip: "Using both $key and $value placeholders to show key-value pairs."
+      - foreach-key:
+          - text:
+              label: "$key: $value"
+              tooltip: "Both '$key' and '$value' placeholders - shows 'name: Sample Node', 'type: demo', etc."
+          - separator
+
+  # Tab content - shows demo content directly
+  foreach-key-demo-tab:
+    type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          metadata:
+            name: "Sample Node"
+            type: "demo"
+            status: "active"
+            count: 42
+    main-data: local
+    body:
+      - foreach-key-demo-content:
+      - separator
+      - text:
+          label: "Local Data Tree:"
+          tooltip: "Shows the local data-tree structure with metadata keys that foreach-key iterates over."
+      - child:
+          size: [0, 300]
+          border: true
+          body:
+            - builtin.tree-view:
+
+  # Button for Popups tab
+  foreach-key-demo-button:
+    type: composite
+    body:
+      - button:
+          label: "Open Foreach-Key Demo Popup"
+          body: foreach-key-demo-popup

@@ -22,12 +22,12 @@ class PluginManager(TreeLike, Object):
 
     def init(self) -> Result[None]:
         # TODO: validate _plugin_path
-        print("PluginManager: init")
+        # print("PluginManager: init")
         # return self._ensure_plugins_loaded()
         return Ok(None)
 
     def get_children_names(self, path: DataPath) -> Result[list]:
-        print(f"PluginManager: get_children_names: {path}, {len(path)}")
+        # print(f"PluginManager: get_children_names: {path}, {len(path)}")
         res = self._ensure_plugins_loaded()
         if not res:
             return Result.error("PluginManager: error loading plugins", res)

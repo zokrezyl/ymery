@@ -155,6 +155,13 @@ widgets:
   # ============================================================================
   # POPUP WIDGET DEMOS
   # ============================================================================
+  regular-popup-demo-content:
+    type: popup
+    body:
+      - text: "This is a regular popup"
+      - separator
+      - text: "You can interact with other widgets"
+
   popup-modal-demo-content:
     type: popup-modal
     body:
@@ -192,12 +199,7 @@ widgets:
           body:
             - button:
                 label: "Open Regular Popup"
-                body:
-                  type: popup
-                  body:
-                    - text: "This is a regular popup"
-                    - separator
-                    - text: "You can interact with other widgets"
+                body: regular-popup-demo-content
 
   # ============================================================================
   # TREE NODE WIDGET DEMOS
@@ -467,6 +469,164 @@ widgets:
 
   widgets-demo-popup:
     type: popup
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            text-single:
+              metadata:
+                label: "Single dynamic text value"
+            text-dict:
+              metadata:
+                label: "Text Dict"
+              children:
+                first:
+                  metadata:
+                    label: "First text"
+                second:
+                  metadata:
+                    label: "Second text"
+                third:
+                  metadata:
+                    label: "Third text"
+            bullet-single:
+              metadata:
+                label: "Single bullet point"
+            bullet-dict:
+              metadata:
+                label: "Bullet Dict"
+              children:
+                feature1:
+                  metadata:
+                    label: "Feature One"
+                feature2:
+                  metadata:
+                    label: "Feature Two"
+                feature3:
+                  metadata:
+                    label: "Feature Three"
+            separator-single:
+              metadata:
+                label: "Single Section Title"
+            separator-dict:
+              metadata:
+                label: "Separator Dict"
+              children:
+                intro:
+                  metadata:
+                    label: "Introduction"
+                main:
+                  metadata:
+                    label: "Main Content"
+                conclusion:
+                  metadata:
+                    label: "Conclusion"
+            button-single:
+              metadata:
+                label: "Click Me"
+            button-dict:
+              metadata:
+                label: "Button Dict"
+              children:
+                save:
+                  metadata:
+                    label: "Save"
+                load:
+                  metadata:
+                    label: "Load"
+                delete:
+                  metadata:
+                    label: "Delete"
+            tree-single:
+              metadata:
+                label: "Single Tree Node"
+            tree-dict:
+              metadata:
+                label: "Tree Dict"
+              children:
+                node1:
+                  metadata:
+                    label: "First Node"
+                node2:
+                  metadata:
+                    label: "Second Node"
+                node3:
+                  metadata:
+                    label: "Third Node"
+            collapse-single:
+              metadata:
+                label: "Single Collapsing Section"
+            collapse-dict:
+              metadata:
+                label: "Collapse Dict"
+              children:
+                settings:
+                  metadata:
+                    label: "Settings"
+                advanced:
+                  metadata:
+                    label: "Advanced"
+                debug:
+                  metadata:
+                    label: "Debug"
+            menu-single:
+              metadata:
+                label: "Main Menu"
+            menu-dict:
+              metadata:
+                label: "Menu Dict"
+              children:
+                file:
+                  metadata:
+                    label: "File"
+                edit:
+                  metadata:
+                    label: "Edit"
+                view:
+                  metadata:
+                    label: "View"
+            menuitem-single:
+              metadata:
+                label: "Menu Action"
+            menuitem-dict:
+              metadata:
+                label: "MenuItem Dict"
+              children:
+                new:
+                  metadata:
+                    label: "New"
+                open:
+                  metadata:
+                    label: "Open"
+                close:
+                  metadata:
+                    label: "Close"
+            input-text:
+              metadata:
+                label: "Editable text"
+            input-int:
+              metadata:
+                label: "42"
+            slider-int:
+              metadata:
+                label: "50"
+            slider-float:
+              metadata:
+                label: "0.5"
+            combo:
+              metadata:
+                label: "Option A"
+            checkbox:
+              metadata:
+                label: "True"
+            color-edit:
+              metadata:
+                label: [1.0, 0.5, 0.2, 1.0]
+            color-button:
+              metadata:
+                label: [0.2, 0.7, 1.0, 1.0]
+    main-data: local
     body: widgets-demo
 
   # ============================================================================
@@ -474,16 +634,26 @@ widgets:
   # ============================================================================
   foreach-key-demo-popup:
     type: popup
+    data:
+      local:
+        type: data-tree
+        arg:
+          metadata:
+            name: "Sample Node"
+            type: "demo"
+            status: "active"
+            count: 42
+    main-data: local
     body:
       - text: "foreach-key Demo - Displays metadata keys and values"
       - separator
       - text: "Simple form (shows values only):"
-      - foreach-key: text
+      - foreach-key:
+          - text: "$value"
       - separator
       - text: "Complex form (shows keys and values):"
       - foreach-key:
-          - text: "$key"
-          - text: "$value"
+          - text: "$key: $value"
           - separator
 
   metadata-tooltip:
@@ -503,7 +673,7 @@ widgets:
               on-click: default
               on-hover:
                 show: metadata-tooltip
-              selection: "@/kernel-tree/selection"
+              selection: "$selection@/selection"
               style-mapping:
                 openable:
                   text: [0.2, 0.8, 0.2, 1.0]
@@ -512,21 +682,34 @@ widgets:
 
   kernel-demo-popup:
     type: popup
+    data:
+      kernel:
+        type: kernel
+      selection:
+        type: data-tree
+        arg:
+          metadata:
+            selection: ""
+    main-data: kernel
     body:
       - text: "Kernel TreeLike Demo - Click nodes to select, hover to see metadata"
       - separator
       - text: "Selection: "
       - same-line
       - text:
-          label: "@/kernel-tree/node-selection"
+          label: "$selection@/selection"
           style:
             text: [0.2, 1.0, 0.2, 1.0]
       - separator
-      - data-path: kernel
+      - data-path: $kernel
         kernel-recursive:
 
   implot-demo-popup:
     type: popup
+    data:
+      kernel:
+        type: kernel
+    main-data: kernel
     body:
       - text: "Implot Waveform Demo"
       - separator
@@ -535,13 +718,13 @@ widgets:
           body:
             - implot-layer:
                 label: "Sine"
-              data-path: /kernel/providers/waveform-st/available/sine/0
+              data-path: /providers/waveform-st/available/sine/0
             - implot-layer:
                 label: "Square"
-              data-path: /kernel/providers/waveform-st/available/square/0
+              data-path: /providers/waveform-st/available/square/0
             - implot-layer:
                 label: "Triangle"
-              data-path: /kernel/providers/waveform-st/available/triangle/0
+              data-path: /providers/waveform-st/available/triangle/0
 
   table-demo-popup:
     type: popup
@@ -601,6 +784,24 @@ widgets:
 
   tab-demo-popup:
     type: popup
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            input-text:
+              metadata:
+                label: "Editable text"
+            slider-int:
+              metadata:
+                label: "50"
+            color-edit:
+              metadata:
+                label: [1.0, 0.5, 0.2, 1.0]
+            color-button:
+              metadata:
+                label: [0.2, 0.7, 1.0, 1.0]
+    main-data: local
     body:
       - text: "Tab Widget Demo"
       - separator

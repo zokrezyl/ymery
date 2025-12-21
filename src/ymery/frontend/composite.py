@@ -143,7 +143,7 @@ class Composite(Widget):
                     else:
                         value = metadata[key]
                         substituted_spec = self._substitute_variables(widget_spec, key, value)
-                        res = self._create_widget_from_spec(substituted_spec)
+                        res = self._widget_factory.create_widget(self._data_bag, substituted_spec, self._namespace)
                         if res:
                             new_group[key] = res.unwrapped
                         else:
@@ -171,7 +171,20 @@ class Composite(Widget):
                     if child_name in old_group:
                         new_group[child_name] = old_group[child_name]
                     else:
-                        res = self._create_widget_from_spec(widget_spec, child_name)
+                        # Add data-path to widget_spec for child navigation
+                        if isinstance(widget_spec, dict):
+                            child_spec = dict(widget_spec)
+                            # Find the widget key and add data-path to its statics
+                            for wkey in child_spec:
+                                if isinstance(child_spec[wkey], dict):
+                                    child_spec[wkey] = dict(child_spec[wkey])
+                                    child_spec[wkey]["data-path"] = child_name
+                                else:
+                                    child_spec[wkey] = {"data-path": child_name}
+                                break
+                        else:
+                            child_spec = {widget_spec: {"data-path": child_name}}
+                        res = self._widget_factory.create_widget(self._data_bag, child_spec, self._namespace)
                         if res:
                             new_group[child_name] = res.unwrapped
                         else:
@@ -183,82 +196,20 @@ class Composite(Widget):
             if "_single" in old_group:
                 continue
 
-            if isinstance(item, str):
-                widget_name = item
-                params = None
-                path_spec = None
-            elif isinstance(item, dict):
-                path_spec = item.get("data-path")
-
-                widget_keys = [k for k in item.keys() if k != "data-path"]
-                if len(widget_keys) != 1:
-                    self._handle_error(Result.error(f"Composite template item must have one widget key (plus optional data-path), got {len(widget_keys)}: {widget_keys}"))
-                    continue
-                widget_name = widget_keys[0]
-                params = item[widget_name]
-            else:
-                self._handle_error(Result.error(f"Composite template item must be str or dict, got {type(item)}"))
-                continue
-
-            if '.' not in widget_name and self._namespace:
-                full_widget_name = f"{self._namespace}.{widget_name}"
-            else:
-                full_widget_name = widget_name
-
-            # Create child DataBag with inherited path
-            res = self._data_bag.inherit(path_spec, params)
+            # Factory handles all parsing - just pass the item directly
+            res = self._widget_factory.create_widget(self._data_bag, item, self._namespace)
             if not res:
-                self._handle_error(Result.error(f"Composite: failed to create child DataBag for '{widget_name}'", res))
-                continue
-            child_bag = res.unwrapped
-
-            res = self._factory.create_widget_from_bag(full_widget_name, child_bag)
-            if not res:
-                self._handle_error(Result.error(f"Composite: failed to create child widget '{widget_name}'", res))
+                self._handle_error(Result.error(f"Composite: failed to create child widget", res))
                 continue
 
             child = res.unwrapped
             if child.__class__.__name__ == "Popup":
-                self._handle_error(Result.error(f"Popup '{widget_name}' cannot be child of Composite"))
+                self._handle_error(Result.error(f"Popup cannot be child of Composite"))
                 continue
 
             self._child_groups[i] = {"_single": child}
 
         return Ok(None)
-
-    def _create_widget_from_spec(self, spec, path_spec=None):
-        """Create a widget from a spec (string or dict)"""
-        if isinstance(spec, str):
-            widget_name = spec
-            widget_params = None
-        elif isinstance(spec, dict):
-            if len(spec) != 1:
-                return Result.error(f"Widget spec must have one key, got {len(spec)}")
-            widget_name = list(spec.keys())[0]
-            widget_params = spec[widget_name]
-        else:
-            return Result.error(f"Widget spec must be str or dict, got {type(spec)}")
-
-        if '.' not in widget_name and self._namespace:
-            full_widget_name = f"{self._namespace}.{widget_name}"
-        else:
-            full_widget_name = widget_name
-
-        # Create child DataBag with inherited path
-        res = self._data_bag.inherit(path_spec, widget_params)
-        if not res:
-            return Result.error(f"Failed to create child DataBag for '{widget_name}'", res)
-        child_bag = res.unwrapped
-
-        res = self._factory.create_widget_from_bag(full_widget_name, child_bag)
-        if not res:
-            return Result.error(f"Failed to create widget '{widget_name}'", res)
-
-        child = res.unwrapped
-        if child.__class__.__name__ == "Popup":
-            return Result.error(f"Popup '{widget_name}' cannot be child of Composite")
-
-        return Ok(child)
 
     def render(self) -> Result[None]:
         """Render all children - Composite doesn't use head/body pattern"""

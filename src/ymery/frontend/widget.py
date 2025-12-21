@@ -51,7 +51,7 @@ def render_error(error) -> Result[None]:
 class Widget(Visual, EventHandler):
     """Base class for all widgets"""
 
-    def __init__(self, factory: "WidgetFactory", dispatcher: Dispatcher, namespace: str, data_bag: DataBag):
+    def __init__(self, widget_factory: "WidgetFactory", dispatcher: Dispatcher, namespace: str, data_bag: DataBag):
         """
         Args:
             factory: WidgetFactory for creating nested widgets
@@ -60,7 +60,7 @@ class Widget(Visual, EventHandler):
             data_bag: DataBag instance for data access
         """
         super().__init__()
-        self._factory = factory
+        self._widget_factory = widget_factory
         self._dispatcher = dispatcher
         self._namespace = namespace
         self._data_bag = data_bag
@@ -84,10 +84,11 @@ class Widget(Visual, EventHandler):
 
 
     def init(self) -> Result[None]:
-        """Initialize widget - override in subclasses if needed"""
-        res = self._data_bag.init()
-        if not res:
-            return Result.error("Widget: failed to init DataBag", res)
+        """Initialize widget - override in subclasses if needed
+
+        Note: DataBag is already initialized by DataBag.create() before being
+        passed to the widget. Never call data_bag.init() here.
+        """
         res = self._init_events()
         if not res:
             return Result.error("Widget: failed to initialize events", res)
@@ -352,7 +353,7 @@ widgets:
 
 
     def _execute_event_command_show(self, event_name: str, command: str, data: Optional[Union[str, dict, list]] = None) -> Result[None]:
-        res = self._create_widget_from_spec(data)
+        res = self._widget_factory.create_widget(self._data_bag, data, self._namespace)
         if not res:
             return Result.error(f"Widget: _execute_event_command_show: failed to create widget from spec: {data}")
         widget = res.unwrapped
@@ -592,7 +593,7 @@ widgets:
             elif action == "show":
                 if "widget-instance" not in cmd_spec:
                     # Lazy create widget
-                    res = self._create_widget_from_spec(widget_spec)
+                    res = self._widget_factory.create_widget(self._data_bag, widget_spec, self._namespace)
                     if not res:
                         return Result.error(f"Widget: Failed to create widget for {event_name} event", res)
                     cmd_spec["widget-instance"] = res.unwrapped
@@ -639,41 +640,6 @@ widgets:
         return Ok(None)
 
 
-    def _create_widget_from_spec(self, widget_spec) -> Result["Widget"]:
-        """
-        Create a widget from a specification.
-
-        Args:
-            widget_spec: String (widget name), dict (inline widget), or list (composite)
-
-        Returns:
-            Result[Widget]: Created widget instance
-        """
-        # String → widget reference
-        if isinstance(widget_spec, str):
-            widget_name = widget_spec
-            if '.' not in widget_name and self._namespace:
-                full_widget_name = f"{self._namespace}.{widget_name}"
-            else:
-                full_widget_name = widget_spec
-            res = self._data_bag.inherit()
-            if not res:
-                return Result.error(f"Widget: _create_widget_from_spec: failed to create child DataBag", res)
-            return self._factory.create_widget_from_bag(full_widget_name, res.unwrapped)
-
-        # Dict or list → composite - use factory to avoid circular import
-        if isinstance(widget_spec, (dict, list)):
-            params = {"type": "composite", "body": [widget_spec] if isinstance(widget_spec, dict) else widget_spec}
-            full_widget_name = f"{self._namespace}.composite" if self._namespace else "composite"
-            res = self._data_bag.inherit(None, params)
-            if not res:
-                return Result.error("Widget: _create_widget_from_spec: failed to create child DataBag", res)
-            res = self._factory.create_widget_from_bag(full_widget_name, res.unwrapped)
-            if not res:
-                return Result.error("Widget: _create_widget_from_spec: could not create widget", res)
-            return Ok(res.unwrapped)
-
-        return Result.error(f"Invalid widget spec type: {type(widget_spec)}")
 
     def _prepare_render(self) -> Result[None]:
         """Prepare for rendering - metadata is now accessed through DataBag"""
@@ -823,7 +789,7 @@ widgets:
             return Result.error("_ensure_body: failed to get body", res)
         body_spec = res.unwrapped
         if body_spec is not None:
-            res = self._create_widget_from_spec(body_spec)
+            res = self._widget_factory.create_widget(self._data_bag, body_spec, self._namespace)
             if not res:
                 return Result.error("_ensure_body: failed to create body widget", res)
             self._body = res.unwrapped
@@ -838,40 +804,32 @@ widgets:
         errors_tree = Result.error("Error:", self._errors).as_tree
         import logging
         logging.error(errors_tree)
+
         # Create error widget only once (persist across render cycles)
         if self._error_widget is None:
-            print("Widget: _render_errors: creating error widget")
-            errors_tree = Result.error("Error:", self._errors).as_tree
+            # Prepare statics for error-tree-view with local data
+            error_statics = {
+                "builtin.error-tree-view": {
+                    "data": {
+                        "error": {
+                            "type": "simple-data-tree",
+                            "arg": errors_tree
+                        }
+                    },
+                    "main-data": "error"
+                }
+            }
 
-
-            # Get SimpleDataTree class from plugin_manager
-            res = self._factory._plugin_manager.get_metadata(DataPath("/tree-like/simple-data-tree"))
+            res = self._widget_factory.create_widget(None, error_statics, self._namespace)
             if not res:
-                return render_error(Result.error("Widget: _render_errors: failed to get SimpleDataTree class", res).as_tree)
-            SimpleDataTree = res.unwrapped.get("class")
-            if not SimpleDataTree:
-                return render_error(Result.error("Widget: _render_errors: SimpleDataTree class not found").as_tree)
-
-            # Convert errors list to tree structure
-            res = SimpleDataTree.create(errors_tree)
-            if not res:
-                return render_error(Result.error("Widget: _render_errors: failed to create SimpleDataTree", res).as_tree)
-
-            error_tree = res.unwrapped
-            res = self._factory.create_widget("builtin.error-tree-view", error_tree, DataPath("/"))
-            if not res:
-                errors = self._errors.copy()
-                errors.append(res)
-                return render_error(Result.error("Widget: _render_errors: failed to create 'tree-view' for errors", errors).as_tree)
+                return render_error(Result.error("Widget: _render_errors: failed to create error widget", res).as_tree)
 
             self._error_widget = res.unwrapped
 
         # Render the persisted error widget every frame
         res = self._error_widget.render()
         if not res:
-            errors = self._errors.copy()
-            errors.append(res)
-            return render_error(Result.error("Widget: _render_errors: failed to render 'tree-view' for errors", errors).as_tree)
+            return render_error(Result.error("Widget: _render_errors: failed to render error widget", res).as_tree)
 
         return Ok(None)
 

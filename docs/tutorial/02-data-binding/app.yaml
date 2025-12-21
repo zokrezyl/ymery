@@ -1,0 +1,169 @@
+# Step 2: Data Binding
+# Connecting widgets to data trees for state management
+
+data:
+  # Define our application data tree
+  app-data:
+    type: data-tree
+    arg:
+      metadata:
+        label: "Application Settings"
+      children:
+        user:
+          metadata:
+            label: "User Settings"
+          children:
+            name:
+              metadata:
+                label: "John Doe"
+            age:
+              metadata:
+                label: "25"
+            email:
+              metadata:
+                label: "john@example.com"
+        display:
+          metadata:
+            label: "Display Settings"
+          children:
+            brightness:
+              metadata:
+                label: "0.8"
+            contrast:
+              metadata:
+                label: "0.5"
+            theme:
+              metadata:
+                label: "dark"
+        audio:
+          metadata:
+            label: "Audio Settings"
+          children:
+            volume:
+              metadata:
+                label: "75"
+            muted:
+              metadata:
+                label: "false"
+            balance:
+              metadata:
+                label: "0.0"
+
+widgets:
+  main-window:
+    type: imgui-main-window
+    label: "Data Binding Demo"
+    body:
+      - text:
+          label: "Data Binding Demo"
+          tooltip: "This demo shows how widgets can be bound to data trees"
+
+      - separator:
+
+      # ===========================================
+      # Tree View - Shows the raw data structure
+      # ===========================================
+      - collapsing-header:
+          label: "Data Tree View"
+          flags: [default-open]
+          tooltip: "This tree view displays the data structure. Watch it update as you change values below!"
+          body:
+            - data-path: $app-data
+              builtin.tree-view:
+
+      # ===========================================
+      # Bound Widgets - Edit the data
+      # ===========================================
+      - collapsing-header:
+          label: "User Settings"
+          flags: [default-open]
+          tooltip: "Widgets bound to the /user path"
+          body:
+            - text:
+                label: "Name:"
+            - data-path: user/name
+              input-text:
+                tooltip: "Bound to user/name - changes update the tree view above"
+            - text:
+                label: "Email:"
+            - data-path: user/email
+              input-text:
+                tooltip: "Bound to user/email"
+            - text:
+                label: "Age:"
+            - data-path: user/age
+              slider-int:
+                min: 0
+                max: 120
+                tooltip: "Bound to user/age"
+
+      - collapsing-header:
+          label: "Display Settings"
+          flags: [default-open]
+          tooltip: "Widgets bound to the /display path"
+          body:
+            - text:
+                label: "Brightness:"
+            - data-path: display/brightness
+              slider-float:
+                min: 0.0
+                max: 1.0
+                tooltip: "Bound to display/brightness"
+            - text:
+                label: "Contrast:"
+            - data-path: display/contrast
+              slider-float:
+                min: 0.0
+                max: 1.0
+                tooltip: "Bound to display/contrast"
+            - text:
+                label: "Theme:"
+            - data-path: display/theme
+              combo:
+                items: ["light", "dark", "auto", "high-contrast"]
+                tooltip: "Bound to display/theme"
+
+      - collapsing-header:
+          label: "Audio Settings"
+          tooltip: "Widgets bound to the /audio path"
+          body:
+            - text:
+                label: "Volume:"
+            - data-path: audio/volume
+              slider-int:
+                min: 0
+                max: 100
+                tooltip: "Bound to audio/volume"
+            - text:
+                label: "Balance:"
+            - data-path: audio/balance
+              slider-float:
+                min: -1.0
+                max: 1.0
+                tooltip: "Bound to audio/balance (-1 = left, +1 = right)"
+            - text:
+                label: "Muted:"
+            - data-path: audio/muted
+              checkbox:
+                tooltip: "Bound to audio/muted"
+
+      # ===========================================
+      # Reading values in text
+      # ===========================================
+      - collapsing-header:
+          label: "Reading Data"
+          tooltip: "Demonstrates how to display data values in text"
+          body:
+            - text:
+                label: "Current user name:"
+            - data-path: user/name
+              text:
+            - separator:
+            - text:
+                label: "Current theme:"
+            - data-path: display/theme
+              text:
+
+app:
+  widget: app.main-window
+  main-data: app-data

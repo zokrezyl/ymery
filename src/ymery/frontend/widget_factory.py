@@ -27,7 +27,7 @@ def to_kebab_case(name: str) -> str:
 class WidgetFactory(Object):
     """
     Factory for creating widgets
-
+e
     Uses DataBag for data access and creates appropriate Widget subclasses
     """
 
@@ -68,23 +68,120 @@ class WidgetFactory(Object):
 
         return Ok(None)
 
-    def create_widget_from_bag(self, widget_name: str, data_bag: DataBag) -> Result["Widget"]:
+    def create_widget(self, parent_data_bag: Optional[DataBag], statics, namespace: str = "") -> Result["Widget"]:
         """
-        Create widget from widget_name using a pre-created DataBag.
+        Create a widget by REFERENCE to a named widget.
+
+        This method creates widgets by referencing named widgets that were defined
+        in YAML files and loaded at factory initialization. It does NOT support
+        inline widget definitions with 'type:' - those are only valid in widget
+        definitions under the 'widgets:' section of YAML files.
 
         Args:
-            widget_name: Widget name (e.g., "demo_widgets.demo-form", "text", "button")
-            data_bag: DataBag with data context for the widget
+            parent_data_bag: Parent's DataBag to inherit from, or None to create
+                            a fresh DataBag with just the statics (useful for
+                            isolated widgets like error displays)
+            statics: Widget reference specification in one of these forms:
+
+                BY REFERENCE (named widget):
+                - str: widget name only
+                    "text"
+                    "my-namespace.my-popup"
+
+                - dict with single key: {widget_name: statics_dict}
+                    {"button": {"label": "Click me"}}
+                    {"data-path": "some-path", "text": None}
+
+                - list: composite body (creates anonymous composite)
+                    [{"text": "Hello"}, {"button": {"label": "OK"}}]
+
+            namespace: Current namespace for resolving unqualified widget names
 
         Returns:
             Result[Widget]: Created widget instance
+
+        IMPORTANT: Widget definitions with 'type:' key (e.g., {type: popup, body: [...]})
+        are ONLY valid in the 'widgets:' section of YAML files. They are loaded at
+        factory initialization and registered as named widgets. To use such a widget,
+        reference it by name:
+
+            # In YAML widgets section (definition):
+            widgets:
+              my-popup:
+                type: popup
+                body:
+                  - text: "Hello"
+
+            # In body (reference by name):
+            body:
+              - button:
+                  label: "Open"
+                  body: my-popup    # reference, not inline definition
+
+        Why "statics"?
+            Called "statics" because these are the STATIC definitions from YAML that
+            don't change at runtime. They define the widget's structure (body),
+            behavior (event-handlers), appearance (style), and data bindings (data,
+            main-data, data-path).
+
+        The factory:
+        1. Parses statics to extract widget_name and widget_statics dict
+        2. Extracts data-path from statics
+        3. Calls parent_data_bag.inherit(data_path, statics) to create child DataBag
+           - inherit() copies _data_trees dict (isolation between siblings)
+           - inherit() calls DataBag.create() which calls init()
+           - init() processes statics['data'] to add local trees
+           - init() processes statics['main-data'] to override main data
+        4. Looks up widget class from cache (primitive or YAML-defined)
+        5. Merges YAML widget definition with statics
+        6. Calls widget_class.create(factory, dispatcher, namespace, data_bag)
         """
-        # Extract namespace if present
+        # Parse statics to get widget_name and widget_statics dict
+        if isinstance(statics, str):
+            # String → widget name only
+            widget_name = statics
+            widget_statics = None
+        elif isinstance(statics, dict):
+            # Dict → {widget_name: widget_statics} with optional data-path
+            # data-path is a special key that's NOT the widget name
+            special_keys = {"data-path"}
+            widget_keys = [k for k in statics.keys() if k not in special_keys]
+
+            if len(widget_keys) != 1:
+                return Result.error(f"create_widget: dict must have exactly one widget key (plus optional data-path), got {len(widget_keys)}: {widget_keys}")
+
+            widget_name = widget_keys[0]
+            widget_statics = statics[widget_name]
+
+            # Ensure widget_statics is a dict or None
+            if widget_statics is not None and not isinstance(widget_statics, dict):
+                # Could be a simple value like {"text": "Hello"} where "Hello" is the label
+                widget_statics = {"label": widget_statics} if isinstance(widget_statics, (str, int, float, bool)) else None
+
+            # Copy data-path into widget_statics if present
+            if "data-path" in statics:
+                if widget_statics is None:
+                    widget_statics = {}
+                else:
+                    widget_statics = dict(widget_statics)  # Don't mutate original
+                widget_statics["data-path"] = statics["data-path"]
+        elif isinstance(statics, list):
+            # List → composite body
+            widget_name = "composite"
+            widget_statics = {"type": "composite", "body": statics}
+        else:
+            return Result.error(f"create_widget: invalid statics type: {type(statics)}")
+
+        # Add namespace if not qualified
+        if '.' not in widget_name and namespace:
+            widget_name = f"{namespace}.{widget_name}"
+
+        # Extract namespace from widget_name if present
         if '.' in widget_name:
-            namespace = widget_name.rsplit('.', 1)[0]
+            widget_namespace = widget_name.rsplit('.', 1)[0]
             lookup_name = widget_name
         else:
-            namespace = ""
+            widget_namespace = namespace
             lookup_name = widget_name
 
         # Smart lookup: try with full name first, then without namespace (for primitives)
@@ -100,16 +197,13 @@ class WidgetFactory(Object):
         if cached_item is None:
             return Result.error(f"Widget '{widget_name}' not found in cache")
 
-        # Check if it's a widget class
+        # Determine widget class and merge YAML definition with statics BEFORE creating DataBag
+        # This ensures data: and main-data: from YAML definitions are processed by DataBag.init()
         if isinstance(cached_item, type):
-            return cached_item.create(
-                factory=self,
-                dispatcher=self._dispatcher,
-                namespace=namespace,
-                data_bag=data_bag
-            )
+            widget_class = cached_item
+            merged_statics = widget_statics
         elif isinstance(cached_item, dict) and "type" in cached_item:
-            # YAML widget definition
+            # YAML widget definition - merge with statics BEFORE DataBag creation
             widget_type = cached_item["type"]
             if widget_type not in self._widget_cache:
                 return Result.error(f"Widget type '{widget_type}' not found in cache")
@@ -118,51 +212,43 @@ class WidgetFactory(Object):
             if not isinstance(widget_class, type):
                 return Result.error(f"Widget type '{widget_type}' is not a class")
 
-            # For YAML widgets, merge cached_item into data_bag's static
-            if data_bag._static is None:
-                data_bag._static = dict(cached_item)
-            else:
-                merged = dict(cached_item)
-                merged.update(data_bag._static)
-                data_bag._static = merged
-
-            return widget_class.create(
-                factory=self,
-                dispatcher=self._dispatcher,
-                namespace=namespace,
-                data_bag=data_bag
-            )
+            # Merge: YAML definition as base, widget_statics (caller) overrides
+            merged_statics = dict(cached_item)
+            if widget_statics:
+                merged_statics.update(widget_statics)
         else:
             return Result.error(f"WidgetFactory: cached_item must be a class or dict with 'type', got {type(cached_item)}")
 
-    def create_widget(self, widget_name: str, tree_like: TreeLike, data_path: DataPath, params=None, parent_data_trees=None) -> Result["Widget"]:
-        """
-        Create widget from widget_name
+        # Extract data-path from merged statics
+        data_path = merged_statics.get("data-path") if merged_statics else None
 
-        Args:
-            widget_name: Widget name (e.g., "demo_widgets.demo-form", "text", "button")
-            tree_like: TreeLike instance (can be None) - used as main data tree
-            data_path: DataPath to data
-            params: Parameters for the widget (can be None) - used as static
-            parent_data_trees: Optional data_trees from parent widget (for inheriting local, etc.)
+        # Create DataBag with merged statics (includes data: from YAML definition)
+        if parent_data_bag is not None:
+            # Normal case: inherit from parent (handles data:, main-data:, copies _data_trees)
+            res = parent_data_bag.inherit(data_path, merged_statics)
+            if not res:
+                return Result.error(f"create_widget: failed to inherit DataBag for '{widget_name}'", res)
+            data_bag = res.unwrapped
+        else:
+            # Isolated widget: create fresh DataBag with just the statics
+            res = DataBag.create(
+                dispatcher=self._dispatcher,
+                plugin_manager=self._plugin_manager,
+                data_trees={},
+                main_data_key=None,
+                main_data_path=DataPath("/"),
+                static=merged_statics
+            )
+            if not res:
+                return Result.error(f"create_widget: failed to create fresh DataBag for '{widget_name}'", res)
+            data_bag = res.unwrapped
 
-        Returns:
-            Result[Widget]: Created widget instance
-        """
-        # Create data_trees dict with tree_like as main entry
-        data_trees = dict(self._data_trees)
-        if parent_data_trees:
-            for key, value in parent_data_trees.items():
-                if key not in data_trees:
-                    data_trees[key] = value
-        if tree_like:
-            data_trees["main"] = tree_like
-        main_data_key = "main" if tree_like else None
-
-        static = params if params is not None else {}
-        data_bag = DataBag(self._dispatcher, self._plugin_manager, data_trees, main_data_key, data_path, static)
-
-        return self.create_widget_from_bag(widget_name, data_bag)
+        return widget_class.create(
+            widget_factory=self,
+            dispatcher=self._dispatcher,
+            namespace=widget_namespace,
+            data_bag=data_bag
+        )
 
     def dispose(self) -> Result[None]:
         return Ok(None)

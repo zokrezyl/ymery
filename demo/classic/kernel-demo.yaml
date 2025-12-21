@@ -1,0 +1,98 @@
+widgets:
+  # Tooltip for kernel node hover
+  kernel-node-tooltip:
+    type: tooltip
+    body:
+      - text: "Metadata:"
+      - separator
+      - foreach-key:
+          - text: "$key: $value"
+
+  # Popup for kernel demo (used from Popups tab)
+  kernel-demo-popup:
+    type: popup
+    data:
+      kernel:
+        type: kernel
+      selection:
+        type: data-tree
+        arg:
+          metadata:
+            selection: ""
+    main-data: kernel
+    body:
+      - kernel-demo-content:
+
+  # Reusable content for both tab and popup (inherits data from parent)
+  kernel-demo-content:
+    type: composite
+    body:
+      - text:
+          label: "Kernel TreeLike Demo"
+          tooltip: "Demonstrates the Kernel data source - a live tree showing system state. Data: 'kernel' (type: kernel) - live system tree, 'selection' (type: data-tree) - stores selected node path."
+      - separator
+      - text:
+          label: "Click nodes to select, hover to see metadata"
+          tooltip: "This demo shows: tree-node with on-click handler, on-hover showing tooltip widget, selection binding via $selection@/selection reference, and style-mapping for visual feedback."
+      - separator
+      - text:
+          label: "Selection: "
+          tooltip: "Displays the currently selected node path. Uses $selection@/selection to read from the 'selection' data tree."
+      - same-line
+      - text:
+          label: "$selection@/selection"
+          style:
+            text: [0.2, 1.0, 0.2, 1.0]
+          tooltip: "Dynamic text bound to selection data. The green color is applied via 'style' static."
+      - separator
+      - data-path: $kernel
+        kernel-recursive:
+
+  # Helper widget for recursive kernel tree display
+  kernel-recursive:
+    type: composite
+    body:
+      - foreach-child:
+          - tree-node:
+              body: kernel-recursive
+              selection: "$selection@/selection"
+              style-mapping:
+                openable:
+                  text: [0.2, 0.8, 0.2, 1.0]
+                opened:
+                  text: [0.8, 0.8, 0.2, 1.0]
+              event-handlers:
+                on-click: default
+                on-hover:
+                  show: kernel-node-tooltip
+
+  # Tab content - shows demo content directly
+  kernel-demo-tab:
+    type: composite
+    data:
+      kernel:
+        type: kernel
+      selection:
+        type: data-tree
+        arg:
+          metadata:
+            selection: ""
+    main-data: kernel
+    body:
+      - kernel-demo-content:
+      - separator
+      - text: "Local Data Tree:"
+      - child:
+          size: [0, 300]
+          border: true
+          body:
+            - data-path: $kernel
+              builtin.tree-view:
+
+  # Button for Popups tab
+  kernel-demo-button:
+    type: composite
+    body:
+      - button:
+          label: "Open Kernel Demo Popup"
+          body: kernel-demo-popup

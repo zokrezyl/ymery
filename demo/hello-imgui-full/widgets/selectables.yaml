@@ -1,6 +1,30 @@
 widgets:
   selectables-demo:
     type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            selectable-1:
+              metadata:
+                label: "Item 1"
+            selectable-2:
+              metadata:
+                label: "Item 2"
+            selectable-3:
+              metadata:
+                label: "Item 3"
+            selectable-4:
+              metadata:
+                label: "Item 4"
+            selectable-5:
+              metadata:
+                label: "Item 5"
+            selectable-6:
+              metadata:
+                label: "Item 6"
+    main-data: local
     body:
       - separator-text: "Basic Selectables"
 

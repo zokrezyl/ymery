@@ -15,8 +15,8 @@ import pprint
 class ImplotLayer(Widget):
     """ImPlot layer widget - renders a single plot layer (line plot)"""
 
-    def __init__(self, factory, dispatcher, namespace: str, data_bag):
-        super().__init__(factory, dispatcher, namespace, data_bag)
+    def __init__(self, widget_factory, dispatcher, namespace: str, data_bag):
+        super().__init__(widget_factory, dispatcher, namespace, data_bag)
         self._cached_buffer = None
 
     def _pre_render_head(self) -> Result[bool]:

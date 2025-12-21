@@ -1,0 +1,86 @@
+# Step 3: Dynamic Data with Events
+# A simple todo app demonstrating dynamic data manipulation
+
+data:
+  todo-list:
+    type: data-tree
+    arg:
+      metadata:
+        label: "My Todos"
+      children:
+        next-id:
+          metadata:
+            label: "4"
+        selection:
+          metadata:
+            label: ""
+        new-todo-text:
+          metadata:
+            label: ""
+        todo-1:
+          metadata:
+            label: "Learn Ymery basics"
+          children:
+            done:
+              metadata:
+                label: "true"
+        todo-2:
+          metadata:
+            label: "Understand data binding"
+          children:
+            done:
+              metadata:
+                label: "true"
+        todo-3:
+          metadata:
+            label: "Build a todo app"
+          children:
+            done:
+              metadata:
+                label: "false"
+
+widgets:
+  main-window:
+    type: imgui-main-window
+    label: "Dynamic Todo App"
+    body:
+      - text:
+          label: "My Todo List"
+          tooltip: "A dynamic todo list"
+
+      - separator:
+
+      - collapsing-header:
+          label: "Add New Todo"
+          flags: [default-open]
+          body:
+            - text:
+                label: "New Todo:"
+            - input-text:
+                tooltip: "Enter the text for your new todo item"
+              data-path: new-todo-text
+
+      - separator:
+
+      - collapsing-header:
+          label: "Todo Items"
+          flags: [default-open]
+          body:
+            - text:
+                label: "Your todos:"
+            - builtin.tree-view:
+              data-path: $todo-list
+
+      - separator:
+
+      - collapsing-header:
+          label: "Selection Info"
+          body:
+            - text:
+                label: "Currently selected:"
+            - text:
+              data-path: selection
+
+app:
+  widget: app.main-window
+  main-data: todo-list

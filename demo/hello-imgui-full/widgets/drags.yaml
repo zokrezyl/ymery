@@ -1,6 +1,24 @@
 widgets:
   drags-demo:
     type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            drag-int:
+              metadata:
+                label: 50
+            drag-float:
+              metadata:
+                label: 0.5
+            drag-int-min:
+              metadata:
+                label: 20
+            drag-int-max:
+              metadata:
+                label: 80
+    main-data: local
     body:
       - separator-text: "Drag Int"
 

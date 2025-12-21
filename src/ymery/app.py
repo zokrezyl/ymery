@@ -15,6 +15,7 @@ from ymery.types import DataPath
 from ymery.result import Result, Ok
 from ymery.frontend.widget import render_error
 from ymery.logging import setup_logging, get_ring_buffer
+from ymery.data_bag import DataBag
 
 import time
 
@@ -168,29 +169,44 @@ def main(layouts_path, layouts_url, plugins_path, widgets_path, main, log_level,
         return 1
 
     widget_name = app_config.get('widget')
-    data_name = app_config.get('data')
+    data_name = app_config.get('main-data')
 
     if not widget_name:
         show_if_error(Result.error("app.widget not specified"))
         return 1
 
-    if not data_name:
-        show_if_error(Result.error("app.data not specified"))
-        return 1
+    # If main-data not specified, use the first data tree if any exist
+    if not data_name and data_trees:
+        data_name = next(iter(data_trees.keys()))
+        logging.info(f"No main-data specified, using first data tree: '{data_name}'")
 
     # Prepend main module namespace if widget_name doesn't have one
     if '.' not in widget_name:
         widget_name = f"{main}.{widget_name}"
 
-    # Get the main data tree
-    if data_name not in data_trees:
+    # Verify main data exists (if specified)
+    if data_name and data_name not in data_trees:
         show_if_error(Result.error(f"Data '{data_name}' not found in data definitions"))
         return 1
 
-    data_tree = data_trees[data_name]
+    # Create root DataBag only if we have data trees
+    root_data_bag = None
+    if data_trees:
+        res = DataBag.create(
+            dispatcher=dispatcher,
+            plugin_manager=plugin_manager,
+            data_trees=data_trees,
+            main_data_key=data_name,
+            main_data_path=DataPath("/"),
+            static=None
+        )
+        if not res:
+            show_if_error(Result.error("Failed to create root DataBag", res))
+            return 1
+        root_data_bag = res.unwrapped
 
-    # Create main widget
-    main_widget = show_if_error(widget_factory.create_widget(widget_name, data_tree, DataPath("/"))).unwrapped
+    # Create main widget - factory handles None data bag
+    main_widget = show_if_error(widget_factory.create_widget(root_data_bag, widget_name)).unwrapped
 
     # Run application - the main widget handles everything
     return main_widget.run()

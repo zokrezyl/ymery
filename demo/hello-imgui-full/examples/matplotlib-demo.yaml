@@ -2,7 +2,7 @@ widgets:
   matplotlib-demo:
     type: composite
     data:
-      plot-data:
+      local:
         type: data-tree
         arg:
           children:
@@ -21,6 +21,7 @@ widgets:
             plot_type:
               metadata:
                 label: "line"
+    main-data: local
     body:
       - separator-text: "Matplotlib Integration"
 

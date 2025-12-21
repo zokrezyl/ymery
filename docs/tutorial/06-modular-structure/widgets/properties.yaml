@@ -1,0 +1,65 @@
+# widgets/properties.yaml
+# Properties panel and related widgets
+
+widgets:
+  # Main properties dockable window
+  panel:
+    type: dockable-window
+    label: "Properties"
+    dock-space-name: "RightPanel"
+    tooltip: "View and edit settings"
+    body:
+      - properties.header:
+      - separator:
+      - properties.settings:
+
+  # Properties header
+  header:
+    type: composite
+    body:
+      - text:
+          label: "PROPERTIES"
+          tooltip: "Application settings"
+
+  # Settings form
+  settings:
+    type: composite
+    body:
+      - collapsing-header:
+          label: "Editor Settings"
+          flags: [default-open]
+          body:
+            - data-path: $app-data@/settings
+              body:
+                - combo:
+                    label: "Theme"
+                    value: "@theme"
+                    items: ["light", "dark", "high-contrast"]
+                    tooltip: "Color theme"
+                - slider-int:
+                    label: "Font Size"
+                    value: "@font-size"
+                    min: 8
+                    max: 24
+                    tooltip: "Editor font size"
+                - slider-int:
+                    label: "Tab Size"
+                    value: "@tab-size"
+                    min: 2
+                    max: 8
+                    tooltip: "Number of spaces per tab"
+
+      - collapsing-header:
+          label: "Features"
+          flags: [default-open]
+          body:
+            - data-path: $app-data@/settings
+              body:
+                - checkbox:
+                    label: "Auto Save"
+                    value: "@auto-save"
+                    tooltip: "Automatically save files"
+                - checkbox:
+                    label: "Line Numbers"
+                    value: "@show-line-numbers"
+                    tooltip: "Show line numbers in editor"

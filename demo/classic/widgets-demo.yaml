@@ -1,0 +1,280 @@
+widgets:
+  # Helper for recursive tree display
+  tree-recursive:
+    type: composite
+    body:
+      - foreach-child:
+          - tree-node:
+              body: tree-recursive
+
+  # Helper for recursive collapsing header
+  collapsing-header-recursive:
+    type: composite
+    body:
+      - foreach-child:
+          - collapsing-header:
+              body: collapsing-header-recursive
+
+  # Helper for recursive menu
+  menu-recursive:
+    type: composite
+    body:
+      - foreach-child:
+          - menu:
+              body: menu-recursive
+
+  # Popup for Widgets demo (used from Popups tab)
+  widgets-demo-popup:
+    type: popup
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            text-single:
+              metadata:
+                label: "Single dynamic text value"
+            text-dict:
+              metadata:
+                label: "Text Dict"
+              children:
+                first:
+                  metadata:
+                    label: "First text"
+                second:
+                  metadata:
+                    label: "Second text"
+                third:
+                  metadata:
+                    label: "Third text"
+            tree-single:
+              metadata:
+                label: "Single Tree Node"
+            input-text:
+              metadata:
+                label: "Editable text"
+            input-int:
+              metadata:
+                label: "42"
+            slider-int:
+              metadata:
+                label: "50"
+            slider-float:
+              metadata:
+                label: "0.5"
+            combo:
+              metadata:
+                label: "Option A"
+            checkbox:
+              metadata:
+                label: "True"
+    main-data: local
+    body:
+      - widgets-demo-content:
+
+  # Reusable content for both tab and popup (inherits data from parent)
+  widgets-demo-content:
+    type: composite
+    body:
+      - text:
+          label: "WIDGET SYSTEM COMPREHENSIVE DEMO"
+          tooltip: "Comprehensive widget demonstration. Data: 'local' (type: data-tree) with children for text, input, and tree widgets."
+      - separator
+      - text:
+          label: "Each section shows: Static, Dynamic Single, Dynamic Dict"
+          tooltip: "Three data binding patterns: Static (YAML-defined), Dynamic Single (one value from data), Dynamic Dict (iterate over children)."
+      - separator
+      # Text Demos
+      - collapsing-header:
+          label: "Text Widgets"
+          tooltip: "Text widget demonstrations showing different data binding approaches."
+          body:
+            - separator-text: "TEXT WIDGET DEMOS"
+            - collapsing-header:
+                label: "Text - Static"
+                flags: [default-open]
+                tooltip: "Static text - label value defined directly in YAML, no data binding used."
+                body:
+                  - text:
+                      label: "This is static text"
+                      tooltip: "Static label - the text 'This is static text' is hardcoded in YAML, not from data tree."
+            - collapsing-header:
+                label: "Text - Dynamic Single Value"
+                tooltip: "Dynamic text bound to 'text-single' child in local data tree. Label comes from metadata."
+                body:
+                  - text:
+                      tooltip: "Label reads from /text-single/metadata/label in local data tree via 'data-path: text-single'."
+                    data-path: text-single
+            - collapsing-header:
+                label: "Text - Dynamic Dict (renders keys)"
+                tooltip: "Uses foreach-child to iterate over 'text-dict' children and render each as a text widget."
+                body:
+                  foreach-child:
+                    - text:
+                        tooltip: "Each child (first, second, third) renders as text. Uses parent's data-path context."
+              data-path: text-dict
+      # Button Demos
+      - collapsing-header:
+          label: "Button Widgets"
+          tooltip: "Button widget demonstrations with static labels and style customization."
+          body:
+            - separator-text: "BUTTON WIDGET DEMOS"
+            - collapsing-header:
+                label: "Button - Static"
+                flags: [default-open]
+                tooltip: "Basic button with static label. Buttons can have 'body' for popups or use event handlers."
+                body:
+                  - button:
+                      label: "Static Button"
+                      tooltip: "Click does nothing - demonstrates basic button rendering. Add 'body' for popup or event handlers for actions."
+            - collapsing-header:
+                label: "Button - With Red Style"
+                tooltip: "Demonstrates 'style' static for customizing widget colors using RGBA values."
+                body:
+                  - button:
+                      label: "Red Button"
+                      tooltip: "Custom styled button using 'style' static with button, button-hovered, and button-active color overrides."
+                      style:
+                        button: [0.8, 0.1, 0.1, 1.0]
+                        button-hovered: [1.0, 0.2, 0.2, 1.0]
+                        button-active: [0.6, 0.05, 0.05, 1.0]
+      # Tree Node Demos
+      - collapsing-header:
+          label: "Tree Node Widgets"
+          tooltip: "Tree-node widget for hierarchical data display. Collapsible nodes with child content."
+          body:
+            - separator-text: "TREE NODE WIDGET DEMOS"
+            - collapsing-header:
+                label: "TreeNode - Static"
+                flags: [default-open]
+                tooltip: "Static tree node with hardcoded label. Body contains child widgets rendered when expanded."
+                body:
+                  - tree-node:
+                      label: "Static Tree Node"
+                      tooltip: "Click to expand. 'body' contains child widgets. 'label' is static from YAML."
+                      body:
+                        - text:
+                            label: "Content inside static tree node"
+                            tooltip: "Child widget inside tree node. Rendered when parent is expanded."
+            - collapsing-header:
+                label: "TreeNode - Dynamic Single Value"
+                tooltip: "Tree node bound to data path. Label comes from data, body uses recursive helper widget."
+                body:
+                  - tree-node:
+                      body: tree-recursive
+                      tooltip: "Label from 'tree-single' child in data. 'body: tree-recursive' enables recursive child display."
+                    data-path: tree-single
+      # Input Demos
+      - collapsing-header:
+          label: "Input Widgets"
+          tooltip: "Input widgets for user data entry. All bound to local data tree children for two-way binding."
+          body:
+            - separator-text: "INPUT WIDGETS DEMOS"
+            - collapsing-header:
+                label: "Input Widgets (single values only)"
+                flags: [default-open]
+                tooltip: "Input widgets require data binding - they read from and write to the data tree."
+                body:
+                  - text:
+                      label: "Text Input:"
+                      tooltip: "Label for input-text widget. The input reads/writes to 'input-text' child."
+                  - input-text:
+                      tooltip: "Text input field. Bound to 'input-text' child in local data tree. Changes update the data tree."
+                    data-path: input-text
+                  - separator
+                  - text: "Integer Input:"
+                  - input-int:
+                      tooltip: "Integer input field. Bound to 'input-int' child with initial value '42'."
+                    data-path: input-int
+                  - separator
+                  - text: "Integer Slider:"
+                  - slider-int:
+                      min: 0
+                      max: 100
+                      tooltip: "Integer slider with min/max bounds from statics. Bound to 'slider-int' child."
+                    data-path: slider-int
+                  - separator
+                  - text: "Float Slider:"
+                  - slider-float:
+                      min: 0.0
+                      max: 1.0
+                      tooltip: "Float slider for decimal values. Bound to 'slider-float' child with initial '0.5'."
+                    data-path: slider-float
+                  - separator
+                  - text: "Combo:"
+                  - combo:
+                      items:
+                        - Option A
+                        - Option B
+                        - Option C
+                      tooltip: "Dropdown combo box. 'items' defined as static, current selection stored in 'combo' child."
+                    data-path: combo
+                  - separator
+                  - text: "Checkbox:"
+                  - checkbox:
+                      tooltip: "Boolean checkbox. Bound to 'checkbox' child with initial 'True'. Toggles the value."
+                    data-path: checkbox
+
+  # Tab content - shows demo content directly
+  widgets-demo-tab:
+    type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            text-single:
+              metadata:
+                label: "Single dynamic text value"
+            text-dict:
+              metadata:
+                label: "Text Dict"
+              children:
+                first:
+                  metadata:
+                    label: "First text"
+                second:
+                  metadata:
+                    label: "Second text"
+                third:
+                  metadata:
+                    label: "Third text"
+            tree-single:
+              metadata:
+                label: "Single Tree Node"
+            input-text:
+              metadata:
+                label: "Editable text"
+            input-int:
+              metadata:
+                label: "42"
+            slider-int:
+              metadata:
+                label: "50"
+            slider-float:
+              metadata:
+                label: "0.5"
+            combo:
+              metadata:
+                label: "Option A"
+            checkbox:
+              metadata:
+                label: "True"
+    main-data: local
+    body:
+      - widgets-demo-content:
+      - separator
+      - text: "Local Data Tree:"
+      - child:
+          size: [0, 300]
+          border: true
+          body:
+            - builtin.tree-view:
+
+  # Button for Popups tab
+  widgets-demo-button:
+    type: composite
+    body:
+      - button:
+          label: "Open Widgets Demo Popup"
+          body: widgets-demo-popup

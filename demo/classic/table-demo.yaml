@@ -1,0 +1,99 @@
+widgets:
+  # Popup for Table demo (used from Popups tab)
+  table-demo-popup:
+    type: popup
+    body:
+      - table-demo-content:
+
+  # Reusable content for both tab and popup
+  table-demo-content:
+    type: composite
+    body:
+      - text:
+          label: "Table Widget Demo"
+          tooltip: "Demonstrates ImGui table widget with rows and columns. This example uses static data - all content is defined directly in YAML."
+      - separator
+      - table:
+          label: "Demo Table"
+          columns: 3
+          flags: [borders, row-bg, sizing-stretch-prop]
+          tooltip: "Table widget with 3 columns and flags: 'borders' (cell borders), 'row-bg' (alternating row colors), 'sizing-stretch-prop' (proportional column sizing)."
+          body:
+            - row:
+                flags: [headers]
+                tooltip: "Header row with 'headers' flag - provides column titles with special styling."
+                body:
+                  - column:
+                      tooltip: "Column widget - contains body with child widgets. Each row must have same number of columns."
+                      body:
+                        - text: "Column 1"
+                  - column:
+                      body:
+                        - text: "Column 2"
+                  - column:
+                      body:
+                        - text: "Column 3"
+            - row:
+                tooltip: "Data row - contains column widgets with content. No special flags for regular rows."
+                body:
+                  - column:
+                      body:
+                        - text: "Row 1, Col 1"
+                  - column:
+                      body:
+                        - text: "Row 1, Col 2"
+                  - column:
+                      body:
+                        - text: "Row 1, Col 3"
+            - row:
+                body:
+                  - column:
+                      body:
+                        - text: "Row 2, Col 1"
+                  - column:
+                      body:
+                        - text: "Row 2, Col 2"
+                  - column:
+                      body:
+                        - text: "Row 2, Col 3"
+            - row:
+                body:
+                  - column:
+                      body:
+                        - text: "Row 3, Col 1"
+                  - column:
+                      body:
+                        - text: "Row 3, Col 2"
+                  - column:
+                      body:
+                        - text: "Row 3, Col 3"
+
+  # Tab content - shows demo content directly
+  table-demo-tab:
+    type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          metadata:
+            label: "Table Demo Data"
+    main-data: local
+    body:
+      - table-demo-content:
+      - separator
+      - text:
+          label: "Local Data Tree:"
+          tooltip: "This demo uses minimal local data - table content is static. Data trees could provide dynamic table content via foreach-child."
+      - child:
+          size: [0, 300]
+          border: true
+          body:
+            - builtin.tree-view:
+
+  # Button for Popups tab
+  table-demo-button:
+    type: composite
+    body:
+      - button:
+          label: "Open Table Demo Popup"
+          body: table-demo-popup

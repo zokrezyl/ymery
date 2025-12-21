@@ -1,0 +1,193 @@
+# Step 1: Basic Widgets
+# Showcasing various ImGui widgets available in Ymery
+
+# Widgets that store values need a data tree
+data:
+  widget-data:
+    type: data-tree
+    arg:
+      metadata:
+        label: "Widget Data"
+      children:
+        # Each child node holds a value in metadata.label
+        enabled:
+          metadata:
+            label: "false"
+        volume:
+          metadata:
+            label: "50"
+        brightness:
+          metadata:
+            label: "0.5"
+        name:
+          metadata:
+            label: ""
+        age:
+          metadata:
+            label: "25"
+        choice:
+          metadata:
+            label: "Option A"
+        size:
+          metadata:
+            label: "Small"
+        color:
+          metadata:
+            label: [1.0, 0.5, 0.0, 1.0]
+
+widgets:
+  main-window:
+    type: imgui-main-window
+    label: "Widget Showcase"
+    body:
+      - text:
+          label: "Welcome to the Widget Showcase!"
+          tooltip: "This tooltip appears when you hover over the text."
+
+      - separator:
+
+      # ===========================================
+      # Buttons Section
+      # ===========================================
+      - collapsing-header:
+          label: "Buttons"
+          flags: [default-open]
+          tooltip: "Various button styles and sizes"
+          body:
+            - button:
+                label: "Click Me!"
+                tooltip: "A simple button"
+            - same-line:
+            - button:
+                label: "Me Too!"
+                tooltip: "Another button on the same line"
+            - button:
+                label: "Wide Button"
+                size: [200, 0]
+                tooltip: "A button with custom width"
+            - button:
+                label: "Tall Button"
+                size: [0, 50]
+                tooltip: "A button with custom height"
+
+      # ===========================================
+      # Input Section
+      # ===========================================
+      - collapsing-header:
+          label: "Input Widgets"
+          flags: [default-open]
+          tooltip: "Widgets for user input"
+          body:
+            - text:
+                label: "Enable Feature:"
+            - checkbox:
+                tooltip: "Toggle this feature on/off"
+              data-path: enabled
+
+            - separator-text:
+                label: "Numeric Inputs"
+
+            - text:
+                label: "Volume:"
+            - slider-int:
+                min: 0
+                max: 100
+                tooltip: "Drag to adjust volume"
+              data-path: volume
+
+            - text:
+                label: "Brightness:"
+            - slider-float:
+                min: 0.0
+                max: 1.0
+                tooltip: "Drag to adjust brightness"
+              data-path: brightness
+
+            - separator-text:
+                label: "Text Inputs"
+
+            - text:
+                label: "Your Name:"
+            - input-text:
+                tooltip: "Enter your name here"
+              data-path: name
+
+            - text:
+                label: "Age:"
+            - input-int:
+                tooltip: "Enter your age"
+              data-path: age
+
+      # ===========================================
+      # Selection Section
+      # ===========================================
+      - collapsing-header:
+          label: "Selection Widgets"
+          tooltip: "Widgets for selecting from options"
+          body:
+            - text:
+                label: "Choose One:"
+            - combo:
+                items: ["Option A", "Option B", "Option C"]
+                tooltip: "Select from the dropdown"
+              data-path: choice
+
+            - separator-text:
+                label: "Radio Buttons"
+
+            - text:
+                label: "Select size:"
+            - radio-button:
+                label: "Small"
+                value: "Small"
+              data-path: size
+            - same-line:
+            - radio-button:
+                label: "Medium"
+                value: "Medium"
+              data-path: size
+            - same-line:
+            - radio-button:
+                label: "Large"
+                value: "Large"
+              data-path: size
+
+      # ===========================================
+      # Colors Section
+      # ===========================================
+      - collapsing-header:
+          label: "Color Widgets"
+          tooltip: "Widgets for color selection"
+          body:
+            - text:
+                label: "Pick a Color:"
+            - color-edit:
+                tooltip: "Click to open color picker"
+              data-path: color
+            - text:
+                label: "Color Preview:"
+            - color-button:
+                tooltip: "Shows current color"
+              data-path: color
+
+      # ===========================================
+      # Text Display
+      # ===========================================
+      - collapsing-header:
+          label: "Text Display"
+          tooltip: "Various ways to display text"
+          body:
+            - text:
+                label: "Regular text"
+            - bullet-text:
+                label: "Bullet point text"
+            - bullet-text:
+                label: "Another bullet point"
+            - separator:
+            - text:
+                label: "Text can have tooltips too!"
+                tooltip: "See? Here's the tooltip!"
+
+app:
+  widget: app.main-window
+  main-data: widget-data

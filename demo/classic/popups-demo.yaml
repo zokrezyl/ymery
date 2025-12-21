@@ -1,0 +1,26 @@
+widgets:
+  # Tab content for Popups Demo - contains buttons to open all demos as popups
+  popups-demo-tab:
+    type: composite
+    body:
+      - text:
+          label: "Popup Demos"
+          tooltip: "Demonstrates popup widgets. Each button opens a demo as a modal popup window. Popups can have their own 'data:' section."
+      - separator
+      - text:
+          label: "Click buttons to open each demo as a popup:"
+          tooltip: "Buttons with 'body' containing a popup widget. The popup opens when clicked. Popups inherit parent data or define their own."
+      - separator
+      - kernel-demo.kernel-demo-button:
+      - separator
+      - implot-demo.implot-demo-button:
+      - separator
+      - tab-demo.tab-demo-button:
+      - separator
+      - foreach-key-demo.foreach-key-demo-button:
+      - separator
+      - table-demo.table-demo-button:
+      - separator
+      - widgets-demo.widgets-demo-button:
+      - separator
+      - tooltip-demo.tooltip-demo-button:

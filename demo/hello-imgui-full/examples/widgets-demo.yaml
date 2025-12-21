@@ -1,8 +1,19 @@
 widgets:
   widgets-demo:
     type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            toggle-flag:
+              metadata:
+                label: true
+    main-data: local
     body:
-      - separator-text: "ImCoolBar"
+      - separator-text:
+          label: "ImCoolBar"
+          tooltip: "ImCoolBar demo - dock-like animated toolbar. Static configuration, no data binding."
 
       - markdown-unindented: |
           # ImCoolBar
@@ -33,15 +44,18 @@ widgets:
 
       - separator:
 
-      - separator-text: "Toggle Switch"
+      - separator-text:
+          label: "Toggle Switch"
+          tooltip: "Toggle widget demo. Data: 'local' (type: data-tree) with 'toggle-flag' child bound to toggle state."
 
       - markdown-unindented: |
           # Toggle Switch
           [imgui_toggle](https://github.com/cmdwtf/imgui_toggle) provides toggle switches for ImGui.
 
-      - data-path: toggle-flag
-        toggle:
+      - toggle:
           label: "Default Toggle"
+          tooltip: "Default toggle style. Bound to 'toggle-flag' in local data tree via data-path."
+        data-path: toggle-flag
 
       - same-line:
 
@@ -77,7 +91,9 @@ widgets:
 
       - separator:
 
-      - separator-text: "Spinners"
+      - separator-text:
+          label: "Spinners"
+          tooltip: "Spinner widgets demo. Static configuration - no data binding needed for animations."
 
       - markdown-unindented: |
           # Spinners
@@ -107,13 +123,17 @@ widgets:
 
       - separator:
 
-      - separator-text: "Knobs"
+      - separator-text:
+          label: "Knobs"
+          tooltip: "Knob widgets demo. Static values shown - can be bound to data for interactive control."
 
       - markdown-unindented: |
           # Knobs
           [imgui-knobs](https://github.com/altschuler/imgui-knobs) provides knobs for ImGui.
 
-      - text: "Some small knobs"
+      - text:
+          label: "Some small knobs"
+          tooltip: "Small float knobs with different visual variants: tick, dot, space, stepped, wiper, wiper_dot, wiper_only."
       - group:
           body:
             - knob:
@@ -146,7 +166,9 @@ widgets:
 
       - same-line:
 
-      - text: "Some big knobs (int values)"
+      - text:
+          label: "Some big knobs (int values)"
+          tooltip: "Large knob-int widgets with 'size: 80'. Integer value variant for discrete controls."
       - group:
           body:
             - knob-int:
@@ -186,7 +208,9 @@ widgets:
 
       - separator:
 
-      - separator-text: "Portable File Dialogs"
+      - separator-text:
+          label: "Portable File Dialogs"
+          tooltip: "Native file dialog integration. Requires async handlers for file selection callbacks."
 
       - markdown-unindented: |
           # Portable File Dialogs
@@ -197,7 +221,9 @@ widgets:
 
       - separator:
 
-      - separator-text: "ImFileDialog"
+      - separator-text:
+          label: "ImFileDialog"
+          tooltip: "ImGui-native file dialog. Pure ImGui implementation without native OS dialogs."
 
       - markdown-unindented: |
           # ImFileDialog

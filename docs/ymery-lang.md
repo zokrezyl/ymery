@@ -58,7 +58,7 @@ The `app` section defines the entry point:
 ```yaml
 app:
   widget: app.main-window   # Root widget (with namespace)
-  data: demo-data           # Root data node name
+  main-data: demo-data      # Root data tree name
 ```
 
 ## Data Tree
@@ -262,31 +262,40 @@ selection: "$form-state@current-selection"
 
 ### Widget-Level Data
 
-Define widget-level data using `data`. This creates DataTree(s) scoped to the widget, with the same semantics as the global `data:` section:
+Define widget-level data using `data` and specify which tree becomes the main data source with `main-data`:
 
 ```yaml
 my-popup:
   type: popup
   data:
-    form-state:                   # Tree ID (first one becomes main tree)
-      metadata:
-        label: "New Item"
-        count: 0
-      children:
-        options:
-          metadata:
-            selected: false
+    form-state:                   # Tree ID
+      type: data-tree             # TreeLike type (optional, defaults to data-tree)
+      arg:                        # Constructor argument
+        metadata:
+          label: "New Item"
+          count: 0
+        children:
+          options:
+            metadata:
+              selected: false
+    kernel:                       # Another tree
+      type: kernel                # Kernel TreeLike
+  main-data: form-state           # Which tree becomes the main data source
   body:
     - input-text:
         label: "$form-state@label"
     - text: "$form-state@count"
+    - data-path: $kernel          # Switch to kernel tree
+      tree-view:
 ```
 
 **Widget data features:**
-- Each top-level key under `data:` becomes a tree ID
-- First tree ID becomes the main tree for that widget
-- Follows standard DataTree structure (`metadata`/`children`)
-- Accessed via `$tree-id@path` (e.g., `$form-state@label`)
+- `data:` defines local data trees, each with a tree ID
+- `main-data:` specifies which tree becomes the main data source (overrides inherited main data)
+- Data trees can specify `type:` (TreeLike class name) and `arg:` (constructor argument)
+- Default type is `data-tree` if not specified
+- Trees are accessible via `$tree-id@path` syntax (e.g., `$form-state@label`)
+- `data-path: $tree-id` switches the main data source for child widgets
 - Inherited by child widgets
 - Read-write (widgets can modify local state)
 
@@ -482,7 +491,7 @@ data:
 
 app:
   widget: app.main-window
-  data: app-data
+  main-data: app-data
 ```
 
 ## Builtin Widgets
@@ -577,17 +586,25 @@ DataBag combines multiple data sources with a priority order:
 
 2. **Main Data Tree** (medium priority)
    - The application's primary data structure
+   - Set via `main-data:` in app config or widget definition
    - Read-write, persists across widget renders
    - Accessed via `data-path` and `@` paths
    ```yaml
    data:
      app-data:
-       metadata:
-         label: "Dynamic Value"
+       type: data-tree
+       arg:
+         metadata:
+           label: "Dynamic Value"
+
+   app:
+     widget: app.main-window
+     main-data: app-data      # Sets app-data as main tree
    ```
 
 3. **Widget-Level Data Trees** (high priority)
    - Widget-scoped data defined with `data:` in widget definition
+   - `main-data:` specifies which tree becomes the main data source
    - Read-write, exists only while widget is active
    - Accessed via `$tree-id@path`
    ```yaml
@@ -595,8 +612,11 @@ DataBag combines multiple data sources with a priority order:
      type: popup
      data:
        form-state:
-         metadata:
-           temp-value: "Editing..."
+         type: data-tree
+         arg:
+           metadata:
+             temp-value: "Editing..."
+     main-data: form-state     # form-state becomes main tree
    ```
 
 4. **Named Trees** (accessed explicitly)
@@ -654,18 +674,20 @@ my-form:
   type: popup
   data:
     form-state:                       # Widget-scoped data tree
-      metadata:
-        editing-name: ""
+      type: data-tree
+      arg:
+        metadata:
+          editing-name: ""
+    kernel:
+      type: kernel
+  main-data: form-state               # form-state becomes main tree
   body:
     - text:
         head:
           label: "Enter name:"        # Static (from YAML)
     - input-text:
         head:
-          label: "$form-state@editing-name"  # Widget data (read-write)
-    - text:
-        head:
-          label: "@/user/name"        # Main data tree
+          label: "@editing-name"      # Main data (form-state)
     - text:
         head:
           label: "$kernel@/system/time"  # Kernel (Python backend)

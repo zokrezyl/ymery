@@ -74,9 +74,9 @@ class Knob(Widget):
         }
         variant = variant_map.get(variant_name, imgui_knobs.ImGuiKnobVariant_.tick)
 
-        # Render knob
+        # Render knob with unique ID
         changed, new_value = imgui_knobs.knob(
-            label,
+            f"{label}##{self._uid}",
             p_value=float(value),
             v_min=v_min,
             v_max=v_max,
@@ -163,9 +163,9 @@ class KnobInt(Widget):
         }
         variant = variant_map.get(variant_name, imgui_knobs.ImGuiKnobVariant_.tick)
 
-        # Render knob
+        # Render knob with unique ID
         changed, new_value = imgui_knobs.knob_int(
-            label,
+            f"{label}##{self._uid}",
             p_value=int(value),
             v_min=v_min,
             v_max=v_max,

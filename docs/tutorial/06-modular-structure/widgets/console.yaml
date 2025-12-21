@@ -1,0 +1,27 @@
+# widgets/console.yaml
+# Console panel
+
+widgets:
+  panel:
+    type: dockable-window
+    label: "Console"
+    dock-space-name: "BottomPanel"
+    tooltip: "View application output and logs"
+    body:
+      - text:
+          label: "CONSOLE"
+      - same-line:
+      - button:
+          label: "Clear"
+          size: [50, 0]
+      - separator:
+      - text:
+          label: "[INFO] Application started"
+      - text:
+          label: "[INFO] Loaded project files"
+      - text:
+          label: "[INFO] Ready"
+      - text:
+          label: ""
+      - text:
+          label: "> _"

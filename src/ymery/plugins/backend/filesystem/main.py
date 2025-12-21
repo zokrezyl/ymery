@@ -17,8 +17,6 @@ from ymery.result import Result, Ok
 
 from typing import Optional, Dict, Union
 
-# Import SoundfileDevice from soundfile plugin (hardcoded for now)
-from ymery.plugins.soundfile.main import SoundfileDevice
 
 
 @lru_cache(maxsize=1000)
@@ -563,6 +561,14 @@ class FilesystemManager(TreeLikeCache, AudioDeviceManager):
                     return Result.error(f"File {file_path} already opened as device {device_id}")
 
             print(f"Opening file: {file_path}")
+            # Get SoundfileDevice class from plugin_manager
+            res = self._plugin_manager.get_metadata(DataPath("/device/soundfile"))
+            if not res:
+                return Result.error("SoundfileDevice not found in plugin_manager", res)
+            SoundfileDevice = res.unwrapped.get("class")
+            if not SoundfileDevice:
+                return Result.error("SoundfileDevice class not available")
+
             # Create device
             res = SoundfileDevice.create(file_path, full_load)
             if not res:

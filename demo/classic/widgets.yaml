@@ -512,17 +512,25 @@ widgets:
 
   kernel-demo-popup:
     type: popup
+    data:
+      kernel:
+        type: kernel
+      selection:
+        type: data-tree
+        arg:
+          metadata:
+            selection: ""
     body:
       - text: "Kernel TreeLike Demo - Click nodes to select, hover to see metadata"
       - separator
       - text: "Selection: "
       - same-line
       - text:
-          label: "@/kernel-tree/selection"
+          label: "$selection@/selection"
           style:
             text: [0.2, 1.0, 0.2, 1.0]
       - separator
-      - data-path: kernel
+      - data-path: $kernel
         kernel-recursive:
 
   implot-demo-popup:

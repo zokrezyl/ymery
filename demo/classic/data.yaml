@@ -1,8 +1,6 @@
 data:
   log-tree:
     type: log-tree
-  kernel:
-    type: kernel
   demo-data:
     type: data-tree
     arg:
@@ -24,10 +22,6 @@ data:
                     error:
                       metadata:
                         label: "Widget: _execute_event_command_dispatch_event: not implemented"
-        kernel-tree:
-          metadata:
-            selection: None
-        kernel: $kernel
         # Text widget demos
         text-single:
           metadata:

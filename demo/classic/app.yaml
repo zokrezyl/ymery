@@ -69,4 +69,4 @@ widgets:
 
 app:
   widget: app.main-window
-  data: demo-data
+  main-data: demo-data

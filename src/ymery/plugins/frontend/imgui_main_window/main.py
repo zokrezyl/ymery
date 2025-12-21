@@ -58,7 +58,7 @@ class ImguiMainWindow(Widget):
         if res:
             body_spec = res.unwrapped
         if body_spec:
-            res = self._create_widget_from_spec(body_spec)
+            res = self._widget_factory.create_widget(self._data_bag, body_spec, self._namespace)
             if not res:
                 print(f"Error creating body widget: {res}")
                 return 1

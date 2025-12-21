@@ -43,12 +43,11 @@ class DataBag(Object):
         if self._static is not None and not isinstance(self._static, (str, dict)):
             return Result.error(f"DataBag.init: static must be None, str, or dict, got {type(self._static)}")
 
-        # Extract 'data' from static - becomes the main data tree
-        # Each top-level key becomes a tree ID, first one becomes main tree
+        # Step 1: Process 'data' section - add local data trees
+        # This must be processed before 'main-data' so trees are available
         if self._static and isinstance(self._static, dict) and "data" in self._static:
             widget_data = self._static["data"]
             if isinstance(widget_data, dict):
-                first_tree_id = None
                 for tree_id, tree_content in widget_data.items():
                     # Check for key conflict
                     if tree_id in self._data_trees:
@@ -74,13 +73,16 @@ class DataBag(Object):
                         return Result.error(f"DataBag.init: failed to init '{type_name}' for '{tree_id}'", res)
 
                     self._data_trees[tree_id] = instance
-                    if first_tree_id is None:
-                        first_tree_id = tree_id
 
-                # First tree becomes the main tree
-                if first_tree_id:
-                    self._main_data_key = first_tree_id
-                    self._main_data_path = DataPath("/")
+        # Step 2: Process 'main-data' - set which tree is the main data source
+        # This overrides any inherited main data
+        if self._static and isinstance(self._static, dict) and "main-data" in self._static:
+            main_data_key = self._static["main-data"]
+            if main_data_key is not None:
+                if main_data_key not in self._data_trees:
+                    return Result.error(f"DataBag.init: main-data '{main_data_key}' not found in data_trees")
+                self._main_data_key = main_data_key
+                self._main_data_path = DataPath("/")
 
         return Ok(None)
 
@@ -439,7 +441,9 @@ class DataBag(Object):
 
     def inherit(self, data_path: str = None, static = None) -> Result["DataBag"]:
         """
-        Create a child DataBag with inherited/modified path.
+        Create a child DataBag with inherited/modified path. 
+        Each child widget inherits the data bag of the parent. 
+        The data bag of a child widget will contain the data entries of the parent plus local data of the child and the statics
 
         Args:
             data_path: Path for the child (relative, absolute, or $tree@path)
@@ -490,4 +494,28 @@ class DataBag(Object):
                 # Relative path - DataPath handles ..
                 new_path = self._main_data_path / data_path
 
-        return DataBag.create(self._dispatcher, self._plugin_manager, self._data_trees, new_key, new_path, static)
+        # Copy data_trees so child can add local trees without affecting parent
+        child_data_trees = self._data_trees.copy()
+        return DataBag.create(self._dispatcher, self._plugin_manager, child_data_trees, new_key, new_path, static)
+
+    @classmethod
+    def create(cls, dispatcher, plugin_manager: PluginManager, data_trees: Dict, main_data_key: str, main_data_path: DataPath, static: Optional[Dict]) -> Result["DataBag"]:
+        """
+        Create and initialize a new DataBag.
+
+        Args:
+            dispatcher: Event dispatcher
+            plugin_manager: Plugin manager instance
+            data_trees: Dict of named data trees (will NOT be copied - caller must copy if needed)
+            main_data_key: Key of the main data tree
+            main_data_path: Path within the main data tree
+            static: Static parameters for the widget
+
+        Returns:
+            Result[DataBag]: Initialized DataBag or error
+        """
+        bag = cls(dispatcher, plugin_manager, data_trees, main_data_key, main_data_path, static)
+        res = bag.init()
+        if not res:
+            return Result.error("DataBag.create: init failed", res)
+        return Ok(bag)

@@ -15,6 +15,7 @@ from ymery.types import DataPath
 from ymery.result import Result, Ok
 from ymery.frontend.widget import render_error
 from ymery.logging import setup_logging, get_ring_buffer
+from ymery.data_bag import DataBag
 
 import time
 
@@ -168,29 +169,40 @@ def main(layouts_path, layouts_url, plugins_path, widgets_path, main, log_level,
         return 1
 
     widget_name = app_config.get('widget')
-    data_name = app_config.get('data')
+    data_name = app_config.get('main-data')
 
     if not widget_name:
         show_if_error(Result.error("app.widget not specified"))
         return 1
 
     if not data_name:
-        show_if_error(Result.error("app.data not specified"))
+        show_if_error(Result.error("app.main-data not specified"))
         return 1
 
     # Prepend main module namespace if widget_name doesn't have one
     if '.' not in widget_name:
         widget_name = f"{main}.{widget_name}"
 
-    # Get the main data tree
+    # Verify main data exists
     if data_name not in data_trees:
         show_if_error(Result.error(f"Data '{data_name}' not found in data definitions"))
         return 1
 
-    data_tree = data_trees[data_name]
+    # Create root DataBag with all data trees
+    root_data_bag = DataBag.create(
+        dispatcher=dispatcher,
+        plugin_manager=plugin_manager,
+        data_trees=data_trees,
+        main_data_key=data_name,
+        main_data_path=DataPath("/"),
+        static=None
+    )
+    if not root_data_bag:
+        show_if_error(Result.error("Failed to create root DataBag", root_data_bag))
+        return 1
 
-    # Create main widget
-    main_widget = show_if_error(widget_factory.create_widget(widget_name, data_tree, DataPath("/"))).unwrapped
+    # Create main widget - factory inherits from root bag
+    main_widget = show_if_error(widget_factory.create_widget(root_data_bag.unwrapped, widget_name)).unwrapped
 
     # Run application - the main widget handles everything
     return main_widget.run()

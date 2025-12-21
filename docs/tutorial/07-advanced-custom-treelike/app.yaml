@@ -1,0 +1,62 @@
+# Step 7: Advanced - Custom TreeLike
+# Demonstrates using custom data providers
+
+# This tutorial shows the concept of custom TreeLike providers.
+# In a real application, you would implement a custom TreeLike
+# class in Python that provides dynamic data.
+
+data:
+  # Using the built-in kernel tree-like for demonstration
+  system:
+    type: kernel
+
+widgets:
+  main-window:
+    type: imgui-main-window
+    label: "Custom TreeLike Demo"
+    body:
+      - text:
+          label: "Custom TreeLike Demo"
+          tooltip: "This demo shows the kernel TreeLike provider"
+
+      - separator:
+
+      # ===========================================
+      # Tree View of System Data
+      # ===========================================
+      - collapsing-header:
+          label: "Kernel Tree View"
+          flags: [default-open]
+          tooltip: "Raw tree view of the kernel data provider"
+          body:
+            - builtin.tree-view:
+              data-path: $system
+
+      - separator:
+
+      # ===========================================
+      # About Section
+      # ===========================================
+      - collapsing-header:
+          label: "About Custom TreeLike"
+          body:
+            - text:
+                label: "TreeLike is Ymery's data abstraction layer."
+            - separator:
+            - text:
+                label: "You can implement custom TreeLike providers to:"
+            - bullet-text:
+                label: "Connect to actual system APIs"
+            - bullet-text:
+                label: "Fetch data from REST endpoints"
+            - bullet-text:
+                label: "Read from databases"
+            - bullet-text:
+                label: "Monitor file systems"
+            - separator:
+            - text:
+                label: "See the plugins directory for examples."
+
+app:
+  widget: app.main-window
+  main-data: system

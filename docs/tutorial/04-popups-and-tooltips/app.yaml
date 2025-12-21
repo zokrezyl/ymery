@@ -1,0 +1,139 @@
+# Step 4: Popups and Tooltips
+# Demonstrating various popup and tooltip patterns
+
+widgets:
+  main-window:
+    type: imgui-main-window
+    label: "Popups & Tooltips Demo"
+    body:
+      - text:
+          label: "Popups & Tooltips Demo"
+          tooltip: "Learn about popups, tooltips, modals, and context menus"
+
+      - separator:
+
+      # ===========================================
+      # Simple Tooltips
+      # ===========================================
+      - collapsing-header:
+          label: "Simple Tooltips"
+          flags: [default-open]
+          tooltip: "Basic tooltip on a collapsing header!"
+          body:
+            - button:
+                label: "Hover Me"
+                tooltip: "This is a simple text tooltip"
+            - same-line:
+            - button:
+                label: "Me Too"
+                tooltip: "Another simple tooltip on a button"
+            - text:
+                label: "Text can have tooltips too"
+                tooltip: "See? Works on text as well!"
+
+      # ===========================================
+      # Click Popups
+      # ===========================================
+      - collapsing-header:
+          label: "Click Popups"
+          flags: [default-open]
+          tooltip: "Popups that appear when you click"
+          body:
+            - button:
+                label: "Click for Simple Popup"
+                event-handlers:
+                  on-click:
+                    show:
+                      popup:
+                        body:
+                          - text:
+                              label: "Hello from the popup!"
+                          - separator:
+                          - text:
+                              label: "Click outside to close"
+
+            - button:
+                label: "Click for Menu Popup"
+                event-handlers:
+                  on-click:
+                    show:
+                      popup:
+                        body:
+                          - menu-item:
+                              label: "Option A"
+                          - menu-item:
+                              label: "Option B"
+                          - separator:
+                          - menu-item:
+                              label: "Option C"
+
+      # ===========================================
+      # Modal Dialogs
+      # ===========================================
+      - collapsing-header:
+          label: "Modal Dialogs"
+          tooltip: "Modal popups block the rest of the UI"
+          body:
+            - button:
+                label: "Open Confirmation Modal"
+                event-handlers:
+                  on-click:
+                    show:
+                      popup-modal:
+                        label: "Confirm Action"
+                        body:
+                          - text:
+                              label: "Are you sure you want to proceed?"
+                          - separator:
+                          - text:
+                              label: "This action cannot be undone."
+                          - separator:
+                          - button:
+                              label: "Yes, proceed"
+                          - same-line:
+                          - button:
+                              label: "Cancel"
+
+      # ===========================================
+      # Context Menus (Right-Click)
+      # ===========================================
+      - collapsing-header:
+          label: "Context Menus"
+          tooltip: "Right-click on items to see context menus"
+          body:
+            - text:
+                label: "Right-click on this text"
+                event-handlers:
+                  on-right-click:
+                    show:
+                      popup:
+                        body:
+                          - menu-item:
+                              label: "Copy"
+                          - menu-item:
+                              label: "Paste"
+                          - separator:
+                          - menu-item:
+                              label: "Delete"
+
+            - separator:
+
+            - button:
+                label: "Right-click this button"
+                event-handlers:
+                  on-right-click:
+                    show:
+                      popup:
+                        body:
+                          - text:
+                              label: "Button Context Menu"
+                          - separator:
+                          - menu-item:
+                              label: "Duplicate"
+                          - menu-item:
+                              label: "Edit"
+                          - menu-item:
+                              label: "Remove"
+
+app:
+  widget: app.main-window

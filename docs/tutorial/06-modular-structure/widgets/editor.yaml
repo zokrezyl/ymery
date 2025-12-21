@@ -1,0 +1,38 @@
+# widgets/editor.yaml
+# Editor panel
+
+widgets:
+  panel:
+    type: dockable-window
+    label: "Editor"
+    dock-space-name: "MainDockSpace"
+    tooltip: "Main code editing area"
+    body:
+      - button:
+          label: "Save"
+          size: [60, 0]
+      - same-line:
+      - button:
+          label: "Undo"
+          size: [60, 0]
+      - same-line:
+      - button:
+          label: "Redo"
+          size: [60, 0]
+      - separator:
+      - text:
+          label: "# Welcome to the Editor"
+      - text:
+          label: ""
+      - text:
+          label: "Select a file from the Explorer to begin editing."
+      - text:
+          label: ""
+      - text:
+          label: "This modular structure demonstrates how to:"
+      - bullet-text:
+          label: "Split widgets into separate files"
+      - bullet-text:
+          label: "Use namespaces to organize code"
+      - bullet-text:
+          label: "Import and reference across files"

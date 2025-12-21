@@ -123,6 +123,13 @@ class SliderInt(Widget):
 
         imgui_id = f"###{self.uid}"
 
+        try:
+            current_value = int(current_value)
+            minv = int(minv)
+            maxv = int(maxv)
+        except ValueError as e:
+            return Result.error(f"SliderInt: invalid integer value: {e}")
+
         if scale == "log":
             # Logarithmic scale
             log_min = math.log2(minv)
@@ -132,7 +139,7 @@ class SliderInt(Widget):
             if display_format:
                 formatted_value = display_format.format(value=current_value)
             else:
-                formatted_value = f"2^{int(log_value)} = {int(current_value)}"
+                formatted_value = f"2^{int(log_value)} = {current_value}"
 
             imgui.text(formatted_value)
             changed, log_value = imgui.slider_float(imgui_id, log_value, log_min, log_max, "")
@@ -144,7 +151,7 @@ class SliderInt(Widget):
                     return Result.error(f"SliderInt: failed to set value", set_res)
         else:
             # Linear scale
-            changed, new_val = imgui.slider_int(imgui_id, int(current_value), int(minv), int(maxv))
+            changed, new_val = imgui.slider_int(imgui_id, current_value, minv, maxv)
             if changed:
                 set_res = self._data_bag.set("label", new_val)
                 if not set_res:
@@ -161,19 +168,26 @@ class SliderFloat(Widget):
         res = self._data_bag.get("label")
         if not res:
             return Result.error("SliderFloat: failed to get value", res)
-        current_value = float(res.unwrapped)
+        current_value = res.unwrapped
 
         minv = 0.0
         res = self._handle_error(self._data_bag.get("min", minv))
         if res:
-            minv = float(res.unwrapped)
+            minv = res.unwrapped
 
         maxv = 1.0
         res = self._handle_error(self._data_bag.get("max", maxv))
         if res:
-            maxv = float(res.unwrapped)
+            maxv = res.unwrapped
 
         imgui_id = f"###{self.uid}"
+
+        try:
+            current_value = float(current_value)
+            minv = float(minv)
+            maxv = float(maxv)
+        except ValueError as e:
+            return Result.error(f"SliderFloat: invalid float value: {e}")
 
         changed, new_val = imgui.slider_float(imgui_id, current_value, minv, maxv)
         if changed:

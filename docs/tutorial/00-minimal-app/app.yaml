@@ -1,0 +1,20 @@
+# Step 0: Minimal Ymery Application
+# This is the simplest possible Ymery app - just a window with text.
+
+widgets:
+  # Define our main window widget
+  main-window:
+    type: imgui-main-window
+    label: "My First Ymery App"
+    body:
+      - text:
+          label: "Hello, Ymery!"
+      - separator:
+      - text:
+          label: "This is my first application."
+      - text:
+          label: "Built with Dear ImGui and Python!"
+
+# Application configuration
+app:
+  widget: app.main-window

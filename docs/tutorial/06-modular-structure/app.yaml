@@ -1,0 +1,66 @@
+# Step 6: Modular Structure
+# Main application file - imports other modules
+
+import:
+  - widgets.explorer
+  - widgets.editor
+  - widgets.console
+
+widgets:
+  main-window:
+    type: hello-imgui-main-window
+    runner-params:
+      app-window-params:
+        window-geometry:
+          size: [1400, 900]
+      imgui-window-params:
+        default-imgui-window-type: provide-full-screen-dock-space
+    fps-idle: 0
+    body:
+      # ===========================================
+      # Menu Bar
+      # ===========================================
+      - hello-imgui-menu:
+          body:
+            - menu:
+                label: "File"
+                body:
+                  - menu-item:
+                      label: "New"
+                  - menu-item:
+                      label: "Open"
+                  - separator:
+                  - menu-item:
+                      label: "Exit"
+            - menu:
+                label: "View"
+                body:
+                  - menu-item:
+                      label: "Explorer"
+                  - menu-item:
+                      label: "Console"
+
+      # ===========================================
+      # Docking Layout
+      # ===========================================
+      - docking-split:
+          initial-dock: "MainDockSpace"
+          new-dock: "LeftPanel"
+          direction: "left"
+          ratio: 0.2
+
+      - docking-split:
+          initial-dock: "MainDockSpace"
+          new-dock: "BottomPanel"
+          direction: "down"
+          ratio: 0.25
+
+      # ===========================================
+      # Dockable Windows (from imported modules)
+      # ===========================================
+      - widgets.explorer.panel:
+      - widgets.editor.panel:
+      - widgets.console.panel:
+
+app:
+  widget: app.main-window

@@ -1,0 +1,67 @@
+# Step 6: Modular Structure
+# Data definitions - separated from widgets for clarity
+
+data:
+  # Main application data tree
+  app-data:
+    type: data-tree
+    arg:
+      metadata:
+        label: "Application"
+        selection: ""
+      children:
+        # Project files
+        files:
+          metadata:
+            label: "Project Files"
+          children:
+            src:
+              metadata:
+                label: "src/"
+              children:
+                main-py:
+                  metadata:
+                    label: "main.py"
+                    type: "python"
+                    size: "2.3 KB"
+                utils-py:
+                  metadata:
+                    label: "utils.py"
+                    type: "python"
+                    size: "1.1 KB"
+                config-py:
+                  metadata:
+                    label: "config.py"
+                    type: "python"
+                    size: "0.8 KB"
+            tests:
+              metadata:
+                label: "tests/"
+              children:
+                test-main:
+                  metadata:
+                    label: "test_main.py"
+                    type: "python"
+                    size: "1.5 KB"
+            readme:
+              metadata:
+                label: "README.md"
+                type: "markdown"
+                size: "3.2 KB"
+
+        # Application settings
+        settings:
+          metadata:
+            label: "Settings"
+            theme: "dark"
+            font-size: 14
+            tab-size: 4
+            auto-save: true
+            show-line-numbers: true
+
+        # Console log
+        console:
+          metadata:
+            label: "Console"
+            next-id: 1
+          children: {}

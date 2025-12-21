@@ -1,0 +1,27 @@
+# widgets/explorer.yaml
+# File explorer panel
+
+widgets:
+  panel:
+    type: dockable-window
+    label: "Explorer"
+    dock-space-name: "LeftPanel"
+    tooltip: "Browse and manage project files"
+    body:
+      - text:
+          label: "EXPLORER"
+      - separator:
+      - text:
+          label: "src/"
+      - text:
+          label: "  main.py"
+      - text:
+          label: "  utils.py"
+      - text:
+          label: "  config.py"
+      - text:
+          label: "tests/"
+      - text:
+          label: "  test_main.py"
+      - text:
+          label: "README.md"

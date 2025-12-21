@@ -175,34 +175,38 @@ def main(layouts_path, layouts_url, plugins_path, widgets_path, main, log_level,
         show_if_error(Result.error("app.widget not specified"))
         return 1
 
-    if not data_name:
-        show_if_error(Result.error("app.main-data not specified"))
-        return 1
+    # If main-data not specified, use the first data tree if any exist
+    if not data_name and data_trees:
+        data_name = next(iter(data_trees.keys()))
+        logging.info(f"No main-data specified, using first data tree: '{data_name}'")
 
     # Prepend main module namespace if widget_name doesn't have one
     if '.' not in widget_name:
         widget_name = f"{main}.{widget_name}"
 
-    # Verify main data exists
-    if data_name not in data_trees:
+    # Verify main data exists (if specified)
+    if data_name and data_name not in data_trees:
         show_if_error(Result.error(f"Data '{data_name}' not found in data definitions"))
         return 1
 
-    # Create root DataBag with all data trees
-    root_data_bag = DataBag.create(
-        dispatcher=dispatcher,
-        plugin_manager=plugin_manager,
-        data_trees=data_trees,
-        main_data_key=data_name,
-        main_data_path=DataPath("/"),
-        static=None
-    )
-    if not root_data_bag:
-        show_if_error(Result.error("Failed to create root DataBag", root_data_bag))
-        return 1
+    # Create root DataBag only if we have data trees
+    root_data_bag = None
+    if data_trees:
+        res = DataBag.create(
+            dispatcher=dispatcher,
+            plugin_manager=plugin_manager,
+            data_trees=data_trees,
+            main_data_key=data_name,
+            main_data_path=DataPath("/"),
+            static=None
+        )
+        if not res:
+            show_if_error(Result.error("Failed to create root DataBag", res))
+            return 1
+        root_data_bag = res.unwrapped
 
-    # Create main widget - factory inherits from root bag
-    main_widget = show_if_error(widget_factory.create_widget(root_data_bag.unwrapped, widget_name)).unwrapped
+    # Create main widget - factory handles None data bag
+    main_widget = show_if_error(widget_factory.create_widget(root_data_bag, widget_name)).unwrapped
 
     # Run application - the main widget handles everything
     return main_widget.run()

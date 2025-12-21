@@ -70,29 +70,60 @@ e
 
     def create_widget(self, parent_data_bag: DataBag, statics, namespace: str = "") -> Result["Widget"]:
         """
-        Create a widget from a widget specification.
+        Create a widget by REFERENCE to a named widget.
+
+        This method creates widgets by referencing named widgets that were defined
+        in YAML files and loaded at factory initialization. It does NOT support
+        inline widget definitions with 'type:' - those are only valid in widget
+        definitions under the 'widgets:' section of YAML files.
 
         Args:
             parent_data_bag: Parent's DataBag to inherit from
-            _statics: Widget specification in one of these forms:
-                      - str: widget name (e.g., "text", "button", "demo.my-popup")
-                      - dict with single key: {widget_name: statics_dict}
-                        e.g., {"button": {"label": "Click me"}}
-                      - list: composite body, creates a composite widget
-                        e.g., [{"text": "Hello"}, {"button": {"label": "OK"}}]
+            statics: Widget reference specification in one of these forms:
+
+                BY REFERENCE (named widget):
+                - str: widget name only
+                    "text"
+                    "my-namespace.my-popup"
+
+                - dict with single key: {widget_name: statics_dict}
+                    {"button": {"label": "Click me"}}
+                    {"data-path": "some-path", "text": None}
+
+                - list: composite body (creates anonymous composite)
+                    [{"text": "Hello"}, {"button": {"label": "OK"}}]
+
             namespace: Current namespace for resolving unqualified widget names
 
         Returns:
             Result[Widget]: Created widget instance
 
-        Why "_statics"?
+        IMPORTANT: Widget definitions with 'type:' key (e.g., {type: popup, body: [...]})
+        are ONLY valid in the 'widgets:' section of YAML files. They are loaded at
+        factory initialization and registered as named widgets. To use such a widget,
+        reference it by name:
+
+            # In YAML widgets section (definition):
+            widgets:
+              my-popup:
+                type: popup
+                body:
+                  - text: "Hello"
+
+            # In body (reference by name):
+            body:
+              - button:
+                  label: "Open"
+                  body: my-popup    # reference, not inline definition
+
+        Why "statics"?
             Called "statics" because these are the STATIC definitions from YAML that
-            don't change at runtime. They define the widget's structure (body, type),
+            don't change at runtime. They define the widget's structure (body),
             behavior (event-handlers), appearance (style), and data bindings (data,
-            main-data, data-path). 
+            main-data, data-path).
 
         The factory:
-        1. Parses _statics to extract widget_name and statics dict
+        1. Parses statics to extract widget_name and widget_statics dict
         2. Extracts data-path from statics
         3. Calls parent_data_bag.inherit(data_path, statics) to create child DataBag
            - inherit() copies _data_trees dict (isolation between siblings)

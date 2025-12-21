@@ -1,16 +1,13 @@
 import:
-  - widgets
   - data
+  - kernel-demo
+  - implot-demo
+  - tab-demo
+  - foreach-key-demo
+  - table-demo
+  - widgets-demo
 
 widgets:
-  error-tree-demo-popup:
-    type: popup
-    body:
-      - text: "Error Tree Demo - builtin.tree-view"
-      - separator
-      - data-path: error-data
-        builtin.tree-view:
-
   main-window:
     type: imgui-main-window
     window-title: "Ymery Widget Demo"
@@ -19,53 +16,46 @@ widgets:
     body:
       - text: "Widget System Demo"
       - separator
-      - button:
-          label: "Widgets Demo"
-          body: widgets.widgets-demo-popup
-      - same-line
-      - button:
-          label: "Kernel Demo"
-          body: widgets.kernel-demo-popup
-      - same-line
-      - button:
-          label: "Implot Demo"
-          body: widgets.implot-demo-popup
-      - same-line
-      - button:
-          label: "Foreach-Key Demo"
-          body: widgets.foreach-key-demo-popup
-      - same-line
-      - button:
-          label: "Table Demo"
-          body: widgets.table-demo-popup
-      - same-line
-      - button:
-          label: "Tab Demo"
-          body: widgets.tab-demo-popup
-      - same-line
-      - button:
-          label: "Modal Popup"
-          body: widgets.popup-modal-demo-content
-      - same-line
-      - button:
-          label: "Error Tree Demo"
-          body: app.error-tree-demo-popup
-      - separator
-      - text: "Draggable Button Demo:"
-      - data-path: # we leave it empty (python: None) so that the widget does not inherit any data
-        draggable:
-          head:
-            size: [40, 40]
-            position: [50, 50]
-            bounds: window
+      # Upper part: Demo tabs
+      - child:
+          size: [0, -200]
           body:
-            - button:
-                head:
-                  label: "this is a button label"
-                  tooltip: "Drag me anywhere in the window"
-                body: widgets.draggable-demo-popup
+            - tab-bar:
+                label: "Demo Tabs"
+                body:
+                  - tab-item:
+                      label: "Kernel"
+                      body:
+                        - kernel-demo.kernel-demo-tab:
+                  - tab-item:
+                      label: "ImPlot"
+                      body:
+                        - implot-demo.implot-demo-tab:
+                  - tab-item:
+                      label: "Tab Widget"
+                      body:
+                        - tab-demo.tab-demo-tab:
+                  - tab-item:
+                      label: "Foreach-Key"
+                      body:
+                        - foreach-key-demo.foreach-key-demo-tab:
+                  - tab-item:
+                      label: "Table"
+                      body:
+                        - table-demo.table-demo-tab:
+                  - tab-item:
+                      label: "Widgets"
+                      body:
+                        - widgets-demo.widgets-demo-tab:
       - separator
-      - text: "Live Data (updates as you edit):"
+      # Lower part: Application Logs
+      - text: "Application Logs:"
+      - child:
+          size: [0, 0]
+          border: true
+          body:
+            - data-path: $log-tree
+              builtin.tree-view:
 
 app:
   widget: app.main-window

@@ -155,6 +155,13 @@ widgets:
   # ============================================================================
   # POPUP WIDGET DEMOS
   # ============================================================================
+  regular-popup-demo-content:
+    type: popup
+    body:
+      - text: "This is a regular popup"
+      - separator
+      - text: "You can interact with other widgets"
+
   popup-modal-demo-content:
     type: popup-modal
     body:
@@ -192,12 +199,7 @@ widgets:
           body:
             - button:
                 label: "Open Regular Popup"
-                body:
-                  type: popup
-                  body:
-                    - text: "This is a regular popup"
-                    - separator
-                    - text: "You can interact with other widgets"
+                body: regular-popup-demo-content
 
   # ============================================================================
   # TREE NODE WIDGET DEMOS

@@ -1,6 +1,15 @@
 widgets:
   combos-demo:
     type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            combo-selection:
+              metadata:
+                label: "Option 1"
+    main-data: local
     body:
       - separator-text: "Combo Box"
 

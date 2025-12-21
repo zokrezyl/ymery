@@ -1,6 +1,33 @@
 widgets:
   basic-demo:
     type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            input-text:
+              metadata:
+                label: "Hello, world!"
+            input-int:
+              metadata:
+                label: 123
+            input-float:
+              metadata:
+                label: 0.001
+            slider-int:
+              metadata:
+                label: 50
+            slider-float:
+              metadata:
+                label: 0.5
+            checkbox:
+              metadata:
+                label: true
+            radio:
+              metadata:
+                label: 0
+    main-data: local
     body:
       - separator-text: "General"
 

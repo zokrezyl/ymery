@@ -176,30 +176,6 @@ e
         if '.' not in widget_name and namespace:
             widget_name = f"{namespace}.{widget_name}"
 
-        # Extract data-path from widget_statics if present
-        data_path = widget_statics.get("data-path") if widget_statics else None
-
-        # Create DataBag: either inherit from parent or create fresh
-        if parent_data_bag is not None:
-            # Normal case: inherit from parent (handles data:, main-data:, copies _data_trees)
-            res = parent_data_bag.inherit(data_path, widget_statics)
-            if not res:
-                return Result.error(f"create_widget: failed to inherit DataBag for '{widget_name}'", res)
-            data_bag = res.unwrapped
-        else:
-            # Isolated widget: create fresh DataBag with just the statics
-            res = DataBag.create(
-                dispatcher=self._dispatcher,
-                plugin_manager=self._plugin_manager,
-                data_trees={},
-                main_data_key=None,
-                main_data_path=DataPath("/"),
-                static=widget_statics
-            )
-            if not res:
-                return Result.error(f"create_widget: failed to create fresh DataBag for '{widget_name}'", res)
-            data_bag = res.unwrapped
-
         # Extract namespace from widget_name if present
         if '.' in widget_name:
             widget_namespace = widget_name.rsplit('.', 1)[0]
@@ -221,16 +197,13 @@ e
         if cached_item is None:
             return Result.error(f"Widget '{widget_name}' not found in cache")
 
-        # Check if it's a widget class (primitive widget)
+        # Determine widget class and merge YAML definition with statics BEFORE creating DataBag
+        # This ensures data: and main-data: from YAML definitions are processed by DataBag.init()
         if isinstance(cached_item, type):
-            return cached_item.create(
-                widget_factory=self,
-                dispatcher=self._dispatcher,
-                namespace=widget_namespace,
-                data_bag=data_bag
-            )
+            widget_class = cached_item
+            merged_statics = widget_statics
         elif isinstance(cached_item, dict) and "type" in cached_item:
-            # YAML widget definition - merge with statics
+            # YAML widget definition - merge with statics BEFORE DataBag creation
             widget_type = cached_item["type"]
             if widget_type not in self._widget_cache:
                 return Result.error(f"Widget type '{widget_type}' not found in cache")
@@ -239,23 +212,43 @@ e
             if not isinstance(widget_class, type):
                 return Result.error(f"Widget type '{widget_type}' is not a class")
 
-            # Merge cached_item (YAML definition) with data_bag's statics
-            # statics from caller override YAML definition
-            if data_bag._static is None:
-                data_bag._static = dict(cached_item)
-            else:
-                merged = dict(cached_item)
-                merged.update(data_bag._static)
-                data_bag._static = merged
-
-            return widget_class.create(
-                widget_factory=self,
-                dispatcher=self._dispatcher,
-                namespace=widget_namespace,
-                data_bag=data_bag
-            )
+            # Merge: YAML definition as base, widget_statics (caller) overrides
+            merged_statics = dict(cached_item)
+            if widget_statics:
+                merged_statics.update(widget_statics)
         else:
             return Result.error(f"WidgetFactory: cached_item must be a class or dict with 'type', got {type(cached_item)}")
+
+        # Extract data-path from merged statics
+        data_path = merged_statics.get("data-path") if merged_statics else None
+
+        # Create DataBag with merged statics (includes data: from YAML definition)
+        if parent_data_bag is not None:
+            # Normal case: inherit from parent (handles data:, main-data:, copies _data_trees)
+            res = parent_data_bag.inherit(data_path, merged_statics)
+            if not res:
+                return Result.error(f"create_widget: failed to inherit DataBag for '{widget_name}'", res)
+            data_bag = res.unwrapped
+        else:
+            # Isolated widget: create fresh DataBag with just the statics
+            res = DataBag.create(
+                dispatcher=self._dispatcher,
+                plugin_manager=self._plugin_manager,
+                data_trees={},
+                main_data_key=None,
+                main_data_path=DataPath("/"),
+                static=merged_statics
+            )
+            if not res:
+                return Result.error(f"create_widget: failed to create fresh DataBag for '{widget_name}'", res)
+            data_bag = res.unwrapped
+
+        return widget_class.create(
+            widget_factory=self,
+            dispatcher=self._dispatcher,
+            namespace=widget_namespace,
+            data_bag=data_bag
+        )
 
     def dispose(self) -> Result[None]:
         return Ok(None)

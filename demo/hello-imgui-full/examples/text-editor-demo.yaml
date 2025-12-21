@@ -1,6 +1,35 @@
 widgets:
   text-editor-demo:
     type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            python-code:
+              metadata:
+                label: |
+                  def hello_world():
+                      print("Hello from ImGui!")
+                      return True
+
+                  # Edit this code
+                  hello_world()
+            cpp-code:
+              metadata:
+                label: |
+                  #include <iostream>
+
+                  void hello_world() {
+                      std::cout << "Hello from ImGui!" << std::endl;
+                  }
+
+                  // Edit this code
+                  int main() {
+                      hello_world();
+                      return 0;
+                  }
+    main-data: local
     body:
       - separator-text: "Python Editor"
 

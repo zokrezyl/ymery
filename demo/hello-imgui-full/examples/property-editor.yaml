@@ -1,6 +1,24 @@
 widgets:
   property-editor:
     type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            prop-name:
+              metadata:
+                label: "Object1"
+            prop-x:
+              metadata:
+                label: 10.0
+            prop-y:
+              metadata:
+                label: 20.0
+            prop-enabled:
+              metadata:
+                label: true
+    main-data: local
     body:
       - text: "Property Editor Example"
       - separator:

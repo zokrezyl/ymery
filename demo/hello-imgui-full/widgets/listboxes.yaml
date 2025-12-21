@@ -1,6 +1,15 @@
 widgets:
   listboxes-demo:
     type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            listbox-selection:
+              metadata:
+                label: "Apple"
+    main-data: local
     body:
       - separator-text: "List Box"
 

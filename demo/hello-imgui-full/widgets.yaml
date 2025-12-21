@@ -648,12 +648,12 @@ widgets:
       - text: "foreach-key Demo - Displays metadata keys and values"
       - separator
       - text: "Simple form (shows values only):"
-      - foreach-key: text
+      - foreach-key:
+          - text: "$value"
       - separator
       - text: "Complex form (shows keys and values):"
       - foreach-key:
-          - text: "$key"
-          - text: "$value"
+          - text: "$key: $value"
           - separator
 
   metadata-tooltip:

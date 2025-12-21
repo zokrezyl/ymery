@@ -84,10 +84,11 @@ class Widget(Visual, EventHandler):
 
 
     def init(self) -> Result[None]:
-        """Initialize widget - override in subclasses if needed"""
-        res = self._data_bag.init()
-        if not res:
-            return Result.error("Widget: failed to init DataBag", res)
+        """Initialize widget - override in subclasses if needed
+
+        Note: DataBag is already initialized by DataBag.create() before being
+        passed to the widget. Never call data_bag.init() here.
+        """
         res = self._init_events()
         if not res:
             return Result.error("Widget: failed to initialize events", res)

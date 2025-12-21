@@ -1,6 +1,15 @@
 widgets:
   widgets-demo:
     type: composite
+    data:
+      local:
+        type: data-tree
+        arg:
+          children:
+            toggle-flag:
+              metadata:
+                label: true
+    main-data: local
     body:
       - separator-text: "ImCoolBar"
 

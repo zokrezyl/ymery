@@ -140,8 +140,7 @@ widgets:
                     label: "Basic"
                     flags: [default-open]
                     body:
-                      - data-path: basic-demo-data
-                        widgets.basic.basic-demo:
+                      - widgets.basic.basic-demo:
                 - tree-node:
                     label: "Tooltips"
                     body:
@@ -316,4 +315,4 @@ widgets:
 
 app:
   widget: app.main-window
-  main-data: demo-data
+  main-data: log-tree

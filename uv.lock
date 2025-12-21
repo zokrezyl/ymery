@@ -1082,7 +1082,7 @@ wheels = [
 
 [[package]]
 name = "ymery"
-version = "0.0.73"
+version = "0.0.74"
 source = { editable = "." }
 dependencies = [
     { name = "click" },

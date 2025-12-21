@@ -1,7 +1,7 @@
 // js/pyodide.js
 
 // Ymery version - updated by build process
-const YMERY_VERSION = "0.0.74";
+const YMERY_VERSION = "0.0.75";
 
 async function load_pyodide_imgui_render() {
     console.log('Loading load_pyodide_imgui_render.py');

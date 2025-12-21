@@ -19,15 +19,25 @@ widgets:
   foreach-key-demo-content:
     type: composite
     body:
-      - text: "foreach-key Demo - Displays metadata keys and values"
+      - text:
+          label: "foreach-key Demo - Displays metadata keys and values"
+          tooltip: "Demonstrates 'foreach-key' widget which iterates over metadata keys. Data: 'local' (type: data-tree) with metadata: {name, type, status, count}."
       - separator
-      - text: "Simple form (shows values only):"
+      - text:
+          label: "Simple form (shows values only):"
+          tooltip: "Using $value placeholder to show only the value of each metadata key."
       - foreach-key:
-          - text: "$value"
+          - text:
+              label: "$value"
+              tooltip: "The '$value' placeholder is replaced with each metadata value. Iterates: 'Sample Node', 'demo', 'active', '42'."
       - separator
-      - text: "Complex form (shows keys and values):"
+      - text:
+          label: "Complex form (shows keys and values):"
+          tooltip: "Using both $key and $value placeholders to show key-value pairs."
       - foreach-key:
-          - text: "$key: $value"
+          - text:
+              label: "$key: $value"
+              tooltip: "Both '$key' and '$value' placeholders - shows 'name: Sample Node', 'type: demo', etc."
           - separator
 
   # Tab content - shows demo content directly
@@ -46,7 +56,9 @@ widgets:
     body:
       - foreach-key-demo-content:
       - separator
-      - text: "Local Data Tree:"
+      - text:
+          label: "Local Data Tree:"
+          tooltip: "Shows the local data-tree structure with metadata keys that foreach-key iterates over."
       - child:
           size: [0, 300]
           border: true

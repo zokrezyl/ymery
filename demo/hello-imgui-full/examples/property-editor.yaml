@@ -20,22 +20,29 @@ widgets:
                 label: true
     main-data: local
     body:
-      - text: "Property Editor Example"
+      - text:
+          label: "Property Editor Example"
+          tooltip: "Demonstrates a property editor pattern. Data: 'local' (type: data-tree) with prop-name, prop-x, prop-y, prop-enabled children."
       - separator:
 
       - tree-node:
           label: "Object Properties"
           flags: [default-open]
+          tooltip: "Tree-node grouping related properties. 'flags: [default-open]' expands node by default."
           body:
-            - data-path: prop-name
-              input-text:
-            - data-path: prop-x
-              drag-float:
+            - input-text:
+                tooltip: "Input-text bound to 'prop-name' child. Object name property."
+              data-path: prop-name
+            - drag-float:
                 min: 0.0
                 max: 100.0
-            - data-path: prop-y
-              drag-float:
+                tooltip: "Drag-float bound to 'prop-x' child. X coordinate with min/max bounds."
+              data-path: prop-x
+            - drag-float:
                 min: 0.0
                 max: 100.0
-            - data-path: prop-enabled
-              checkbox:
+                tooltip: "Drag-float bound to 'prop-y' child. Y coordinate with min/max bounds."
+              data-path: prop-y
+            - checkbox:
+                tooltip: "Checkbox bound to 'prop-enabled' child. Boolean enabled/disabled property."
+              data-path: prop-enabled

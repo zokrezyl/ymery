@@ -246,35 +246,46 @@ widgets:
                   integrated into [ImGui Bundle](https://github.com/pthom/imgui_bundle) by Pascal Thomet.
     main-data: local
     body:
-      - separator-text: "Basic Markdown"
+      - separator-text:
+          label: "Basic Markdown"
+          tooltip: "Demonstrates markdown widget. Data: 'local' (type: data-tree) with markdown content stored in 'label' metadata."
 
-      - data-path: markdown-basic
-        markdown:
-
-      - separator:
-
-      - separator-text: "Tables"
-
-      - data-path: markdown-tables
-        markdown:
+      - markdown:
+          tooltip: "Markdown widget bound to 'markdown-basic' child. Renders markdown from metadata/label."
+        data-path: markdown-basic
 
       - separator:
 
-      - separator-text: "Links and Horizontal Rules"
+      - separator-text:
+          label: "Tables"
+          tooltip: "Markdown table demonstration. Tables use | for columns and --- for header separation."
 
-      - data-path: markdown-links
-        markdown:
-
-      - separator:
-
-      - separator-text: "Advanced Features"
-
-      - data-path: markdown-advanced
-        markdown:
+      - markdown:
+        data-path: markdown-tables
 
       - separator:
 
-      - separator-text: "Complete Reference"
+      - separator-text:
+          label: "Links and Horizontal Rules"
+          tooltip: "Markdown links [text](url) and horizontal rules (---)."
 
-      - data-path: markdown-comprehensive
-        markdown:
+      - markdown:
+        data-path: markdown-links
+
+      - separator:
+
+      - separator-text:
+          label: "Advanced Features"
+          tooltip: "HTML elements, backslash escapes, and mixed formatting in markdown."
+
+      - markdown:
+        data-path: markdown-advanced
+
+      - separator:
+
+      - separator-text:
+          label: "Complete Reference"
+          tooltip: "Comprehensive markdown reference - all supported features in one section."
+
+      - markdown:
+        data-path: markdown-comprehensive

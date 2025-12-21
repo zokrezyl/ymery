@@ -27,14 +27,23 @@ widgets:
   kernel-demo-content:
     type: composite
     body:
-      - text: "Kernel TreeLike Demo - Click nodes to select, hover to see metadata"
+      - text:
+          label: "Kernel TreeLike Demo"
+          tooltip: "Demonstrates the Kernel data source - a live tree showing system state. Data: 'kernel' (type: kernel) - live system tree, 'selection' (type: data-tree) - stores selected node path."
       - separator
-      - text: "Selection: "
+      - text:
+          label: "Click nodes to select, hover to see metadata"
+          tooltip: "This demo shows: tree-node with on-click handler, on-hover showing tooltip widget, selection binding via $selection@/selection reference, and style-mapping for visual feedback."
+      - separator
+      - text:
+          label: "Selection: "
+          tooltip: "Displays the currently selected node path. Uses $selection@/selection to read from the 'selection' data tree."
       - same-line
       - text:
           label: "$selection@/selection"
           style:
             text: [0.2, 1.0, 0.2, 1.0]
+          tooltip: "Dynamic text bound to selection data. The green color is applied via 'style' static."
       - separator
       - data-path: $kernel
         kernel-recursive:
@@ -46,15 +55,16 @@ widgets:
       - foreach-child:
           - tree-node:
               body: kernel-recursive
-              on-click: default
-              on-hover:
-                show: kernel-node-tooltip
               selection: "$selection@/selection"
               style-mapping:
                 openable:
                   text: [0.2, 0.8, 0.2, 1.0]
                 opened:
                   text: [0.8, 0.8, 0.2, 1.0]
+              event-handlers:
+                on-click: default
+                on-hover:
+                  show: kernel-node-tooltip
 
   # Tab content - shows demo content directly
   kernel-demo-tab:

@@ -1,0 +1,289 @@
+widgets:
+  # Popup for Tooltip demo (used from Popups tab)
+  tooltip-demo-popup:
+    type: popup
+    body:
+      - tooltip-demo-content:
+
+  # Reusable content for both tab and popup (inherits data from parent)
+  tooltip-demo-content:
+    type: composite
+    body:
+      - text: "TOOLTIP WIDGET COMPREHENSIVE DEMO"
+      - separator
+
+      # Section 1: Implicit Tooltips
+      - collapsing-header:
+          label: "Implicit Tooltips (via 'tooltip' static)"
+          flags: [default-open]
+          body:
+            - text: "Implicit tooltips are added via the 'tooltip' key in widget statics."
+            - text: "Hover over the widgets below to see their tooltips."
+            - separator
+
+            - button:
+                label: "Button with Tooltip"
+                tooltip: "This is an implicit tooltip on a button. Just add 'tooltip: ...' to any widget!"
+
+            - text:
+                label: "Text with Tooltip - Hover me!"
+                tooltip: "Tooltips work on text widgets too. The tooltip appears when you hover."
+
+            - separator-text: "Input with Tooltip"
+            - input-text:
+                label: "##input-tooltip-demo"
+                tooltip: "Enter some text here. This input has a tooltip explaining its purpose."
+
+            - separator
+            - text: "Multiple tooltips on same line:"
+            - same-line
+            - button:
+                label: "First"
+                tooltip: "First button - demonstrates multiple tooltips on same line"
+            - same-line
+            - button:
+                label: "Second"
+                tooltip: "Second button - each widget can have its own tooltip"
+            - same-line
+            - button:
+                label: "Third"
+                tooltip: "Third button - tooltips help explain UI without cluttering it"
+
+      # Section 2: Explicit Tooltip Widgets
+      - collapsing-header:
+          label: "Explicit Tooltips (tooltip widget with body)"
+          flags: [default-open]
+          body:
+            - text: "Explicit tooltips use the 'tooltip' widget type with a 'body' containing child widgets."
+            - text: "This allows rich content like multiple texts, separators, colors, and more."
+            - separator
+
+            - button:
+                label: "Button with Rich Tooltip"
+                event-handlers:
+                  on-hover:
+                    show: rich-tooltip-demo
+
+            - separator
+            - text: "Hover the button above to see a tooltip with:"
+            - bullet-text: "Multiple text lines"
+            - bullet-text: "Separator widgets"
+            - bullet-text: "Colored text"
+            - bullet-text: "Bullet points"
+
+      # Section 3: What can go in tooltips
+      - collapsing-header:
+          label: "Tooltip Content Examples"
+          body:
+            - text: "Tooltips can contain various widget types. Hover each button to explore:"
+            - separator
+
+            - button:
+                label: "Text Only"
+                event-handlers:
+                  on-hover:
+                    show: tooltip-text-only
+
+            - same-line
+            - button:
+                label: "With Bullets"
+                event-handlers:
+                  on-hover:
+                    show: tooltip-with-bullets
+
+            - same-line
+            - button:
+                label: "With Colors"
+                event-handlers:
+                  on-hover:
+                    show: tooltip-with-colors
+
+            - same-line
+            - button:
+                label: "With Separators"
+                event-handlers:
+                  on-hover:
+                    show: tooltip-with-separators
+
+            - separator
+
+            - button:
+                label: "Formatted Text"
+                event-handlers:
+                  on-hover:
+                    show: tooltip-formatted
+
+            - same-line
+            - button:
+                label: "Nested Structure"
+                event-handlers:
+                  on-hover:
+                    show: tooltip-nested
+
+            - same-line
+            - button:
+                label: "Data Display"
+                event-handlers:
+                  on-hover:
+                    show: tooltip-data-display
+
+      # Section 4: Tooltip Patterns
+      - collapsing-header:
+          label: "Common Tooltip Patterns"
+          body:
+            - text: "Here are recommended patterns for using tooltips effectively:"
+            - separator
+
+            - separator-text: "Help Icons"
+            - text: "Add [?] buttons with detailed explanations:"
+            - same-line
+            - button:
+                label: "[?]"
+                tooltip: "Help tooltips explain complex features. Keep them concise but informative."
+
+            - separator-text: "Status Indicators"
+            - text: "Show status details on hover:"
+            - same-line
+            - text:
+                label: "[Active]"
+                style:
+                  text: [0.2, 0.8, 0.2, 1.0]
+                tooltip: "Status: Active\nLast update: Just now\nConnection: Stable"
+
+            - separator-text: "Feature Discovery"
+            - text: "Reveal hidden features:"
+            - same-line
+            - button:
+                label: "Advanced Options"
+                event-handlers:
+                  on-hover:
+                    show: tooltip-feature-discovery
+
+  # Rich tooltip with multiple widget types
+  rich-tooltip-demo:
+    type: tooltip
+    body:
+      - text:
+          label: "Rich Tooltip Content"
+          style:
+            text: [1.0, 0.8, 0.2, 1.0]
+      - separator
+      - text: "This tooltip contains multiple widgets:"
+      - bullet-text: "Text widgets"
+      - bullet-text: "Separator widgets"
+      - bullet-text: "Bullet text"
+      - bullet-text: "Colored text"
+      - separator
+      - text:
+          label: "Styled text is supported!"
+          style:
+            text: [0.2, 1.0, 0.5, 1.0]
+
+  # Text only tooltip
+  tooltip-text-only:
+    type: tooltip
+    body:
+      - text: "Simple text tooltip"
+      - text: "Can have multiple lines"
+      - text: "Each line is a separate text widget"
+
+  # Tooltip with bullets
+  tooltip-with-bullets:
+    type: tooltip
+    body:
+      - text: "Features:"
+      - bullet-text: "Feature A"
+      - bullet-text: "Feature B"
+      - bullet-text: "Feature C"
+
+  # Tooltip with colors
+  tooltip-with-colors:
+    type: tooltip
+    body:
+      - text:
+          label: "Red Text"
+          style:
+            text: [1.0, 0.2, 0.2, 1.0]
+      - text:
+          label: "Green Text"
+          style:
+            text: [0.2, 1.0, 0.2, 1.0]
+      - text:
+          label: "Blue Text"
+          style:
+            text: [0.2, 0.5, 1.0, 1.0]
+      - text:
+          label: "Yellow Text"
+          style:
+            text: [1.0, 1.0, 0.2, 1.0]
+
+  # Tooltip with separators
+  tooltip-with-separators:
+    type: tooltip
+    body:
+      - text: "Section 1"
+      - separator
+      - text: "Section 2"
+      - separator-text: "Named Section"
+      - text: "Section 3 content"
+
+  # Formatted tooltip
+  tooltip-formatted:
+    type: tooltip
+    body:
+      - separator-text: "Keyboard Shortcut"
+      - text: "Ctrl+S - Save file"
+      - text: "Ctrl+O - Open file"
+      - text: "Ctrl+N - New file"
+
+  # Nested structure tooltip
+  tooltip-nested:
+    type: tooltip
+    body:
+      - text: "Parent Item"
+      - text: "  └─ Child 1"
+      - text: "  └─ Child 2"
+      - text: "      └─ Grandchild"
+      - text: "  └─ Child 3"
+
+  # Data display tooltip
+  tooltip-data-display:
+    type: tooltip
+    body:
+      - separator-text: "Object Properties"
+      - text: "Name: MyObject"
+      - text: "Type: Widget"
+      - text: "Status: Active"
+      - separator
+      - text:
+          label: "✓ Valid"
+          style:
+            text: [0.2, 1.0, 0.2, 1.0]
+
+  # Feature discovery tooltip
+  tooltip-feature-discovery:
+    type: tooltip
+    body:
+      - text:
+          label: "Pro Tips:"
+          style:
+            text: [1.0, 0.8, 0.2, 1.0]
+      - separator
+      - bullet-text: "Double-click to edit"
+      - bullet-text: "Right-click for context menu"
+      - bullet-text: "Drag to reorder"
+      - bullet-text: "Shift+Click for multi-select"
+
+  # Tab content - shows demo content directly
+  tooltip-demo-tab:
+    type: composite
+    body:
+      - tooltip-demo-content:
+
+  # Button for Popups tab
+  tooltip-demo-button:
+    type: composite
+    body:
+      - button:
+          label: "Open Tooltip Demo Popup"
+          body: tooltip-demo-popup

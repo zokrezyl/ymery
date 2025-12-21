@@ -27,58 +27,79 @@ widgets:
   tab-demo-content:
     type: composite
     body:
-      - text: "Tab Widget Demo"
+      - text:
+          label: "Tab Widget Demo"
+          tooltip: "Demonstrates tab-bar and tab-item widgets. Data: 'local' (type: data-tree) - contains input-text, slider-int, color-edit, and color-button children."
       - separator
       - tab-bar:
           label: "Demo Tabs"
+          tooltip: "Tab bar widget containing multiple tab-item children. Each tab shows different widget demonstrations."
           body:
             - tab-item:
                 label: "Tab 1"
+                tooltip: "Static content tab - shows text and bullet-text widgets with no data binding."
                 body:
-                  - text: "Content of Tab 1"
+                  - text:
+                      label: "Content of Tab 1"
+                      tooltip: "Static text - the 'label' value is defined directly in YAML, no data binding."
                   - separator
                   - text: "This is the first tab"
-                  - bullet-text: "Feature A"
+                  - bullet-text:
+                      label: "Feature A"
+                      tooltip: "Bullet-text widget - renders text with a bullet point prefix."
                   - bullet-text: "Feature B"
                   - bullet-text: "Feature C"
             - tab-item:
                 label: "Tab 2"
+                tooltip: "Input widgets tab - demonstrates input-text and slider-int bound to local data tree."
                 body:
                   - text: "Content of Tab 2"
                   - separator
-                  - data-path: input-text
-                    text: "Text Input:"
-                  - data-path: input-text
-                    input-text:
+                  - text:
+                      label: "Text Input:"
+                      tooltip: "Label for input-text widget below. The input reads/writes to 'input-text' child in local data tree."
+                    data-path: input-text
+                  - input-text:
+                      tooltip: "Input-text widget bound to local data via 'data-path: input-text'. Changes are stored in data tree."
+                    data-path: input-text
                   - separator
                   - text: "Slider:"
-                  - data-path: slider-int
-                    slider-int:
+                  - slider-int:
                       min: 0
                       max: 100
+                      tooltip: "Slider-int widget with min/max bounds. Bound to 'slider-int' child in local data tree."
+                    data-path: slider-int
             - tab-item:
                 label: "Tab 3"
+                tooltip: "Button widgets tab - shows static buttons with no data binding."
                 body:
                   - text: "Content of Tab 3"
                   - separator
                   - button:
                       label: "Button 1"
+                      tooltip: "Static button - label defined in YAML. Buttons can have 'body' for popups or event handlers."
                   - button:
                       label: "Button 2"
+                      tooltip: "Multiple buttons can be placed sequentially."
                   - button:
                       label: "Button 3"
             - tab-item:
                 label: "Colors"
+                tooltip: "Color widgets tab - demonstrates color-edit and color-button bound to local data."
                 body:
-                  - text: "Color Widgets Demo"
+                  - text:
+                      label: "Color Widgets Demo"
+                      tooltip: "Color widgets store RGBA values as [r, g, b, a] arrays in the data tree."
                   - separator
                   - text: "Color Edit (RGBA):"
-                  - data-path: color-edit
-                    color-edit:
+                  - color-edit:
+                      tooltip: "Color-edit widget - full color picker UI. Bound to 'color-edit' child storing [1.0, 0.5, 0.2, 1.0]."
+                    data-path: color-edit
                   - separator
                   - text: "Color Button:"
-                  - data-path: color-button
-                    color-button:
+                  - color-button:
+                      tooltip: "Color-button widget - shows current color, click to open picker. Bound to 'color-button' child."
+                    data-path: color-button
                   - same-line
                   - text: "Click to see color"
 
@@ -106,7 +127,9 @@ widgets:
     body:
       - tab-demo-content:
       - separator
-      - text: "Local Data Tree:"
+      - text:
+          label: "Local Data Tree:"
+          tooltip: "Shows the local data-tree structure. Contains children for input-text, slider-int, color-edit, and color-button."
       - child:
           size: [0, 300]
           border: true

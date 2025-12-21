@@ -15,7 +15,7 @@ class HelloImguiMainWindow(Composite):
     Main window using hello_imgui.run() with docking support
 
     Parameters:
-        window-title: Window title (default: "Ymery App")
+        label: Window title (default: widget UID)
         window-size: Window size as [width, height] (default: [1200, 800])
         fps-idle: FPS when idle (default: 0)
 
@@ -53,11 +53,31 @@ class HelloImguiMainWindow(Composite):
     def _main_loop(self):
         """Main rendering loop called by hello_imgui"""
         imgui.text("Main loop is running!")
+
+        # Check dock tab hover and show tooltips for dockable windows
+        self._check_dock_tab_tooltips()
+
         # Render non-docking widgets (regular widgets in main dock space)
         for widget in self._non_docking_widgets:
             self._handle_error(widget.render())
 
         self._render_errors()
+
+    def _check_dock_tab_tooltips(self):
+        """Check if any dock tab is hovered and show its tooltip"""
+        for dockable_window in self._dockable_windows:
+            if not dockable_window._dock_tab_tooltip:
+                continue
+            try:
+                window = imgui.internal.find_window_by_name(dockable_window._dockable_window.label)
+                if window:
+                    # Check if dock tab is hovered (hovered_rect flag = 1)
+                    # ItemStatusFlags_.hovered_rect = 1 << 0 = 1
+                    if window.dc.dock_tab_item_status_flags & 1:
+                        imgui.set_tooltip(dockable_window._dock_tab_tooltip)
+                        break  # Only one tooltip at a time
+            except Exception:
+                pass  # Silently ignore if window not found or API unavailable
 
     def _resolve_constant(self, field_name: str, value: str):
         """Convert YAML constant to Python constant
@@ -121,6 +141,7 @@ class HelloImguiMainWindow(Composite):
 
         self._non_docking_widgets = []
         self._menu_bar_widget = None
+        self._dockable_windows = []  # Store for dock tab tooltip checking
         # Extract children by type
         docking_splits = []
         dockable_windows = []
@@ -208,6 +229,9 @@ class HelloImguiMainWindow(Composite):
 
             # Add dockable windows
             docking_params.dockable_windows = [window_widget.dockable_window for window_widget in dockable_windows]
+
+            # Store dockable windows for dock tab tooltip checking
+            self._dockable_windows = dockable_windows
 
             # Assign the complete DockingParams to runner_params
             runner_params.docking_params = docking_params
@@ -336,6 +360,10 @@ class DockableWindow(Widget):
         res = self._data_bag.get("can-be-closed", True)
         if res:
             self._dockable_window.can_be_closed = res.unwrapped
+
+        # Get tooltip for dock tab
+        res = self._data_bag.get("tooltip", None)
+        self._dock_tab_tooltip = res.unwrapped if res else None
 
         # Set gui_function to render the body
         self._dockable_window.gui_function = self._render_dockable

@@ -3,9 +3,13 @@ widgets:
   popups-demo-tab:
     type: composite
     body:
-      - text: "Popup Demos"
+      - text:
+          label: "Popup Demos"
+          tooltip: "Demonstrates popup widgets. Each button opens a demo as a modal popup window. Popups can have their own 'data:' section."
       - separator
-      - text: "Click buttons to open each demo as a popup:"
+      - text:
+          label: "Click buttons to open each demo as a popup:"
+          tooltip: "Buttons with 'body' containing a popup widget. The popup opens when clicked. Popups inherit parent data or define their own."
       - separator
       - kernel-demo.kernel-demo-button:
       - separator
@@ -18,3 +22,5 @@ widgets:
       - table-demo.table-demo-button:
       - separator
       - widgets-demo.widgets-demo-button:
+      - separator
+      - tooltip-demo.tooltip-demo-button:

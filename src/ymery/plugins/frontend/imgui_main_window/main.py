@@ -16,7 +16,7 @@ class ImguiMainWindow(Widget):
     Simple main window using immapp.run()
 
     Parameters:
-        window-title: Window title (default: "Ymery App")
+        label: Window title (default: "Main Window")
         window-size: Window size as [width, height] (default: [1200, 800])
         fps-idle: FPS when idle (default: 0)
     """

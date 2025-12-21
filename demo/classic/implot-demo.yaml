@@ -13,19 +13,25 @@ widgets:
   implot-demo-content:
     type: composite
     body:
-      - text: "Implot Waveform Demo"
+      - text:
+          label: "Implot Waveform Demo"
+          tooltip: "Demonstrates ImPlot integration for real-time plotting. Data: 'kernel' (type: kernel) - live system tree providing waveform data streams."
       - separator
       - implot:
           label: "Waveforms"
+          tooltip: "ImPlot widget showing multiple waveform layers. Each layer uses 'data-path' to bind to kernel waveform providers at /providers/waveform-st/available/."
           body:
             - implot-layer:
                 label: "Sine"
+                tooltip: "Sine wave layer - bound to kernel path /providers/waveform-st/available/sine/0 using absolute data-path."
               data-path: /providers/waveform-st/available/sine/0
             - implot-layer:
                 label: "Square"
+                tooltip: "Square wave layer - demonstrates multiple plot layers in same implot widget."
               data-path: /providers/waveform-st/available/square/0
             - implot-layer:
                 label: "Triangle"
+                tooltip: "Triangle wave layer - all layers share the same kernel data source."
               data-path: /providers/waveform-st/available/triangle/0
 
   # Tab content - shows demo content directly
@@ -38,7 +44,9 @@ widgets:
     body:
       - implot-demo-content:
       - separator
-      - text: "Local Data Tree (Kernel):"
+      - text:
+          label: "Local Data Tree (Kernel):"
+          tooltip: "Shows the kernel data tree structure. The kernel is a live tree showing system state including waveform providers."
       - child:
           size: [0, 300]
           border: true

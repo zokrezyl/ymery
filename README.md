@@ -8,6 +8,10 @@
 
 Ymery lets you create [Dear ImGui](https://github.com/ocornut/imgui) applications using declarative YAML files, powered by [Dear ImGui Bundle](https://github.com/pthom/imgui_bundle) for Python.
 
+For the C++ based implementation (also WIP) see https://github.com/zokrezyl/ymery-cpp
+
+An online demo available at https://zokrezyl.github.io/imery/demo/index.html
+
 ## Why Ymery?
 
 Traditional GUI development with ImGui requires writing repetitive boilerplate code. Every button, slider, or layout change means modifying and recompiling your application.
